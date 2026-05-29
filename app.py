@@ -199,11 +199,33 @@ def inject_custom_css(trade_state, theme):
         transform: scale(1.01); 
     }}
     
-    h1, h2, h3, h4 {{ font-family: var(--font-heading) !important; font-weight: 700; letter-spacing: -0.02em; margin: 0; color: var(--text-main); transition: color 0.4s ease; }}
+    h1, h2, h3, h4 {{ 
+        font-family: var(--font-heading) !important; 
+        font-weight: 700; 
+        letter-spacing: -0.02em; 
+        margin: 0; 
+        color: var(--text-main) !important; 
+        -webkit-text-fill-color: var(--text-main) !important;
+        transition: color 0.4s ease; 
+    }}
     
-    /* SPECIFIC FIX: Ensure muted span elements are always colored correctly */
-    span.text-muted {{ color: var(--text-secondary) !important; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: block; }}
+    /* ----------------------------------------------------
+       WEBKIT FILL OVERRIDES TO DESTROY NATIVE DARK MODE 
+       ---------------------------------------------------- */
     
+    /* Subheaders */
+    span.text-muted {{ 
+        color: var(--text-secondary) !important; 
+        -webkit-text-fill-color: var(--text-secondary) !important; 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 0.05em; 
+        margin-bottom: 12px; 
+        display: block; 
+    }}
+    
+    /* Metric Containers */
     div[data-testid="metric-container"] {{ 
         background: var(--bg-glass); border-radius: 16px; padding: 20px; 
         border: 1px solid var(--card-border); box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
@@ -212,13 +234,23 @@ def inject_custom_css(trade_state, theme):
     }}
     div[data-testid="metric-container"]:hover {{ transform: scale(1.02); border-color: var(--accent-color); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }}
     
-    /* SPECIFIC FIX: Highly aggressive targeting to overwrite Streamlit's dark-mode metric hijacking */
-    div[data-testid="metric-container"] [data-testid="stMetricLabel"],
-    div[data-testid="metric-container"] [data-testid="stMetricLabel"] * {{ color: var(--text-secondary) !important; font-size: 0.85rem !important; font-weight: 600 !important; font-family: var(--font-body); }}
+    div[data-testid="metric-container"] [data-testid="stMetricLabel"] * {{ 
+        color: var(--text-secondary) !important; 
+        -webkit-text-fill-color: var(--text-secondary) !important; 
+        font-size: 0.85rem !important; 
+        font-weight: 600 !important; 
+        font-family: var(--font-body); 
+    }}
     
-    div[data-testid="metric-container"] [data-testid="stMetricValue"],
-    div[data-testid="metric-container"] [data-testid="stMetricValue"] * {{ font-family: var(--font-heading) !important; font-weight: 700 !important; font-size: 2.2rem !important; color: var(--text-main) !important; }}
+    div[data-testid="metric-container"] [data-testid="stMetricValue"] * {{ 
+        font-family: var(--font-heading) !important; 
+        font-weight: 700 !important; 
+        font-size: 2.2rem !important; 
+        color: var(--text-main) !important; 
+        -webkit-text-fill-color: var(--text-main) !important; 
+    }}
 
+    /* Radio Pills */
     div[data-testid="stRadio"] > div[role="radiogroup"] {{ 
         display: flex; flex-direction: row; justify-content: center; gap: 8px; 
         background: var(--bg-glass) !important; 
@@ -242,6 +274,7 @@ def inject_custom_css(trade_state, theme):
     div[data-testid="stRadio"] label span, 
     div[data-testid="stRadio"] label * {{ 
         color: var(--text-main) !important; 
+        -webkit-text-fill-color: var(--text-main) !important; 
         font-weight: 600 !important; 
         font-size: 0.85rem !important; 
         letter-spacing: 0.03em !important; 
@@ -259,8 +292,10 @@ def inject_custom_css(trade_state, theme):
     div[data-testid="stRadio"] label[data-checked="true"] span, 
     div[data-testid="stRadio"] label[data-checked="true"] * {{ 
         color: var(--nav-active-text) !important; 
+        -webkit-text-fill-color: var(--nav-active-text) !important; 
     }}
 
+    /* Dropdowns / Selectboxes */
     div[data-baseweb="select"] > div {{ 
         background: var(--bg-glass) !important; 
         border: 1px solid var(--card-border) !important; 
@@ -271,13 +306,13 @@ def inject_custom_css(trade_state, theme):
     }}
     div[data-baseweb="select"] > div:hover {{ border-color: var(--accent-neu) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }}
     
-    /* AGGRESSIVE CSS OVERRIDE: Prevent Streamlit from hiding dropdown text */
     div[data-baseweb="select"] [class*="singleValue"],
     div[data-baseweb="select"] [class*="ValueContainer"],
     div[data-baseweb="select"] span,
     div[data-baseweb="select"] input,
     div[data-baseweb="select"] div {{ 
         color: var(--text-main) !important; 
+        -webkit-text-fill-color: var(--text-main) !important; 
         font-weight: 600 !important; 
         font-family: var(--font-body) !important; 
     }}
@@ -289,8 +324,21 @@ def inject_custom_css(trade_state, theme):
         box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important; 
         border-radius: 12px !important; 
     }}
-    ul[role="listbox"] li, ul[role="listbox"] li * {{ background: transparent !important; color: var(--text-main) !important; font-weight: 500 !important; border-radius: 8px !important; font-size: 0.9rem !important; font-family: var(--font-body); }}
-    ul[role="listbox"] li:hover, ul[role="listbox"] li[aria-selected="true"], ul[role="listbox"] li[aria-selected="true"] * {{ background: {nav_bg} !important; color: var(--accent-neu) !important; font-weight: 700 !important; }}
+    ul[role="listbox"] li, ul[role="listbox"] li * {{ 
+        background: transparent !important; 
+        color: var(--text-main) !important; 
+        -webkit-text-fill-color: var(--text-main) !important; 
+        font-weight: 500 !important; 
+        border-radius: 8px !important; 
+        font-size: 0.9rem !important; 
+        font-family: var(--font-body); 
+    }}
+    ul[role="listbox"] li:hover, ul[role="listbox"] li[aria-selected="true"], ul[role="listbox"] li[aria-selected="true"] * {{ 
+        background: {nav_bg} !important; 
+        color: var(--accent-neu) !important; 
+        -webkit-text-fill-color: var(--accent-neu) !important; 
+        font-weight: 700 !important; 
+    }}
     
     .static-header {{ position: sticky; top: 0; z-index: 1000; background: linear-gradient(180deg, var(--bg-main) 70%, transparent); padding: 10px 0; margin-bottom: 5px; }}
     .ticker-wrap {{ background: var(--bg-glass); border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); padding: 8px 0; overflow: hidden; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); backdrop-filter: blur(10px); }}
