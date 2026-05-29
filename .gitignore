@@ -1,0 +1,45 @@
+#Python / Virtual Environments
+
+pycache/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+#Jupyter Notebooks
+
+.ipynb_checkpoints/
+
+#MLOps Project Artifacts (Models, Logs, Plots)
+
+#We ignore these so we don't push heavy model weights or local logs to GitHub
+
+mlops_artifacts/models/.h5
+mlops_artifacts/models/.pkl
+mlops_artifacts/logs/.log
+mlops_artifacts/logs/.csv
+mlops_artifacts/plots/*.png
+
+#Data Files (Avoid pushing large datasets)
+
+data/raw/.csv
+data/processed/*.csv
+
+#Streamlit
+
+.streamlit/secrets.toml
+
+#Pytest
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+#OS Generated Files
+
+.DS_Store
+Thumbs.db
+
+data/
