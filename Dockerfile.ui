@@ -1,0 +1,35 @@
+# Use official Python lightweight image
+FROM python:3.10-slim
+
+#Set the working directory inside the container
+
+WORKDIR /app
+
+# Prevent Python form writing .pyc files and buffer stdout 
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies required for ML packages
+RUN apt-get update && apt-get install -y --no-install -recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependencies and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+#Copy the actual application code 
+
+COPY app.py .
+COPY src/ /src/
+
+# We will moun data. at runtime via docker-compose
+
+#Expose Streamlit Port 
+EXPOSE 8501
+
+#Command to run the UI
+CMD ["streamlit","run","app.py","--server.port=8501","--server.address=0.0.0.0"]
+  
+  
