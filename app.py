@@ -200,7 +200,9 @@ def inject_custom_css(trade_state, theme):
     }}
     
     h1, h2, h3, h4 {{ font-family: var(--font-heading) !important; font-weight: 700; letter-spacing: -0.02em; margin: 0; color: var(--text-main); transition: color 0.4s ease; }}
-    .text-muted {{ color: var(--text-secondary) !important; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: block; }}
+    
+    /* SPECIFIC FIX: Ensure muted span elements are always colored correctly */
+    span.text-muted {{ color: var(--text-secondary) !important; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: block; }}
     
     div[data-testid="metric-container"] {{ 
         background: var(--bg-glass); border-radius: 16px; padding: 20px; 
@@ -209,8 +211,13 @@ def inject_custom_css(trade_state, theme):
         transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); 
     }}
     div[data-testid="metric-container"]:hover {{ transform: scale(1.02); border-color: var(--accent-color); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }}
-    div[data-testid="metric-container"] label {{ color: var(--text-secondary) !important; font-size: 0.85rem !important; font-weight: 600 !important; font-family: var(--font-body); }}
-    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {{ font-family: var(--font-heading) !important; font-weight: 700 !important; font-size: 2.2rem !important; color: var(--text-main); }}
+    
+    /* SPECIFIC FIX: Highly aggressive targeting to overwrite Streamlit's dark-mode metric hijacking */
+    div[data-testid="metric-container"] [data-testid="stMetricLabel"],
+    div[data-testid="metric-container"] [data-testid="stMetricLabel"] * {{ color: var(--text-secondary) !important; font-size: 0.85rem !important; font-weight: 600 !important; font-family: var(--font-body); }}
+    
+    div[data-testid="metric-container"] [data-testid="stMetricValue"],
+    div[data-testid="metric-container"] [data-testid="stMetricValue"] * {{ font-family: var(--font-heading) !important; font-weight: 700 !important; font-size: 2.2rem !important; color: var(--text-main) !important; }}
 
     div[data-testid="stRadio"] > div[role="radiogroup"] {{ 
         display: flex; flex-direction: row; justify-content: center; gap: 8px; 
@@ -636,10 +643,11 @@ if selected_page == "Macro & Risk Engine":
     next_d = future_dates[1] if future_dates[1].weekday() < 5 else future_dates[1] + timedelta(days=2)
     fig.add_trace(go.Scatter(x=[df_tail.index[-1], next_d], y=[latest_close, p_price], mode='lines+markers', line=dict(color=active_color, width=2, dash='dot'), marker=dict(size=10, symbol='circle'), name="Algorithm Target Focus"))
         
+    # FIX: Adding theme=None prevents Streamlit from overwriting Plotly's colors
     fig.update_layout(height=400, legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
     fig.update_yaxes(gridcolor=grid_col, zerolinecolor=grid_col)
     fig.update_xaxes(gridcolor=grid_col, zerolinecolor=grid_col)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, theme=None)
 
 elif selected_page == "Deep Technical Suite":
     st.markdown("<span class='text-muted'>ADVANCED INSTITUTIONAL INDICATORS</span>", unsafe_allow_html=True)
@@ -664,7 +672,8 @@ elif selected_page == "Deep Technical Suite":
     fig.update_layout(template=chart_template, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color=t_main, family=f_heading), height=800, xaxis_rangeslider_visible=False, margin=dict(l=20,r=20,t=40,b=20), showlegend=False)
     fig.update_yaxes(gridcolor=grid_col); fig.update_xaxes(gridcolor=grid_col)
     for annotation in fig['layout']['annotations']: annotation['font'] = dict(size=12, color=t_main, family=f_heading)
-    st.plotly_chart(fig, use_container_width=True)
+    # FIX: Adding theme=None here as well
+    st.plotly_chart(fig, use_container_width=True, theme=None)
 
 elif selected_page == "SOTA Benchmarking":
     st.markdown("<span class='text-muted'>MODEL ARCHITECTURE VALIDATION</span>", unsafe_allow_html=True)
@@ -686,7 +695,8 @@ elif selected_page == "SOTA Benchmarking":
     fig.update_layout(height=400, legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
     fig.update_yaxes(gridcolor=grid_col)
     fig.update_xaxes(gridcolor=grid_col)
-    st.plotly_chart(fig, use_container_width=True)
+    # FIX: theme=None
+    st.plotly_chart(fig, use_container_width=True, theme=None)
 
 elif selected_page == "Backtesting Engine":
     st.markdown("<span class='text-muted'>1-YEAR ALGORITHMIC TRADING SIMULATOR</span>", unsafe_allow_html=True)
@@ -714,7 +724,8 @@ elif selected_page == "Backtesting Engine":
                     fig.update_layout(height=450, title=dict(text="Portfolio Value ($100k Starting Capital)", font=dict(family=f_heading)), legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
                     fig.update_yaxes(gridcolor=grid_col, tickprefix="$")
                     fig.update_xaxes(gridcolor=grid_col)
-                    st.plotly_chart(fig, use_container_width=True)
+                    # FIX: theme=None
+                    st.plotly_chart(fig, use_container_width=True, theme=None)
                 else:
                     st.error(f"Backtest API Failed. Status {res.status_code}: {res.text}")
             except Exception as e:
