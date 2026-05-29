@@ -3,8 +3,11 @@ pandas
 numpy
 plotly
 scikit-learn
+tensorflow
 yfinance
+joblib
 fastapi
 uvicorn
 requests
 vaderSentiment
+sqlite3
