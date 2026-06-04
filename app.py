@@ -542,4 +542,3 @@ elif selected_page == "Trading Desk":
         st.markdown(html_table, unsafe_allow_html=True)
 
 
-```
