@@ -141,8 +141,10 @@ Vercel is the recommended hosting platform for Next.js 14 frontend clients:
 1. Import your GitHub repository into [Vercel](https://vercel.com/).
 2. Set the **Root Directory** to `frontend`.
 3. Configure the environment variable:
-   * `NEXT_PUBLIC_API_URL`: The URL of your Hugging Face Space API (e.g., `https://amoghsamadhiya779-afk-quantum-yield-api.hf.space`).
+   * `NEXT_PUBLIC_API_URL`: The URL of your Hugging Face Space API (currently `https://1amogh212-quant-modeling.hf.space`).
 4. Click **Deploy**. Vercel will build the Next.js static and edge routines and serve the UI.
+
+The API allows local frontend origins by default and matches Vercel preview/production domains with `FRONTEND_ORIGIN_REGEX`. For a custom frontend domain, set `FRONTEND_ORIGINS` on the API host to a comma-separated list of exact origins.
 
 ---
 

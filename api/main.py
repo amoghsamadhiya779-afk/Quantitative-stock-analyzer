@@ -64,9 +64,19 @@ def get_model_paths(index_key):
     return model_path, scaler_path
 
 app = FastAPI(title="Nexus Inference & NLP API", version="5.1.0", description="SQL-Backed Enterprise quantitative engine with strict MLOps logging.")
+
+def parse_cors_origins(raw_origins: str) -> list[str]:
+    return [origin.strip().rstrip("/") for origin in raw_origins.split(",") if origin.strip()]
+
+frontend_origins = parse_cors_origins(
+    os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+)
+frontend_origin_regex = os.getenv("FRONTEND_ORIGIN_REGEX", r"https://.*\.vercel\.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://*.vercel.app"],
+    allow_origins=frontend_origins,
+    allow_origin_regex=frontend_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

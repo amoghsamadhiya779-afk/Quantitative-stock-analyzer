@@ -1,4 +1,23 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7860";
+const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL || "http://localhost:7860");
+
+function normalizeApiUrl(url: string): string {
+  return url.replace(/\/+$/, "");
+}
+
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const res = await fetch(`${API_URL}${path}`, init);
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const data = await res.json();
+      detail = data?.detail || data?.message || detail;
+    } catch {
+      // Some failures return an empty or non-JSON response body.
+    }
+    throw new Error(`API request failed (${res.status}): ${detail}`);
+  }
+  return res;
+}
 
 export interface MarketInfo {
   index_key: string;
@@ -64,42 +83,37 @@ export interface NewsItem {
 }
 
 export async function fetchMarkets(): Promise<Record<string, MarketInfo>> {
-  const res = await fetch(`${API_URL}/api/v1/markets`);
-  if (!res.ok) throw new Error("Failed to fetch markets");
+  const res = await apiFetch("/api/v1/markets");
   const data = await res.json();
   return data.markets;
 }
 
 export async function fetchTickers(marketName: string): Promise<string[]> {
-  const res = await fetch(`${API_URL}/api/v1/tickers/${encodeURIComponent(marketName)}`);
-  if (!res.ok) throw new Error("Failed to fetch tickers");
+  const res = await apiFetch(`/api/v1/tickers/${encodeURIComponent(marketName)}`);
   const data = await res.json();
   return data.tickers;
 }
 
 export async function fetchStockData(marketName: string, ticker: string): Promise<StockData> {
-  const res = await fetch(`${API_URL}/api/v1/stock/${encodeURIComponent(marketName)}/${encodeURIComponent(ticker)}`);
-  if (!res.ok) throw new Error("Failed to fetch stock data");
+  const res = await apiFetch(`/api/v1/stock/${encodeURIComponent(marketName)}/${encodeURIComponent(ticker)}`);
   return res.json();
 }
 
 export async function fetchPrediction(marketName: string, ticker: string): Promise<PredictionResult> {
-  const res = await fetch(`${API_URL}/api/v1/predict`, {
+  const res = await apiFetch("/api/v1/predict", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ market_name: marketName, ticker }),
   });
-  if (!res.ok) throw new Error("Failed to fetch prediction");
   return res.json();
 }
 
 export async function fetchBacktest(marketName: string, ticker: string): Promise<BacktestResult> {
-  const res = await fetch(`${API_URL}/api/v1/backtest`, {
+  const res = await apiFetch("/api/v1/backtest", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ market_name: marketName, ticker }),
   });
-  if (!res.ok) throw new Error("Failed to fetch backtest");
   return res.json();
 }
 
