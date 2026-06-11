@@ -123,6 +123,29 @@ docker-compose up --build -d
 
 ---
 
+## Production Cloud Deployment
+
+The platform is designed to be deployed using a fully decoupled cloud strategy:
+
+### 1. Backend Deployment (Hugging Face Spaces)
+Hugging Face Spaces provides a free container hosting environment suitable for python analytical services:
+1. Create a new Space on [Hugging Face](https://huggingface.co/) and select **Docker** as the SDK (with the Blank template).
+2. Copy `Dockerfile.hf` to `Dockerfile` to configure the container to run the FastAPI analytical endpoint on port 7860:
+   ```bash
+   cp Dockerfile.hf Dockerfile
+   ```
+3. Commit and push the repository to your Hugging Face Space git remote. Hugging Face will build the container and serve the API.
+
+### 2. Frontend Deployment (Vercel)
+Vercel is the recommended hosting platform for Next.js 14 frontend clients:
+1. Import your GitHub repository into [Vercel](https://vercel.com/).
+2. Set the **Root Directory** to `frontend`.
+3. Configure the environment variable:
+   * `NEXT_PUBLIC_API_URL`: The URL of your Hugging Face Space API (e.g., `https://amoghsamadhiya779-afk-quantum-yield-api.hf.space`).
+4. Click **Deploy**. Vercel will build the Next.js static and edge routines and serve the UI.
+
+---
+
 ## Financial and Academic Disclaimer
 
 Quantum Yield is a technical demonstration of Machine Learning Operations (MLOps), data pipelines, and high-density interface design. It is not financial advice. The models, Monte Carlo simulations, and order book matrices are simulations intended for educational and research demonstration purposes. Past performance is not indicative of future results.
