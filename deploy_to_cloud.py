@@ -64,7 +64,7 @@ class CloudDeployer:
         time.sleep(2)
         print("   Instance provisioned. IP allocated.")
         self._run_cmd("docker-compose up -d", "Spinning up isolated Docker network (bridge)")
-        print("   Services 'nexus-api' (Port 8000) and 'nexus-ui' (Port 8501) are now active.")
+        print("   Services 'nexus-api' (Port 7860) and 'nexus-ui' (Port 8501) are now active.")
 
     def step_5_configure_automation(self):
         print("\n[Step 5/5] Configuring Autonomous Market Sync (Cron)...")

@@ -32,7 +32,7 @@ except ImportError:
         "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv", "lat": -6.20, "lon": 106.81, "region": "Asia", "currency": "IDR"}
     }
 
-API_URL = os.getenv("NEXUS_API_URL", "http://localhost:8000")
+API_URL = os.getenv("NEXUS_API_URL", "http://localhost:7860")
 DB_PATH = os.path.join("data", "nexus_trading.db")
 
 # ==========================================

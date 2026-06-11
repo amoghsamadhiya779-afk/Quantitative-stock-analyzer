@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.api
     container_name: nexus-backend-api
     ports:
-      - "8000:8000"
+      - "7860:7860"
     volumes:
       # Mount local data and artifacts so the API has access to live CSVs and trained models
       - ./data:/app/data
@@ -25,7 +25,7 @@ services:
       - "8501:8501"
     environment:
       # Tells the Streamlit container how to find the API container over the Docker network
-      - NEXUS_API_URL=http://nexus-api:8000
+      - NEXUS_API_URL=http://nexus-api:7860
     volumes:
       # Mount local data so UI can generate drop-downs and charts
       - ./data:/app/data
