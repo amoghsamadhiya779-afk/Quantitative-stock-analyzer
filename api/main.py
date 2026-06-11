@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
@@ -6,6 +7,7 @@ import os
 import joblib
 import warnings
 import sqlite3
+import sys
 import yfinance as yf
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import logging
@@ -18,6 +20,9 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 import uvicorn
+
+# Append root directory to sys.path to resolve 'src' imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.feature_engineering import FeatureEngineering
 
 # Configure Enterprise Logging for visibility
@@ -35,6 +40,17 @@ MARKET_CONFIG = {
     "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv"}
 }
 
+MARKET_META = {
+    "United States (S&P 500)": {"index_key": "SP500", "stock_file": "SP500_DATASET.csv", "region": "North America", "currency": "USD"},
+    "India (NIFTY 50)": {"index_key": "NIFTY50", "stock_file": "NIFTY50_India.csv", "region": "Asia", "currency": "INR"},
+    "Japan (Nikkei 225)": {"index_key": "Nikkei225", "stock_file": "Nikkei225_Japan.csv", "region": "Asia", "currency": "JPY"},
+    "United Kingdom (FTSE 100)": {"index_key": "FTSE100", "stock_file": "FTSE100_UK.csv", "region": "Europe", "currency": "GBP"},
+    "Germany (DAX 40)": {"index_key": "DAX40", "stock_file": "DAX40_Germany.csv", "region": "Europe", "currency": "EUR"},
+    "Turkey (BIST 100)": {"index_key": "BIST100", "stock_file": "BIST100_Turkey.csv", "region": "Europe/Asia", "currency": "TRY"},
+    "Brazil (Bovespa)": {"index_key": "Bovespa", "stock_file": "Bovespa_Brazil.csv", "region": "South America", "currency": "BRL"},
+    "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv", "region": "Asia", "currency": "IDR"}
+}
+
 SEQ_LENGTH = 60
 
 # Force absolute pathing to guarantee models are found regardless of terminal execution directory
@@ -48,6 +64,13 @@ def get_model_paths(index_key):
     return model_path, scaler_path
 
 app = FastAPI(title="Nexus Inference & NLP API", version="5.1.0", description="SQL-Backed Enterprise quantitative engine with strict MLOps logging.")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://*.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 nlp_analyzer = SentimentIntensityAnalyzer()
 MODEL_CACHE = {}
 
@@ -66,6 +89,7 @@ class InferenceResponse(BaseModel):
 
 class NewsRequest(BaseModel):
     ticker: str
+    market: str = ""
 
 class BacktestResponse(BaseModel):
     dates: list
@@ -267,18 +291,26 @@ def execute_backtest(req: InferenceRequest):
         logger.error(f"Backtest runtime error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+import feedparser
+import urllib.parse
+
 @app.post("/api/v1/news")
 def get_real_time_news(req: NewsRequest):
     try:
-        stock = yf.Ticker(req.ticker)
-        raw_news = stock.news
+        search_term = req.market if req.market else req.ticker
+        query = urllib.parse.quote(f"{search_term} stock market finance economy")
+        url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+        
+        feed = feedparser.parse(url)
+        raw_news = feed.entries
+        
         if not raw_news: return {"news": []}
             
         processed_news = []
-        for item in raw_news[:5]:
-            title = item.get("title", "")
-            link = item.get("link", "#")
-            publisher = item.get("publisher", "Financial Press")
+        for item in raw_news[:6]:
+            title = item.title
+            link = item.link
+            publisher = getattr(item, 'source', {}).get('title', 'Financial Press')
             
             sentiment_score = nlp_analyzer.polarity_scores(title)
             compound = sentiment_score['compound']
@@ -292,6 +324,59 @@ def get_real_time_news(req: NewsRequest):
     except Exception as e: 
         logger.error(f"News fetch failed: {e}")
         return {"news": []}
+
+@app.get("/api/v1/markets")
+def get_markets():
+    return {"markets": MARKET_META}
+
+
+@app.get("/api/v1/tickers/{market_name}")
+def get_tickers(market_name: str):
+    if market_name not in MARKET_CONFIG:
+        raise HTTPException(status_code=404, detail="Market not found")
+    stock_file = MARKET_CONFIG[market_name]["stock_file"]
+    file_path = os.path.join(PROJECT_ROOT, "data", "raw", stock_file)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=500, detail="Data file not found")
+    df = pd.read_csv(file_path, parse_dates=['Date'])
+    df['Dollar_Volume'] = df['Close'] * df['Volume']
+    recent = df[df['Date'] >= (df['Date'].max() - pd.Timedelta(days=90))]
+    top_30 = recent.groupby('Ticker')['Dollar_Volume'].median().sort_values(ascending=False).head(30).index.tolist()
+    return {"tickers": top_30, "market": market_name}
+
+
+@app.get("/api/v1/stock/{market_name}/{ticker}")
+def get_stock_data(market_name: str, ticker: str):
+    df = get_market_data(market_name, ticker)
+    df_recent = df.tail(252)  # Last 1 year
+    result = {
+        "ticker": ticker,
+        "market": market_name,
+        "currency": MARKET_META.get(market_name, {}).get("currency", "USD"),
+        "region": MARKET_META.get(market_name, {}).get("region", "Global"),
+        "latest_close": float(df['Close'].iloc[-1]),
+        "prev_close": float(df['Close'].iloc[-2]),
+        "price_delta": float(df['Close'].iloc[-1] - df['Close'].iloc[-2]),
+        "pct_change": float(((df['Close'].iloc[-1] / df['Close'].iloc[-2]) - 1) * 100),
+        "rsi": float(df['RSI_14'].iloc[-1]),
+        "volatility": float(df['Volatility_20'].iloc[-1] * np.sqrt(252) * 100),
+        "vwap": float(df['VWAP_20'].iloc[-1]),
+        "ma_20": float(df['MA_20'].iloc[-1]),
+        "ma_50": float(df['MA_50'].iloc[-1]),
+        "dates": df_recent.index.strftime('%Y-%m-%d').tolist() if hasattr(df_recent.index, 'strftime') else df_recent.reset_index()['Date'].astype(str).tolist(),
+        "closes": df_recent['Close'].tolist(),
+        "opens": df_recent['Open'].tolist(),
+        "highs": df_recent['High'].tolist(),
+        "lows": df_recent['Low'].tolist(),
+        "volumes": df_recent['Volume'].tolist(),
+        "bb_upper": df_recent['BB_Upper'].tolist(),
+        "bb_lower": df_recent['BB_Lower'].tolist(),
+        "macd": df_recent['MACD'].tolist(),
+        "signal_line": df_recent['Signal_Line'].tolist(),
+        "rsi_series": df_recent['RSI_14'].tolist(),
+    }
+    return result
+
 
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
