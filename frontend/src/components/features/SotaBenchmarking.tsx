@@ -13,7 +13,11 @@ interface Props {
 }
 
 export default function SotaBenchmarking({ stockData, prediction, currency, selectedAlgo }: Props) {
-  if (!stockData) return <div className="flex items-center justify-center h-64 text-foreground/30 font-mono text-sm animate-pulse">Loading benchmarks...</div>;
+  if (!stockData) return (
+    <div className="w-full h-[600px] rounded-2xl border border-[var(--border)] bg-[var(--surface)] flex items-center justify-center overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+    </div>
+  );
 
   const tail = stockData.closes.slice(-50);
   const tailDates = stockData.dates.slice(-50);

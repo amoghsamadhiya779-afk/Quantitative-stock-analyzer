@@ -90,6 +90,19 @@ DB_PATH = os.path.join(PROJECT_ROOT, "data", "nexus_trading.db")
 def get_model_paths(index_key):
     model_path = os.path.join(MODEL_DIR, f"best_{index_key}_model.h5")
     scaler_path = os.path.join(MODEL_DIR, f"{index_key}_feature_scaler.pkl")
+    
+    # Linux environments are case-sensitive. Check for lowercase filenames as a fallback 
+    # (e.g., best_sp500_model.h5 instead of best_SP500_model.h5)
+    if not os.path.exists(model_path):
+        alt_model_path = os.path.join(MODEL_DIR, f"best_{index_key.lower()}_model.h5")
+        if os.path.exists(alt_model_path):
+            model_path = alt_model_path
+            
+    if not os.path.exists(scaler_path):
+        alt_scaler_path = os.path.join(MODEL_DIR, f"{index_key.lower()}_feature_scaler.pkl")
+        if os.path.exists(alt_scaler_path):
+            scaler_path = alt_scaler_path
+            
     return model_path, scaler_path
 
 app = FastAPI(title="Nexus Inference & NLP API", version="5.1.0", description="SQL-Backed Enterprise quantitative engine with strict MLOps logging.")
@@ -146,12 +159,28 @@ def get_market_data(market_name: str, ticker: str):
         
     idx_key = MARKET_CONFIG[market_name]["index_key"]
     
+    def process_df(data):
+        if data.empty: return data
+        
+        # PREVENT CHART PLUNGE BUG: Replace zero prices with NaN, then forward fill
+        for col in ['Open', 'High', 'Low', 'Close']:
+            if col in data.columns:
+                data[col] = pd.to_numeric(data[col], errors='coerce').replace(0.0, np.nan)
+        if 'Volume' in data.columns:
+            data['Volume'] = pd.to_numeric(data['Volume'], errors='coerce')
+            
+        data = data.ffill().bfill().dropna(subset=['Close'])
+        
+        # Drop any remaining infinite values that break Pydantic validation
+        data = data.replace([np.inf, -np.inf], np.nan).ffill()
+        return FeatureEngineering.engineer_features(data)
+
     # Check SQL DB first
     if os.path.exists(DB_PATH):
         with sqlite3.connect(DB_PATH) as conn:
             df = pd.read_sql(f"SELECT * FROM market_data WHERE Market = '{idx_key}' AND Ticker = '{ticker}' ORDER BY Date", conn, parse_dates=['Date'])
             if not df.empty:
-                return FeatureEngineering.engineer_features(df)
+                return process_df(df)
                 
     # Fallback 1: Attempt to load raw CSV
     file_path = os.path.join(PROJECT_ROOT, "data", "raw", MARKET_CONFIG[market_name]["stock_file"])
@@ -161,7 +190,7 @@ def get_market_data(market_name: str, ticker: str):
             df = pd.read_csv(file_path, parse_dates=['Date'])
             subset = df[df['Ticker'] == ticker].sort_values('Date')
             if not subset.empty:
-                return FeatureEngineering.engineer_features(subset)
+                return process_df(subset)
         except Exception as e:
             logger.error(f"Failed to read CSV for {ticker}: {e}")
 
@@ -177,7 +206,7 @@ def get_market_data(market_name: str, ticker: str):
                 
             df_live['Ticker'] = ticker
             logger.info(f"✅ Successfully downloaded live historical data for {ticker}")
-            return FeatureEngineering.engineer_features(df_live)
+            return process_df(df_live)
         else:
             logger.warning(f"yfinance returned empty dataset for {ticker}")
     except Exception as e:
@@ -242,13 +271,33 @@ def execute_prediction(req: InferenceRequest):
                 raise e
         else:
             logger.warning(f"Triggering linear fallback. Reason: Artifacts={bool(artifacts)}, Data_Length={len(df)}")
-            change = (df['Close'].iloc[-1] / df['Close'].iloc[-5]) - 1
+            
+            # DEFEND AGAINST ZERO DIVISION ERROR IN FALLBACK LOGIC
+            if len(df) >= 5 and float(df['Close'].iloc[-5]) != 0.0:
+                change = (float(df['Close'].iloc[-1]) / float(df['Close'].iloc[-5])) - 1
+            else:
+                change = 0.0
+                
             predicted_price = float(latest_close * (1 + change * 0.3))
             model_type = "Algorithmic Momentum Synthesis"
             conf = 72.5
             
+        # GUARD AGAINST PYDANTIC VALIDATION 500 ERRORS (caused by NaNs)
+        if np.isnan(predicted_price) or np.isinf(predicted_price):
+            predicted_price = latest_close
+            
         delta = predicted_price - latest_close
-        pct_change = (delta / latest_close) * 100
+        
+        # DEFEND AGAINST ZERO DIVISION FOR PCT_CHANGE
+        if latest_close != 0.0:
+            pct_change = (delta / latest_close) * 100
+        else:
+            pct_change = 0.0
+        
+        if np.isnan(delta) or np.isnan(pct_change) or np.isinf(pct_change) or np.isinf(delta):
+            delta = 0.0
+            pct_change = 0.0
+            conf = 0.0
         
         return InferenceResponse(
             ticker=req.ticker, latest_close=latest_close, predicted_price=predicted_price,
@@ -436,31 +485,35 @@ def get_tickers(market_name: str):
 def get_stock_data(market_name: str, ticker: str):
     df = get_market_data(market_name, ticker)
     df_recent = df.tail(252)  # Last 1 year
+    
+    # Handle NaNs defensively for frontend charting
+    df_recent = df_recent.replace([np.inf, -np.inf, np.nan], 0.0)
+    
     result = {
         "ticker": ticker,
         "market": market_name,
         "currency": MARKET_META.get(market_name, {}).get("currency", "USD"),
         "region": MARKET_META.get(market_name, {}).get("region", "Global"),
-        "latest_close": float(df['Close'].iloc[-1]),
-        "prev_close": float(df['Close'].iloc[-2]),
-        "price_delta": float(df['Close'].iloc[-1] - df['Close'].iloc[-2]),
-        "pct_change": float(((df['Close'].iloc[-1] / df['Close'].iloc[-2]) - 1) * 100),
-        "rsi": float(df['RSI_14'].iloc[-1]),
-        "volatility": float(df['Volatility_20'].iloc[-1] * np.sqrt(252) * 100),
-        "vwap": float(df['VWAP_20'].iloc[-1]),
-        "ma_20": float(df['MA_20'].iloc[-1]),
-        "ma_50": float(df['MA_50'].iloc[-1]),
+        "latest_close": float(df_recent['Close'].iloc[-1]),
+        "prev_close": float(df_recent['Close'].iloc[-2]) if len(df_recent) > 1 else 0.0,
+        "price_delta": float(df_recent['Close'].iloc[-1] - df_recent['Close'].iloc[-2]) if len(df_recent) > 1 else 0.0,
+        "pct_change": float(((df_recent['Close'].iloc[-1] / df_recent['Close'].iloc[-2]) - 1) * 100) if len(df_recent) > 1 and df_recent['Close'].iloc[-2] != 0 else 0.0,
+        "rsi": float(df_recent['RSI_14'].iloc[-1]) if 'RSI_14' in df_recent.columns else 0.0,
+        "volatility": float(df_recent['Volatility_20'].iloc[-1] * np.sqrt(252) * 100) if 'Volatility_20' in df_recent.columns else 0.0,
+        "vwap": float(df_recent['VWAP_20'].iloc[-1]) if 'VWAP_20' in df_recent.columns else 0.0,
+        "ma_20": float(df_recent['MA_20'].iloc[-1]) if 'MA_20' in df_recent.columns else 0.0,
+        "ma_50": float(df_recent['MA_50'].iloc[-1]) if 'MA_50' in df_recent.columns else 0.0,
         "dates": df_recent.index.strftime('%Y-%m-%d').tolist() if hasattr(df_recent.index, 'strftime') else df_recent.reset_index()['Date'].astype(str).tolist(),
         "closes": df_recent['Close'].tolist(),
         "opens": df_recent['Open'].tolist(),
         "highs": df_recent['High'].tolist(),
         "lows": df_recent['Low'].tolist(),
         "volumes": df_recent['Volume'].tolist(),
-        "bb_upper": df_recent['BB_Upper'].tolist(),
-        "bb_lower": df_recent['BB_Lower'].tolist(),
-        "macd": df_recent['MACD'].tolist(),
-        "signal_line": df_recent['Signal_Line'].tolist(),
-        "rsi_series": df_recent['RSI_14'].tolist(),
+        "bb_upper": df_recent['BB_Upper'].tolist() if 'BB_Upper' in df_recent.columns else [],
+        "bb_lower": df_recent['BB_Lower'].tolist() if 'BB_Lower' in df_recent.columns else [],
+        "macd": df_recent['MACD'].tolist() if 'MACD' in df_recent.columns else [],
+        "signal_line": df_recent['Signal_Line'].tolist() if 'Signal_Line' in df_recent.columns else [],
+        "rsi_series": df_recent['RSI_14'].tolist() if 'RSI_14' in df_recent.columns else [],
     }
     return result
 

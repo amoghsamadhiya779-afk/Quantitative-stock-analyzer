@@ -15,6 +15,8 @@ const config: Config = {
         border: "var(--border)",
         accent: "var(--accent)",
         glow: "var(--glow)",
+        profit: "var(--profit)",
+        loss: "var(--loss)",
       },
       fontFamily: {
         sans: ['var(--font-inter)'],
