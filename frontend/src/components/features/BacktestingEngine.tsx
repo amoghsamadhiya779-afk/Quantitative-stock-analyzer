@@ -80,7 +80,7 @@ export default function BacktestingEngine({ selectedMarket, selectedTicker, sele
               <LineChart data={chartData}>
                 <XAxis dataKey="date" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 9 }} interval={Math.floor(chartData.length / 12)} />
                 <YAxis domain={["auto", "auto"]} stroke="var(--border)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} />
-                <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v: number) => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v: any) => `$${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
                 <Line type="monotone" dataKey="ai" stroke="var(--accent)" strokeWidth={2.5} dot={false} name="AI Strategy" />
                 <Line type="monotone" dataKey="bh" stroke="var(--foreground)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} opacity={0.5} name="Buy & Hold" />
               </LineChart>

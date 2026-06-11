@@ -56,7 +56,7 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
           <ResponsiveContainer width="100%" height="85%">
             <BarChart data={data.slice(-60)}>
               <XAxis dataKey="date" hide />
-              <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", fontSize: 11 }} formatter={(v: number) => v.toLocaleString()} />
+              <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", fontSize: 11 }} formatter={(v: any) => Number(v).toLocaleString()} />
               <Bar dataKey="volume" fill="var(--accent)" opacity={0.4} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
