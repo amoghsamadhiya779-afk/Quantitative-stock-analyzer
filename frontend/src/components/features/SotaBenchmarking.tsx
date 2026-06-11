@@ -73,7 +73,7 @@ export default function SotaBenchmarking({ stockData, prediction, currency, sele
 
       <div className="p-5 rounded-xl bg-surface border border-border" style={{ height: 380 }}>
         <h3 className="text-[10px] tracking-widest text-foreground/40 uppercase mb-3">Historical vs AI Target vs SMA Baseline</h3>
-        <ResponsiveContainer width="100%" height="90%">
+        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0}>
           <LineChart data={chartData}>
             <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} interval={Math.floor(chartData.length / 10)} />
             <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} tickFormatter={(v) => v.toLocaleString()} />

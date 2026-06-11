@@ -60,7 +60,7 @@ export default function CommoditiesBar() {
             <div className="text-sm font-mono font-bold">{c.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="w-16 h-8">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <LineChart data={c.sparkline.map((v) => ({ v }))}>
                 <Line type="monotone" dataKey="v" stroke={c.change >= 0 ? "var(--profit)" : "var(--loss)"} strokeWidth={1.5} dot={false} />
               </LineChart>

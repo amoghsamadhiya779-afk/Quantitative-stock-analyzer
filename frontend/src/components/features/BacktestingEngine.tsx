@@ -97,7 +97,7 @@ export default function BacktestingEngine({ selectedMarket, selectedTicker, sele
               <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase">Portfolio Value ($100k Starting Capital)</h3>
               <span className="text-[9px] font-mono text-[var(--accent)] px-3 py-1 rounded bg-[var(--accent)]/10 border border-[var(--accent)]/20">{data.model_used}</span>
             </div>
-            <ResponsiveContainer width="100%" height="88%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorAi" x1="0" y1="0" x2="0" y2="1">

@@ -85,7 +85,7 @@ export default function MacroRiskEngine({ stockData, prediction, currency, selec
 
       <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow" style={{ height: 380 }}>
         <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">Monte Carlo Projection — {selectedAlgo.split("-")[0].trim()}</h3>
-        <ResponsiveContainer width="100%" height="90%">
+        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0}>
           <LineChart data={chartData}>
             <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickMargin={10} />
             <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10, fontFamily: 'monospace' }} tickFormatter={(v) => v.toLocaleString()} axisLine={false} tickLine={false} />
