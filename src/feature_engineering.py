@@ -5,6 +5,9 @@ class FeatureEngineering:
     @staticmethod
     def engineer_features(df):
         df = df.copy()
+        # Drop any empty trailing rows (common in live data APIs like yfinance)
+        if 'Close' in df.columns:
+            df = df.dropna(subset=['Close'])
         # Ensure we have datetime index
         if 'Date' in df.columns:
             df = df.set_index('Date')
