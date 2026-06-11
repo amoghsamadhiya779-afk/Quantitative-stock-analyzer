@@ -79,6 +79,7 @@ export default function Home() {
   const [selectedAlgo, setSelectedAlgo] = useState(algos[0]);
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
+  const [allPredictions, setAllPredictions] = useState<PredictionResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
 
@@ -126,19 +127,32 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [selectedMarket]);
 
-  // 3. Load stock data + prediction when ticker changes
+  // 3. Load stock data + predictions with real-time polling
   useEffect(() => {
     if (!selectedMarket || !selectedTicker) return;
     setLoading(true);
     setLogoError(false);
-    Promise.all([
-      fetchStockData(selectedMarket, selectedTicker).catch(() => null),
-      fetchPrediction(selectedMarket, selectedTicker, ALGO_MAP[selectedAlgo]).catch(() => null),
-    ]).then(([sd, pr]) => {
-      setStockData(sd);
-      setPrediction(pr);
-      setLoading(false);
-    });
+
+    const fetchData = () => {
+      const algoKeys = Object.values(ALGO_MAP);
+      Promise.all([
+        fetchStockData(selectedMarket, selectedTicker).catch(() => null),
+        fetchPrediction(selectedMarket, selectedTicker, ALGO_MAP[selectedAlgo]).catch(() => null),
+        ...algoKeys.map(algo => fetchPrediction(selectedMarket, selectedTicker, algo).catch(() => null))
+      ]).then(([sd, primaryPr, ...allPrs]) => {
+        if (sd) setStockData(sd as any);
+        if (primaryPr) setPrediction(primaryPr as any);
+        
+        const validPrs = allPrs.filter(Boolean) as PredictionResult[];
+        if (validPrs.length > 0) setAllPredictions(validPrs);
+        setLoading(false);
+      });
+    };
+
+    fetchData();
+    // Real-time polling every 15 seconds
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
   }, [selectedMarket, selectedTicker, selectedAlgo]);
 
   const setTheme = (t: string) => {
@@ -316,6 +330,7 @@ export default function Home() {
                 <AnalystDashboardView
                   stockData={stockData}
                   prediction={prediction}
+                  allPredictions={allPredictions}
                   currency={currency}
                 />
               )}

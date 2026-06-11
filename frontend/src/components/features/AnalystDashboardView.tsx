@@ -7,8 +7,9 @@ import QuantResearchScore from "../ui/QuantResearchScore";
 import PortfolioHealthWidget from "../ui/PortfolioHealthWidget";
 import ResearchSnapshotCard from "../ui/ResearchSnapshotCard";
 import { useCursor } from "../providers/CursorProvider";
+import { PredictionResult } from "@/lib/api";
 
-export default function AnalystDashboardView({ stockData, prediction, currency }: any) {
+export default function AnalystDashboardView({ stockData, prediction, allPredictions = [], currency }: any) {
   const { setCursorType } = useCursor();
 
   if (!stockData) return (
@@ -60,9 +61,46 @@ export default function AnalystDashboardView({ stockData, prediction, currency }
         onMouseLeave={() => setCursorType("default")}
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
-        <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-[var(--border)] pb-2 relative z-10">AI Forecasting Engine</h3>
+        <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-[var(--border)] pb-2 relative z-10 flex items-center justify-between">
+          <span>AI Multi-Model Consensus Engine</span>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--profit)] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--profit)]"></span>
+            </span>
+            <span className="text-[9px] text-[var(--profit)]">LIVE</span>
+          </div>
+        </h3>
         
-        {prediction ? (
+        {allPredictions && allPredictions.length > 0 ? (
+          <div className="flex flex-col gap-6 relative z-10">
+            {/* Aggregate Confidence */}
+            <ConfidenceMeter confidence={
+              allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length
+            } />
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+              {allPredictions.map((p: PredictionResult, idx: number) => {
+                const isUp = p.forecast_direction === "UP";
+                const displayModel = p.model_type.split('_').join(' ').replace('CNN BiLSTM Attention', 'CNN-Attn Engine').replace('TimeSeriesTransformer', 'Temporal Transf.').replace('AdvancedBiLSTM', 'BiLSTM Layer');
+                return (
+                  <div key={idx} className="p-3 bg-black/20 rounded-lg border border-[var(--border)] flex flex-col items-center text-center justify-center relative overflow-hidden group/model">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover/model:opacity-100 transition-opacity" />
+                    <div className="text-[9px] uppercase tracking-widest text-[var(--foreground)]/50 mb-1 w-full truncate px-1" title={p.model_type}>{displayModel}</div>
+                    <div className={`text-xl font-bold font-mono ${isUp ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+                      {p.forecast_direction}
+                    </div>
+                    <div className="text-[10px] text-[var(--foreground)]/60 mt-1">{Math.round(p.confidence)}% Conf.</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-4 rounded-xl bg-black/10 border border-[var(--border)] text-xs text-[var(--foreground)]/80 font-mono leading-relaxed backdrop-blur-md">
+              Real-time multi-model consensus indicates a {Math.round(allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length)}% aggregated probability of {allPredictions.filter((p: PredictionResult) => p.forecast_direction === "UP").length > allPredictions.length / 2 ? "UP" : "DOWN"} movement over the next 5 periods across {allPredictions.length} models, conditioned on {Number(stockData.volatility).toFixed(1)}% volatility regime.
+            </div>
+          </div>
+        ) : prediction ? (
           <div className="flex flex-col gap-6 relative z-10">
             <ConfidenceMeter confidence={prediction.confidence} />
             
