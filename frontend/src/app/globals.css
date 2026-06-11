@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #030712;
-  --foreground: #F8FAFC;
-  --surface: rgba(255, 255, 255, 0.04);
+  --background: #000000;
+  --foreground: #F4F4F5;
+  --surface: rgba(255, 255, 255, 0.03);
   --border: rgba(255, 255, 255, 0.08);
-  --accent: #60A5FA;
-  --accent-secondary: #818CF8;
-  --glow: rgba(96, 165, 250, 0.4);
-  --profit: #34D399;
-  --loss: #F87171;
-  --card-radius: 16px;
+  --accent: #2563EB;
+  --accent-secondary: #3B82F6;
+  --glow: rgba(37, 99, 235, 0.2);
+  --profit: #10B981;
+  --loss: #EF4444;
+  --card-radius: 12px;
 }
 
 [data-theme="void"] {
@@ -23,8 +23,8 @@
   --accent: #FFFFFF;
   --accent-secondary: #A1A1AA;
   --glow: rgba(255, 255, 255, 0.15);
-  --profit: #4ADE80;
-  --loss: #FB7185;
+  --profit: #059669;
+  --loss: #E11D48;
 }
 
 [data-theme="anthropic"] {
@@ -40,15 +40,15 @@
 }
 
 [data-theme="zesty"] {
-  --background: #0A0A1A;
+  --background: #05050A;
   --foreground: #F0F0FF;
-  --surface: rgba(120, 80, 255, 0.06);
+  --surface: rgba(120, 80, 255, 0.04);
   --border: rgba(120, 80, 255, 0.12);
   --accent: #A855F7;
   --accent-secondary: #EC4899;
-  --glow: rgba(168, 85, 247, 0.4);
-  --profit: #2DD4BF;
-  --loss: #FB923C;
+  --glow: rgba(168, 85, 247, 0.3);
+  --profit: #14B8A6;
+  --loss: #F97316;
 }
 
 body {

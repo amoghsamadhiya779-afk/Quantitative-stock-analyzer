@@ -9,6 +9,7 @@ import SotaBenchmarking from "@/components/features/SotaBenchmarking";
 import BacktestingEngine from "@/components/features/BacktestingEngine";
 import TradingDesk from "@/components/features/TradingDesk";
 import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
+import AnalystDashboardView from "@/components/features/AnalystDashboardView";
 import ThemeSelector from "@/components/ui/ThemeSelector";
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 
@@ -25,6 +26,7 @@ import {
 } from "@/lib/api";
 
 const pages = [
+  "Analyst Dashboard",
   "Macro & Risk Engine",
   "Deep Technical Suite",
   "SOTA Benchmarking",
@@ -298,6 +300,13 @@ export default function Home() {
               exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
+              {activePage === "Analyst Dashboard" && (
+                <AnalystDashboardView
+                  stockData={stockData}
+                  prediction={prediction}
+                  currency={currency}
+                />
+              )}
               {activePage === "Macro & Risk Engine" && (
                 <MacroRiskEngine
                   stockData={stockData}
