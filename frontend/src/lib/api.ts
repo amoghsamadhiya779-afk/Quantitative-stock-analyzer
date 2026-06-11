@@ -99,20 +99,20 @@ export async function fetchStockData(marketName: string, ticker: string): Promis
   return res.json();
 }
 
-export async function fetchPrediction(marketName: string, ticker: string): Promise<PredictionResult> {
+export async function fetchPrediction(marketName: string, ticker: string, modelType: string = "CNN_BiLSTM_Attention"): Promise<PredictionResult> {
   const res = await apiFetch("/api/v1/predict", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ market_name: marketName, ticker }),
+    body: JSON.stringify({ market_name: marketName, ticker, model_type: modelType }),
   });
   return res.json();
 }
 
-export async function fetchBacktest(marketName: string, ticker: string): Promise<BacktestResult> {
+export async function fetchBacktest(marketName: string, ticker: string, modelType: string = "CNN_BiLSTM_Attention"): Promise<BacktestResult> {
   const res = await apiFetch("/api/v1/backtest", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ market_name: marketName, ticker }),
+    body: JSON.stringify({ market_name: marketName, ticker, model_type: modelType }),
   });
   return res.json();
 }

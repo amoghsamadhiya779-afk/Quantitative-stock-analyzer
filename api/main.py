@@ -87,23 +87,23 @@ logger.info("=" * 80)
 MODEL_DIR = os.path.join(PROJECT_ROOT, "mlops_artifacts", "models")
 DB_PATH = os.path.join(PROJECT_ROOT, "data", "nexus_trading.db")
 
-def get_model_paths(index_key):
-    model_path = os.path.join(MODEL_DIR, f"best_{index_key}_model.h5")
+def get_model_paths(index_key, model_type="CNN_BiLSTM_Attention"):
+    model_path = os.path.join(MODEL_DIR, f"{index_key}_{model_type}.keras")
     scaler_path = os.path.join(MODEL_DIR, f"{index_key}_feature_scaler.pkl")
+    features_path = os.path.join(MODEL_DIR, f"{index_key}_features_list.pkl")
     
-    # Linux environments are case-sensitive. Check for lowercase filenames as a fallback 
-    # (e.g., best_sp500_model.h5 instead of best_SP500_model.h5)
+    # Fallback to old naming
     if not os.path.exists(model_path):
-        alt_model_path = os.path.join(MODEL_DIR, f"best_{index_key.lower()}_model.h5")
-        if os.path.exists(alt_model_path):
-            model_path = alt_model_path
+        model_path = os.path.join(MODEL_DIR, f"best_{index_key}_model.keras")
+        if not os.path.exists(model_path):
+            model_path = os.path.join(MODEL_DIR, f"best_{index_key.lower()}_model.keras")
             
     if not os.path.exists(scaler_path):
         alt_scaler_path = os.path.join(MODEL_DIR, f"{index_key.lower()}_feature_scaler.pkl")
         if os.path.exists(alt_scaler_path):
             scaler_path = alt_scaler_path
             
-    return model_path, scaler_path
+    return model_path, scaler_path, features_path
 
 app = FastAPI(title="Nexus Quant Research & Portfolio Analytics Engine", version="6.0.0", description="SQL-Backed Institutional quantitative engine with MLOps logging and Factor Analytics.")
 
@@ -130,6 +130,7 @@ MODEL_CACHE = {}
 class InferenceRequest(BaseModel):
     market_name: str
     ticker: str
+    model_type: str = "CNN_BiLSTM_Attention"
 
 class InferenceResponse(BaseModel):
     ticker: str
@@ -247,25 +248,38 @@ def execute_prediction(req: InferenceRequest):
         latest_close = float(df['Close'].iloc[-1])
         idx_key = MARKET_CONFIG[req.market_name]["index_key"]
         
+        cache_key = f"{idx_key}_{req.model_type}"
+        
         # Load models into cache with vivid error reporting
-        if idx_key not in MODEL_CACHE or MODEL_CACHE[idx_key] is None:
-            model_path, scaler_path = get_model_paths(idx_key)
+        if cache_key not in MODEL_CACHE or MODEL_CACHE[cache_key] is None:
+            model_path, scaler_path, features_path = get_model_paths(idx_key, req.model_type)
             if os.path.exists(model_path) and os.path.exists(scaler_path):
                 try:
-                    logger.info(f"Mounting BiLSTM Model for {idx_key} from {model_path}...")
-                    MODEL_CACHE[idx_key] = {"model": load_model(model_path, compile=False), "scaler": joblib.load(scaler_path)}
-                    logger.info(f"✅ Architecture successfully mounted for {idx_key}.")
+                    logger.info(f"Mounting {req.model_type} Model for {idx_key} from {model_path}...")
+                    
+                    # Load feature list if exists, else fallback
+                    if os.path.exists(features_path):
+                        feature_list = joblib.load(features_path)
+                    else:
+                        feature_list = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
+                        
+                    MODEL_CACHE[cache_key] = {
+                        "model": load_model(model_path, compile=False), 
+                        "scaler": joblib.load(scaler_path),
+                        "features": feature_list
+                    }
+                    logger.info(f"✅ Architecture successfully mounted for {cache_key}.")
                 except Exception as e:
                     logger.error(f"❌ Failed to load Neural Network artifacts: {e}")
-                    MODEL_CACHE[idx_key] = None
+                    MODEL_CACHE[cache_key] = None
             else:
-                logger.warning(f"⚠️ Artifacts missing for {idx_key}. Expected: {model_path}")
-                MODEL_CACHE[idx_key] = None
+                logger.warning(f"⚠️ Artifacts missing for {cache_key}. Expected: {model_path}")
+                MODEL_CACHE[cache_key] = None
                 
-        artifacts = MODEL_CACHE.get(idx_key)
+        artifacts = MODEL_CACHE.get(cache_key)
         
         if artifacts and len(df) >= SEQ_LENGTH:
-            features = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
+            features = artifacts["features"]
             try:
                 # 1. Extract feature subset and Scale
                 data_slice = df[features].tail(SEQ_LENGTH).values
@@ -276,11 +290,14 @@ def execute_prediction(req: InferenceRequest):
                 pred = artifacts["model"].predict(X_pred, verbose=0)
                 
                 # 3. Inverse Transform specifically against the Close price dimension
-                t_scaler = MinMaxScaler()
-                t_scaler.fit(df[['Close']].values)
-                predicted_price = float(t_scaler.inverse_transform(pred)[0][0])
+                # Create a dummy array with same shape as features to inverse transform correctly
+                dummy = np.zeros((1, len(features)))
+                close_idx = features.index('Close')
+                dummy[0, close_idx] = pred[0][0]
                 
-                model_type = "Neural Network (BiLSTM)"
+                predicted_price = float(artifacts["scaler"].inverse_transform(dummy)[0][close_idx])
+                
+                model_type_resp = f"Neural Network ({req.model_type})"
                 conf = float(np.random.uniform(88.5, 98.2))
             except Exception as e:
                 logger.error(f"❌ TensorFlow Inference Failed: {e}")
@@ -327,7 +344,7 @@ def execute_prediction(req: InferenceRequest):
         
         return InferenceResponse(
             ticker=req.ticker, latest_close=latest_close, predicted_price=predicted_price,
-            delta=delta, pct_change=pct_change, model_type=model_type, confidence=conf,
+            delta=delta, pct_change=pct_change, model_type=model_type_resp, confidence=conf,
             feature_importance=explainability
         )
     except HTTPException as he:
@@ -350,23 +367,34 @@ def execute_backtest(req: InferenceRequest):
         dates = df.index[-backtest_days:].strftime('%Y-%m-%d').tolist()
         asset_returns = pd.Series(actual_closes).pct_change().fillna(0).values
 
-        if idx_key not in MODEL_CACHE or MODEL_CACHE[idx_key] is None:
-            model_path, scaler_path = get_model_paths(idx_key)
+        cache_key = f"{idx_key}_{req.model_type}"
+        
+        if cache_key not in MODEL_CACHE or MODEL_CACHE[cache_key] is None:
+            model_path, scaler_path, features_path = get_model_paths(idx_key, req.model_type)
             if os.path.exists(model_path) and os.path.exists(scaler_path):
                 try:
-                    MODEL_CACHE[idx_key] = {"model": load_model(model_path, compile=False), "scaler": joblib.load(scaler_path)}
+                    if os.path.exists(features_path):
+                        feature_list = joblib.load(features_path)
+                    else:
+                        feature_list = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
+                        
+                    MODEL_CACHE[cache_key] = {
+                        "model": load_model(model_path, compile=False), 
+                        "scaler": joblib.load(scaler_path),
+                        "features": feature_list
+                    }
                 except Exception as e:
                     logger.error(f"❌ Failed to mount model for backtesting: {e}")
-                    MODEL_CACHE[idx_key] = None
+                    MODEL_CACHE[cache_key] = None
             else:
-                MODEL_CACHE[idx_key] = None
+                MODEL_CACHE[cache_key] = None
                 
-        artifacts = MODEL_CACHE.get(idx_key)
+        artifacts = MODEL_CACHE.get(cache_key)
 
         # Vectorized Signal Generation using Neural Networks
         if artifacts:
             try:
-                features = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
+                features = artifacts["features"]
                 scaler = artifacts["scaler"]
                 model = artifacts["model"]
                 
@@ -376,12 +404,14 @@ def execute_backtest(req: InferenceRequest):
                 X_batch = np.array([scaled_data[i:i+SEQ_LENGTH] for i in range(backtest_days)])
                 preds_scaled = model.predict(X_batch, verbose=0)
                 
-                t_scaler = MinMaxScaler()
-                t_scaler.fit(df[['Close']].values)
-                preds = t_scaler.inverse_transform(preds_scaled).flatten()
+                # Inverse transform using the full scaler
+                close_idx = features.index('Close')
+                dummy_batch = np.zeros((backtest_days, len(features)))
+                dummy_batch[:, close_idx] = preds_scaled.flatten()
+                preds = scaler.inverse_transform(dummy_batch)[:, close_idx]
                 
                 signals = np.where(preds > actual_closes, 1, -1)
-                model_used = "BiLSTM Neural Network"
+                model_used = f"Neural Network ({req.model_type})"
             except Exception as e:
                 logger.error(f"❌ Backtest inference failed: {e}")
                 raise e

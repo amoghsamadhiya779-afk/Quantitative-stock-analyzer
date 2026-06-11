@@ -35,11 +35,13 @@ const pages = [
   "News-Driven Market",
 ];
 
-const algos = [
-  "Quantum Transformer (QTN) - Max Yield",
-  "Liquid Neural Net (LTC) - Robust",
-  "Temporal Fusion Coder (TFC) - Balanced",
-];
+const ALGO_MAP: Record<string, string> = {
+  "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
+  "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
+  "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM"
+};
+
+const algos = Object.keys(ALGO_MAP);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -131,13 +133,13 @@ export default function Home() {
     setLogoError(false);
     Promise.all([
       fetchStockData(selectedMarket, selectedTicker).catch(() => null),
-      fetchPrediction(selectedMarket, selectedTicker).catch(() => null),
+      fetchPrediction(selectedMarket, selectedTicker, ALGO_MAP[selectedAlgo]).catch(() => null),
     ]).then(([sd, pr]) => {
       setStockData(sd);
       setPrediction(pr);
       setLoading(false);
     });
-  }, [selectedMarket, selectedTicker]);
+  }, [selectedMarket, selectedTicker, selectedAlgo]);
 
   const setTheme = (t: string) => {
     setThemeState(t);
@@ -163,8 +165,13 @@ export default function Home() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="w-full bg-[var(--surface)] border-b border-[var(--border)] py-2 overflow-hidden whitespace-nowrap text-xs font-mono text-[var(--foreground)]/60 backdrop-blur-xl z-50 relative"
       >
-        <div className="animate-[marquee_30s_linear_infinite] inline-block">
-          S&P 500: 5,088.21 <span className="text-[var(--profit)]">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)]">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; DAX: 17,419.33 <span className="text-[var(--profit)]">▲ 0.28%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)]">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)]">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp; US10Y: 4.28% <span className="text-[var(--loss)]">▼ -0.02</span> &nbsp;&nbsp;&nbsp;&nbsp; BTC: 64,210.00 <span className="text-[var(--profit)]">▲ 3.42%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIFTY 50: 22,147.90 <span className="text-[var(--profit)]">▲ 0.68%</span> &nbsp;&nbsp;&nbsp;&nbsp; FTSE 100: 8,275.38 <span className="text-[var(--loss)]">▼ -0.31%</span>
+        <div className="animate-marquee inline-block flex w-max">
+          <div className="flex shrink-0">
+            S&P 500: 5,088.21 <span className="text-[var(--profit)] mx-1">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)] mx-1">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; DAX: 17,419.33 <span className="text-[var(--profit)] mx-1">▲ 0.28%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)] mx-1">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)] mx-1">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp; US10Y: 4.28% <span className="text-[var(--loss)] mx-1">▼ -0.02</span> &nbsp;&nbsp;&nbsp;&nbsp; BTC: 64,210.00 <span className="text-[var(--profit)] mx-1">▲ 3.42%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIFTY 50: 22,147.90 <span className="text-[var(--profit)] mx-1">▲ 0.68%</span> &nbsp;&nbsp;&nbsp;&nbsp; FTSE 100: 8,275.38 <span className="text-[var(--loss)] mx-1">▼ -0.31%</span> &nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+          <div className="flex shrink-0">
+            S&P 500: 5,088.21 <span className="text-[var(--profit)] mx-1">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)] mx-1">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; DAX: 17,419.33 <span className="text-[var(--profit)] mx-1">▲ 0.28%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)] mx-1">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)] mx-1">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp; US10Y: 4.28% <span className="text-[var(--loss)] mx-1">▼ -0.02</span> &nbsp;&nbsp;&nbsp;&nbsp; BTC: 64,210.00 <span className="text-[var(--profit)] mx-1">▲ 3.42%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIFTY 50: 22,147.90 <span className="text-[var(--profit)] mx-1">▲ 0.68%</span> &nbsp;&nbsp;&nbsp;&nbsp; FTSE 100: 8,275.38 <span className="text-[var(--loss)] mx-1">▼ -0.31%</span> &nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
         </div>
       </motion.div>
 
@@ -176,11 +183,11 @@ export default function Home() {
       >
         {/* Header */}
         <motion.div variants={itemVariants} className="flex justify-between items-end">
-          <div className="flex items-center gap-4">
-            <img src="/quantum_yield_logo.png" alt="Quantum Yield Logo" className="w-16 h-16 rounded-2xl object-cover border border-[var(--border)] shadow-[0_0_20px_var(--glow)]" />
+          <div className="flex items-center gap-4 group p-2 pr-6 rounded-2xl border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface)] transition-all duration-500 cursor-pointer">
+            <img src="/quantum_yield_logo.png" alt="Quantum Yield Logo" className="w-16 h-16 rounded-2xl object-cover border border-[var(--border)] shadow-[0_0_20px_var(--glow)] group-hover:scale-105 transition-transform duration-500" />
             <div>
-              <h1 className="text-4xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[var(--foreground)] to-[var(--foreground)]/50 animate-glow-pulse drop-shadow-xl">QUANTUM YIELD</h1>
-              <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--foreground)]/50 font-bold mt-1">Algorithmic Capital Allocation</div>
+              <h1 className="text-4xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[var(--foreground)] to-[var(--foreground)]/50 group-hover:to-[var(--accent)] transition-all duration-500 py-1">QUANTUM YIELD</h1>
+              <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--foreground)]/50 font-bold group-hover:text-[var(--accent)] transition-colors duration-500">Algorithmic Capital Allocation</div>
             </div>
           </div>
           <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />

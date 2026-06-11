@@ -17,12 +17,19 @@ export default function BacktestingEngine({ selectedMarket, selectedTicker, sele
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const ALGO_MAP: Record<string, string> = {
+    "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
+    "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
+    "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM"
+  };
+
   const handleRun = async () => {
     if (!selectedMarket || !selectedTicker) return;
     setLoading(true);
     setError("");
     try {
-      const result = await fetchBacktest(selectedMarket, selectedTicker);
+      const backendModelType = ALGO_MAP[selectedAlgo] || "CNN_BiLSTM_Attention";
+      const result = await fetchBacktest(selectedMarket, selectedTicker, backendModelType);
       setData(result);
     } catch (e: any) {
       setError(e.message || "Backtest failed");
