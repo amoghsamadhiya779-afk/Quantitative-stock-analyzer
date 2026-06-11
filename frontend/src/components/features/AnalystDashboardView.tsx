@@ -17,7 +17,7 @@ export default function AnalystDashboardView({ stockData, prediction, currency }
   // Derive composite score
   const rsiScore = stockData.rsi > 70 ? 20 : (stockData.rsi < 30 ? 80 : 50);
   const vwapScore = stockData.latest_close > stockData.vwap ? 80 : 30;
-  const compositeScore = Math.round((rsiScore + vwapScore + (prediction?.confidence || 0.5) * 100) / 3);
+  const compositeScore = Math.round((rsiScore + vwapScore + (prediction?.confidence || 50)) / 3);
 
   return (
     <motion.div 
