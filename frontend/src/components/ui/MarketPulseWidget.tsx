@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
+import { useCursor } from "../providers/CursorProvider";
 
 export default function MarketPulseWidget({ rsi = 50, macd = 0 }: { rsi?: number, macd?: number }) {
+  const { setCursorType } = useCursor();
+  
   // A dual gauge or pulse representation
   const isOverbought = rsi > 70;
   const isOversold = rsi < 30;
@@ -10,8 +13,13 @@ export default function MarketPulseWidget({ rsi = 50, macd = 0 }: { rsi?: number
   else if (isOversold) pulseColor = "var(--profit)";
 
   return (
-    <div className="relative p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-      <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50 mb-3">Market Pulse (RSI / MACD)</div>
+    <div 
+      className="relative p-5 glass-card overflow-hidden group"
+      onMouseEnter={() => setCursorType("hover-card")}
+      onMouseLeave={() => setCursorType("default")}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
+      <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50 mb-3 relative z-10">Market Pulse (RSI / MACD)</div>
       
       <div className="flex items-end justify-between relative z-10">
         <div>

@@ -1,23 +1,28 @@
 import { motion } from "framer-motion";
+import { useCursor } from "../providers/CursorProvider";
 
-export default function ResearchSnapshotCard({ data, currency }: { data: any, currency: string }) {
+export default function ResearchSnapshotCard({ data, currency }: any) {
+  const { setCursorType } = useCursor();
+
   if (!data) return null;
 
   return (
-    <div className="p-5 rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--surface)] to-transparent shadow-xl backdrop-blur-md">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-bold tracking-tight">{data.ticker} <span className="text-[10px] text-[var(--foreground)]/40 ml-1">SNAPSHOT</span></h3>
-        </div>
-        <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${data.pct_change >= 0 ? 'bg-[var(--profit)]/20 text-[var(--profit)]' : 'bg-[var(--loss)]/20 text-[var(--loss)]'}`}>
-          {data.pct_change >= 0 ? 'LONG' : 'SHORT'} SIGNAL
-        </div>
+    <div 
+      className="p-5 glass-card relative overflow-hidden group"
+      onMouseEnter={() => setCursorType("hover-card")}
+      onMouseLeave={() => setCursorType("default")}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
+      
+      <div className="flex justify-between items-center mb-6 relative z-10">
+        <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--foreground)]">Valuation Overview</h3>
+        <span className="text-[10px] font-mono bg-[var(--foreground)]/10 px-2 py-1 rounded text-[var(--foreground)]/60">LIVE</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 relative z-10" onMouseEnter={(e) => { e.stopPropagation(); setCursorType("hover-data"); }} onMouseLeave={(e) => { e.stopPropagation(); setCursorType("hover-card"); }}>
         <div>
-          <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Close</div>
-          <div className="font-mono text-lg font-bold">{data.latest_close.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Current Price</div>
+          <div className="font-mono text-xl font-bold">{data.latest_close.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs text-[var(--foreground)]/40">{currency}</span></div>
         </div>
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Delta</div>
@@ -26,7 +31,7 @@ export default function ResearchSnapshotCard({ data, currency }: { data: any, cu
           </div>
         </div>
         <div>
-          <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">VWAP</div>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">VWAP (20d)</div>
           <div className="font-mono text-sm">{data.vwap.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
         </div>
         <div>

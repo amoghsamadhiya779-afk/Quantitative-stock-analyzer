@@ -2,65 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #000000;
-  --foreground: #F4F4F5;
-  --surface: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.08);
-  --accent: #2563EB;
-  --accent-secondary: #3B82F6;
-  --glow: rgba(37, 99, 235, 0.2);
-  --profit: #10B981;
-  --loss: #EF4444;
+:root, [data-theme="nexus-terminal"] {
+  --background: #030507;
+  --surface: #0B1523;
+  --surface-hover: rgba(11, 21, 35, 0.8);
+  --border: rgba(0, 212, 255, 0.15);
+  --foreground: #F8FAFC;
+  --accent: #00D4FF;
+  --accent-secondary: #0B1523;
+  --glow: rgba(0, 212, 255, 0.2);
+  --profit: #00C076;
+  --loss: #FF5A5F;
   --card-radius: 12px;
+  --liquid-glass-bg: rgba(11, 21, 35, 0.5);
+  --liquid-glass-border: rgba(0, 212, 255, 0.1);
+  --liquid-blur: blur(16px);
 }
 
-[data-theme="void"] {
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --surface: rgba(255, 255, 255, 0.02);
-  --border: rgba(255, 255, 255, 0.06);
-  --accent: #FFFFFF;
-  --accent-secondary: #A1A1AA;
-  --glow: rgba(255, 255, 255, 0.15);
+[data-theme="nexus-research"] {
+  --background: #F7F9FC;
+  --surface: #FFFFFF;
+  --surface-hover: #F2F5F9;
+  --border: rgba(15, 23, 42, 0.1);
+  --foreground: #0F172A;
+  --accent: #2563EB;
+  --accent-secondary: #0EA5E9;
+  --glow: rgba(37, 99, 235, 0.15);
   --profit: #059669;
-  --loss: #E11D48;
+  --loss: #DC2626;
+  --liquid-glass-bg: rgba(255, 255, 255, 0.7);
+  --liquid-glass-border: rgba(15, 23, 42, 0.05);
+  --liquid-blur: blur(20px);
 }
 
-[data-theme="anthropic"] {
-  --background: #F0EBE1;
-  --foreground: #191919;
-  --surface: rgba(255, 255, 255, 0.85);
-  --border: rgba(0, 0, 0, 0.08);
-  --accent: #C4704B;
-  --accent-secondary: #D4956E;
-  --glow: rgba(196, 112, 75, 0.25);
-  --profit: #336B4D;
-  --loss: #B34D40;
-}
-
-[data-theme="zesty"] {
-  --background: #05050A;
-  --foreground: #F0F0FF;
-  --surface: rgba(120, 80, 255, 0.04);
-  --border: rgba(120, 80, 255, 0.12);
-  --accent: #A855F7;
-  --accent-secondary: #EC4899;
-  --glow: rgba(168, 85, 247, 0.3);
-  --profit: #14B8A6;
-  --loss: #F97316;
+[data-theme="nexus-executive"] {
+  --background: #F8F2E7;
+  --surface: rgba(255, 255, 255, 0.18);
+  --surface-hover: rgba(255, 255, 255, 0.25);
+  --border: rgba(255, 255, 255, 0.25);
+  --foreground: #2A241F;
+  --accent: #8B6B42;
+  --accent-secondary: #5A4426;
+  --glow: rgba(255, 255, 255, 0.4);
+  --profit: #2E8B57;
+  --loss: #B22222;
+  --liquid-glass-bg: rgba(255, 255, 255, 0.18);
+  --liquid-glass-border: rgba(255, 255, 255, 0.25);
+  --liquid-blur: blur(40px);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  transition: background-color 0.6s cubic-bezier(0.22, 1, 0.36, 1), color 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 1.5s cubic-bezier(0.22, 1, 0.36, 1), color 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: none; /* We will use custom cursor globally */
+}
+
+/* Fallback cursor if JS fails or loading */
+body.no-custom-cursor {
+  cursor: auto;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Glass Card Utility */
+.glass-card {
+  background: var(--liquid-glass-bg);
+  backdrop-filter: var(--liquid-blur);
+  -webkit-backdrop-filter: var(--liquid-blur);
+  border: 1px solid var(--liquid-glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  border-radius: var(--card-radius);
+  transition: all 0.5s ease;
 }
 
 /* Premium Select Styling */
@@ -71,16 +88,11 @@ select {
   padding-right: 28px !important;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; }
+/* Custom scrollbar - disabled if Lenis is taking over, but good fallback */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
@@ -92,5 +104,5 @@ select {
   50% { box-shadow: 0 0 20px 2px var(--glow); }
 }
 
-.animate-float { animation: float 3s ease-in-out infinite; }
-.animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }

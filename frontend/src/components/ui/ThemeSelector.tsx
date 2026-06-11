@@ -3,12 +3,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Sun, Moon, Palette, Zap, Check } from "lucide-react";
+import { useCursor } from "../providers/CursorProvider";
 
 const themes = [
-  { id: "default", name: "Midnight", desc: "Deep space intelligence", icon: <Moon className="w-4 h-4" />, preview: ["#030712", "#60A5FA", "#F8FAFC"] },
-  { id: "void", name: "Void", desc: "Pure monochrome OLED", icon: <Sun className="w-4 h-4" />, preview: ["#000000", "#FFFFFF", "#FFFFFF"] },
-  { id: "anthropic", name: "Parchment", desc: "Warm document-centric", icon: <Palette className="w-4 h-4" />, preview: ["#F0EBE1", "#C4704B", "#191919"] },
-  { id: "zesty", name: "Ultraviolet", desc: "Vibrant neon energy", icon: <Zap className="w-4 h-4" />, preview: ["#0A0A1A", "#A855F7", "#EC4899"] },
+  { id: "nexus-terminal", name: "Nexus Terminal", desc: "Black Datamorphism", icon: <Moon className="w-4 h-4" />, preview: ["#030507", "#00D4FF", "#00C076"] },
+  { id: "nexus-research", name: "Nexus Research Lab", desc: "White Datamorphism", icon: <Sun className="w-4 h-4" />, preview: ["#F7F9FC", "#2563EB", "#0F172A"] },
+  { id: "nexus-executive", name: "Nexus Executive", desc: "Liquid Glass Parchment", icon: <Palette className="w-4 h-4" />, preview: ["#F8F2E7", "#8B6B42", "#2A241F"] },
 ];
 
 interface Props {
@@ -18,12 +18,15 @@ interface Props {
 
 export default function ThemeSelector({ currentTheme, onThemeChange }: Props) {
   const [open, setOpen] = useState(false);
+  const { setCursorType } = useCursor();
 
   return (
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface border border-border text-foreground text-[10px] font-bold uppercase tracking-widest hover:border-accent transition-all backdrop-blur-xl"
+        onMouseEnter={() => setCursorType("hover-button")}
+        onMouseLeave={() => setCursorType("default")}
+        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] text-[10px] font-bold uppercase tracking-widest hover:border-[var(--accent)] transition-all backdrop-blur-xl"
       >
         <div className="flex gap-0.5">
           {themes.find((t) => t.id === currentTheme)?.preview.map((c, i) => (
@@ -52,7 +55,9 @@ export default function ThemeSelector({ currentTheme, onThemeChange }: Props) {
                   <button
                     key={t.id}
                     onClick={() => { onThemeChange(t.id); setOpen(false); }}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${currentTheme === t.id ? "bg-accent/10 border border-accent/30" : "hover:bg-surface border border-transparent"}`}
+                    onMouseEnter={() => setCursorType("hover-button")}
+                    onMouseLeave={() => setCursorType("default")}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${currentTheme === t.id ? "bg-[var(--accent)]/10 border border-[var(--accent)]/30" : "hover:bg-[var(--surface)] border border-transparent"}`}
                   >
                     <div className="flex gap-0.5 shrink-0">
                       {t.preview.map((c, i) => (

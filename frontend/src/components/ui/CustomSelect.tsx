@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check } from "lucide-react";
+import { useCursor } from "../providers/CursorProvider";
 
 interface Props {
   label: string;
@@ -14,6 +15,7 @@ interface Props {
 export default function CustomSelect({ label, value, options, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { setCursorType } = useCursor();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -26,10 +28,16 @@ export default function CustomSelect({ label, value, options, onChange }: Props)
   }, []);
 
   return (
-    <div ref={ref} className={`relative p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] flex flex-col justify-center backdrop-blur-xl group hover:border-[var(--accent)] transition-all select-none cursor-pointer ${open ? "z-50" : "z-10"}`} onClick={() => setOpen(!open)}>
-      <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/40 mb-1 group-hover:text-[var(--accent)] transition-colors">{label}</span>
+    <div 
+      ref={ref} 
+      className={`relative p-3 rounded-xl glass-card flex flex-col justify-center group transition-all select-none ${open ? "z-50" : "z-10"}`} 
+      onClick={() => setOpen(!open)}
+      onMouseEnter={() => setCursorType("hover-button")}
+      onMouseLeave={() => setCursorType("default")}
+    >
+      <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/40 mb-1 group-hover:text-[var(--accent)] transition-colors relative z-10">{label}</span>
       
-      <div className="flex justify-between items-center w-full text-[var(--foreground)] font-bold text-sm truncate">
+      <div className="flex justify-between items-center w-full text-[var(--foreground)] font-bold text-sm truncate relative z-10">
         <span className="truncate pr-4">{value || "Select..."}</span>
         <ChevronDown className={`w-4 h-4 text-[var(--foreground)]/50 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
       </div>
@@ -47,6 +55,8 @@ export default function CustomSelect({ label, value, options, onChange }: Props)
               <div
                 key={o}
                 onClick={(e) => { e.stopPropagation(); onChange(o); setOpen(false); }}
+                onMouseEnter={(e) => { e.stopPropagation(); setCursorType("hover-button"); }}
+                onMouseLeave={(e) => { e.stopPropagation(); setCursorType("hover-button"); }}
                 className={`flex items-center justify-between p-3 text-sm transition-all hover:bg-[var(--surface)] ${value === o ? "text-[var(--accent)] bg-[var(--accent)]/5 font-bold" : "text-[var(--foreground)]"}`}
               >
                 <span className="truncate">{o}</span>

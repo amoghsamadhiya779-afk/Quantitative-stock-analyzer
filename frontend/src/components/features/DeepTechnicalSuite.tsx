@@ -4,14 +4,17 @@ import { motion } from "framer-motion";
 import { ComposedChart, Line, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Area, AreaChart } from "recharts";
 import { Layers } from "lucide-react";
 import type { StockData } from "@/lib/api";
+import { useCursor } from "../providers/CursorProvider";
 
 interface Props {
   stockData: StockData | null;
 }
 
 export default function DeepTechnicalSuite({ stockData }: Props) {
+  const { setCursorType } = useCursor();
+
   if (!stockData) return (
-    <div className="w-full h-96 rounded-2xl border border-[var(--border)] bg-[var(--surface)] flex items-center justify-center overflow-hidden relative">
+    <div className="w-full h-96 glass-card flex items-center justify-center overflow-hidden relative">
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
     </div>
   );
@@ -35,10 +38,11 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-black/80 backdrop-blur-md border border-[var(--border)] p-3 rounded-lg shadow-xl">
-          <p className="text-[10px] uppercase text-[var(--foreground)]/50 mb-2 font-bold tracking-widest border-b border-[var(--border)] pb-1">{label}</p>
+        <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] p-3 rounded-lg shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-[var(--background)] opacity-50 pointer-events-none" />
+          <p className="text-[10px] uppercase text-[var(--foreground)]/50 mb-2 font-bold tracking-widest border-b border-[var(--border)] pb-1 relative z-10">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-3 text-xs font-mono my-1">
+            <div key={index} className="flex items-center gap-3 text-xs font-mono my-1 relative z-10">
               <span style={{ color: entry.color }} className="font-bold flex-1">{entry.name}:</span>
               <span className="text-[var(--foreground)] text-right">{Number(entry.value).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
             </div>
@@ -57,9 +61,13 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
       </div>
 
       {/* Price + Bollinger */}
-      <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow" style={{ height: 380 }}>
+      <div 
+        className="p-5 glass-card" style={{ height: 380 }}
+        onMouseEnter={() => setCursorType("hover-chart")}
+        onMouseLeave={() => setCursorType("default")}
+      >
         <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">Price Action & Bollinger Channels</h3>
-        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0}>
+        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0} className="cursor-none">
           <ComposedChart data={data}>
             <defs>
               <linearGradient id="colorClose" x1="0" y1="0" x2="0" y2="1">
@@ -79,9 +87,13 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Volume */}
-        <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md hover:shadow-lg transition-shadow" style={{ height: 220 }}>
+        <div 
+          className="p-5 glass-card" style={{ height: 220 }}
+          onMouseEnter={() => setCursorType("hover-chart")}
+          onMouseLeave={() => setCursorType("default")}
+        >
           <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">Liquidity Density</h3>
-          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0}>
+          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0} className="cursor-none">
             <BarChart data={data.slice(-60)}>
               <XAxis dataKey="date" hide />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface)' }} />
@@ -91,9 +103,13 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
         </div>
 
         {/* MACD */}
-        <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md hover:shadow-lg transition-shadow" style={{ height: 220 }}>
+        <div 
+          className="p-5 glass-card" style={{ height: 220 }}
+          onMouseEnter={() => setCursorType("hover-chart")}
+          onMouseLeave={() => setCursorType("default")}
+        >
           <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">MACD Oscillator</h3>
-          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0}>
+          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0} className="cursor-none">
             <ComposedChart data={data.slice(-60)}>
               <XAxis dataKey="date" hide />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1, strokeDasharray: '4 4' }} />
@@ -105,9 +121,13 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
         </div>
 
         {/* RSI */}
-        <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-md hover:shadow-lg transition-shadow" style={{ height: 220 }}>
+        <div 
+          className="p-5 glass-card" style={{ height: 220 }}
+          onMouseEnter={() => setCursorType("hover-chart")}
+          onMouseLeave={() => setCursorType("default")}
+        >
           <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">RSI (14)</h3>
-          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0}>
+          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0} className="cursor-none">
             <AreaChart data={data.slice(-60)}>
               <defs>
                 <linearGradient id="colorRsi" x1="0" y1="0" x2="0" y2="1">

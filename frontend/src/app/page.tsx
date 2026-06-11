@@ -61,9 +61,12 @@ const itemVariants = {
   },
 };
 
+import { useCursor } from "@/components/providers/CursorProvider";
+
 export default function Home() {
   const [activePage, setActivePage] = useState(pages[0]);
-  const [theme, setThemeState] = useState("default");
+  const [theme, setThemeState] = useState("nexus-terminal");
+  const { setCursorType } = useCursor();
 
   // Backend-driven state
   const [markets, setMarkets] = useState<Record<string, MarketInfo>>({});
@@ -274,15 +277,17 @@ export default function Home() {
         </motion.div>
 
         {/* Navigation Pills */}
-        <motion.div variants={itemVariants} className="flex flex-wrap gap-1.5 bg-[var(--surface)] p-1.5 rounded-2xl border border-[var(--border)] backdrop-blur-xl shadow-lg relative z-30">
+        <motion.div variants={itemVariants} className="flex flex-wrap gap-1.5 glass-card p-1.5 relative z-30">
           {pages.map((page) => (
             <button
               key={page}
               onClick={() => setActivePage(page)}
+              onMouseEnter={() => setCursorType("hover-button")}
+              onMouseLeave={() => setCursorType("default")}
               className={`flex-1 min-w-[130px] px-3 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
                 activePage === page
                   ? "bg-[var(--foreground)] text-[var(--background)] shadow-[0_4px_20px_var(--glow)] scale-[1.02]"
-                  : "text-[var(--foreground)]/70 hover:bg-white/5 hover:text-[var(--foreground)] hover:-translate-y-0.5"
+                  : "text-[var(--foreground)]/70 hover:bg-[var(--foreground)]/5 hover:text-[var(--foreground)] hover:-translate-y-0.5"
               }`}
             >
               {page}
