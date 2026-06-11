@@ -22,7 +22,7 @@ export default function ResearchSnapshotCard({ data, currency }: { data: any, cu
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Delta</div>
           <div className={`font-mono text-lg font-bold ${data.pct_change >= 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
-            {data.pct_change >= 0 ? '+' : ''}{data.pct_change.toFixed(2)}%
+            {data.pct_change >= 0 ? '+' : ''}{Number(data.pct_change).toFixed(2)}%
           </div>
         </div>
         <div>
@@ -31,7 +31,7 @@ export default function ResearchSnapshotCard({ data, currency }: { data: any, cu
         </div>
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Volatility</div>
-          <div className="font-mono text-sm">{data.volatility.toFixed(1)}%</div>
+          <div className="font-mono text-sm">{Number(data.volatility).toFixed(1)}%</div>
         </div>
       </div>
     </div>

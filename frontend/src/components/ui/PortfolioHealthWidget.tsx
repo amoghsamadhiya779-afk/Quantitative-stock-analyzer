@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function PortfolioHealthWidget({ ticker, pctChange }: { ticker: string, pctChange: number }) {
   // Mock impact on portfolio
-  const impact = (pctChange * 0.15).toFixed(2); // assuming 15% weight
+  const impact = Number(pctChange * 0.15).toFixed(2); // assuming 15% weight
   const isPositive = pctChange >= 0;
 
   return (

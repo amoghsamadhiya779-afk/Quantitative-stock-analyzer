@@ -74,11 +74,11 @@ export default function MacroRiskEngine({ stockData, prediction, currency, selec
       <SectionHeader icon={<Activity className="text-[var(--accent)] w-4 h-4" />} title="Quantitative Metrics & Risk Modeling" />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <MetricCard title="Algo Target (T+1)" value={prediction ? `${prediction.predicted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}` : "—"} sub={prediction ? `${prediction.pct_change >= 0 ? "+" : ""}${prediction.pct_change.toFixed(2)}% (Expected)` : ""} icon={prediction && prediction.pct_change >= 0 ? <TrendingUp className="w-4 h-4 text-[var(--profit)]" /> : <TrendingDown className="w-4 h-4 text-[var(--loss)]" />} />
-        <MetricCard title="Historical Sharpe" value={sharpe.toFixed(2)} sub="Risk-Adjusted Alpha" />
-        <MetricCard title="Value at Risk (95%)" value={`${var95.toFixed(2)}%`} sub="Max Daily Loss" icon={<TrendingDown className="w-4 h-4 text-[var(--loss)]" />} />
+        <MetricCard title="Algo Target (T+1)" value={prediction ? `${prediction.predicted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}` : "—"} sub={prediction ? `${prediction.pct_change >= 0 ? "+" : ""}${Number(prediction.pct_change).toFixed(2)}% (Expected)` : ""} icon={prediction && prediction.pct_change >= 0 ? <TrendingUp className="w-4 h-4 text-[var(--profit)]" /> : <TrendingDown className="w-4 h-4 text-[var(--loss)]" />} />
+        <MetricCard title="Historical Sharpe" value={Number(sharpe).toFixed(2)} sub="Risk-Adjusted Alpha" />
+        <MetricCard title="Value at Risk (95%)" value={`${Number(var95).toFixed(2)}%`} sub="Max Daily Loss" icon={<TrendingDown className="w-4 h-4 text-[var(--loss)]" />} />
         <div className="p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col justify-center items-center text-center transition-all hover:border-[var(--accent)] shadow-md hover:shadow-[0_8px_30px_var(--glow)]">
-          <h4 className="text-xl text-[var(--accent)] font-bold tracking-tight">★ {prediction ? prediction.confidence.toFixed(1) : "—"}%</h4>
+          <h4 className="text-xl text-[var(--accent)] font-bold tracking-tight">★ {prediction ? Number(prediction.confidence).toFixed(1) : "—"}%</h4>
           <span className="text-[9px] text-[var(--foreground)]/40 uppercase tracking-widest mt-1">{prediction?.model_type || selectedAlgo}</span>
         </div>
       </div>

@@ -18,17 +18,17 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
 
   const data = stockData.dates.map((d, i) => ({
     date: d.slice(5),
-    close: stockData.closes[i],
-    open: stockData.opens[i],
-    high: stockData.highs[i],
-    low: stockData.lows[i],
-    upper: stockData.bb_upper[i],
-    lower: stockData.bb_lower[i],
-    volume: stockData.volumes[i],
-    macd: stockData.macd[i],
-    signal: stockData.signal_line[i],
-    hist: stockData.macd[i] - stockData.signal_line[i],
-    rsi: stockData.rsi_series[i],
+    close: Number(stockData.closes[i]),
+    open: Number(stockData.opens[i]),
+    high: Number(stockData.highs[i]),
+    low: Number(stockData.lows[i]),
+    upper: Number(stockData.bb_upper[i]),
+    lower: Number(stockData.bb_lower[i]),
+    volume: Number(stockData.volumes[i]),
+    macd: Number(stockData.macd[i]),
+    signal: Number(stockData.signal_line[i]),
+    hist: Number(stockData.macd[i]) - Number(stockData.signal_line[i]),
+    rsi: Number(stockData.rsi_series[i]),
   }));
 
   // Helper for custom premium tooltip

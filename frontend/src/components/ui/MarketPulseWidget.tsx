@@ -15,8 +15,8 @@ export default function MarketPulseWidget({ rsi = 50, macd = 0 }: { rsi?: number
       
       <div className="flex items-end justify-between relative z-10">
         <div>
-          <div className="text-2xl font-mono font-bold" style={{ color: pulseColor }}>{rsi.toFixed(1)}</div>
-          <div className="text-[10px] font-mono text-[var(--foreground)]/40 mt-1">MACD: {macd > 0 ? "+" : ""}{macd.toFixed(3)}</div>
+          <div className="text-2xl font-mono font-bold" style={{ color: pulseColor }}>{Number(rsi).toFixed(1)}</div>
+          <div className="text-[10px] font-mono text-[var(--foreground)]/40 mt-1">MACD: {macd > 0 ? "+" : ""}{Number(macd).toFixed(3)}</div>
         </div>
         
         {/* Animated Pulse Line */}

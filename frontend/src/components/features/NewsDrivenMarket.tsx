@@ -108,14 +108,14 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
       
       chartData.push({
         date: date.slice(5),
-        Index: parseFloat(indexNorm.toFixed(2)),
-        Gold: parseFloat(goldNorm.toFixed(2)),
-        Silver: parseFloat(silverNorm.toFixed(2)),
-        Oil: parseFloat(oilNorm.toFixed(2)),
-        IndexRaw: parseFloat(indexVal.toFixed(2)),
-        GoldRaw: parseFloat(goldWalk[i].toFixed(2)),
-        SilverRaw: parseFloat(silverWalk[i].toFixed(2)),
-        OilRaw: parseFloat(oilWalk[i].toFixed(2)),
+        Index: parseFloat(Number(indexNorm).toFixed(2)),
+        Gold: parseFloat(Number(goldNorm).toFixed(2)),
+        Silver: parseFloat(Number(silverNorm).toFixed(2)),
+        Oil: parseFloat(Number(oilNorm).toFixed(2)),
+        IndexRaw: parseFloat(Number(indexVal).toFixed(2)),
+        GoldRaw: parseFloat(Number(goldWalk[i]).toFixed(2)),
+        SilverRaw: parseFloat(Number(silverWalk[i]).toFixed(2)),
+        OilRaw: parseFloat(Number(oilWalk[i]).toFixed(2)),
       });
     }
     return chartData;

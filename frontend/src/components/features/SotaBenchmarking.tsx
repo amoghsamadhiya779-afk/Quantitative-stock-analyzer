@@ -66,8 +66,8 @@ export default function SotaBenchmarking({ stockData, prediction, currency, sele
         </div>
         <div className="flex-1 p-5 rounded-xl bg-surface border border-border">
           <span className="text-[9px] tracking-widest text-foreground/40 uppercase">Target RMSE Error Est.</span>
-          <div className="font-mono text-2xl font-bold mt-2 text-accent">±{(nnErr * 0.3).toFixed(2)} {currency}</div>
-          <div className="mt-2 text-xs text-foreground/40">Beats SMA Baseline by {((smaErr * 0.8) - (nnErr * 0.3)).toFixed(2)} pts</div>
+          <div className="font-mono text-2xl font-bold mt-2 text-accent">±{Number(nnErr * 0.3).toFixed(2)} {currency}</div>
+          <div className="mt-2 text-xs text-foreground/40">Beats SMA Baseline by {Number((smaErr * 0.8) - (nnErr * 0.3)).toFixed(2)} pts</div>
         </div>
       </div>
 

@@ -34,8 +34,8 @@ export default function BacktestingEngine({ selectedMarket, selectedTicker, sele
   const chartData = data
     ? data.dates.map((d, i) => ({
         date: d.slice(5),
-        ai: data.strategy_equity[i],
-        bh: data.buy_hold_equity[i],
+        ai: Number(data.strategy_equity[i]),
+        bh: Number(data.buy_hold_equity[i]),
       }))
     : [];
 
@@ -86,10 +86,10 @@ export default function BacktestingEngine({ selectedMarket, selectedTicker, sele
       ) : data ? (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <MC title="Strategy Return" value={`${data.total_return.toFixed(2)}%`} sub={`Alpha: ${alpha >= 0 ? "+" : ""}${alpha.toFixed(2)}%`} subColor={alpha >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"} />
-            <MC title="Buy & Hold Return" value={`${data.bh_return.toFixed(2)}%`} />
-            <MC title="Sharpe Ratio" value={data.sharpe_ratio.toFixed(2)} sub="Risk-Adjusted" />
-            <MC title="Max Drawdown" value={`${data.max_drawdown.toFixed(2)}%`} sub="Peak-to-Trough" subColor="text-[var(--loss)]" />
+            <MC title="Strategy Return" value={`${Number(data.total_return).toFixed(2)}%`} sub={`Alpha: ${alpha >= 0 ? "+" : ""}${Number(alpha).toFixed(2)}%`} subColor={alpha >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"} />
+            <MC title="Buy & Hold Return" value={`${Number(data.bh_return).toFixed(2)}%`} />
+            <MC title="Sharpe Ratio" value={Number(data.sharpe_ratio).toFixed(2)} sub="Risk-Adjusted" />
+            <MC title="Max Drawdown" value={`${Number(data.max_drawdown).toFixed(2)}%`} sub="Peak-to-Trough" subColor="text-[var(--loss)]" />
           </div>
 
           <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow" style={{ height: 450 }}>
@@ -106,7 +106,7 @@ export default function BacktestingEngine({ selectedMarket, selectedTicker, sele
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 9, fontFamily: 'monospace' }} interval={Math.floor(chartData.length / 12)} axisLine={false} tickMargin={10} />
-                <YAxis domain={["auto", "auto"]} stroke="var(--border)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
+                <YAxis domain={["auto", "auto"]} stroke="var(--border)" tickFormatter={(v) => `$${Number(v / 1000).toFixed(0)}k`} tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1, strokeDasharray: '4 4' }} />
                 <Line type="monotone" dataKey="bh" stroke="var(--foreground)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} opacity={0.5} name="Buy & Hold" />
                 <Area type="monotone" dataKey="ai" stroke="var(--accent)" fillOpacity={1} fill="url(#colorAi)" strokeWidth={3} dot={false} name="AI Strategy" isAnimationActive={true} />
