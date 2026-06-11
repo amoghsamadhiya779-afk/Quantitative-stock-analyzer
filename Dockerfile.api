@@ -26,8 +26,8 @@ COPY src/ ./
 # We will mount data/ and mlops_artifacts/ at runtime via docker-compose
 
 #Expose the FastAPI port 
-EXPOSE 8000
+EXPOSE 7860
 
 # Command to run the Enterprise API
 
-CMD ["uvicorn","api.main:app","--host","0.0.0.0","--port","8000"]
+CMD ["uvicorn","api.main:app","--host","0.0.0.0","--port","7860"]

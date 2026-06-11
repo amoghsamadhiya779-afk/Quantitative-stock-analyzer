@@ -104,7 +104,7 @@ Run the FastAPI development server:
 ```bash
 python api/main.py
 ```
-The API Swagger documentation will be accessible at `http://localhost:8000/docs`.
+The API Swagger documentation will be accessible at `http://localhost:7860/docs`.
 
 ### 2. Frontend Development Server Setup
 Install Node.js packages and launch the Next.js dev server:
