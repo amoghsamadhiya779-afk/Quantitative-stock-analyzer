@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function ConfidenceMeter({ confidence = 0.5 }: { confidence?: number }) {
   // confidence between 0 and 1
-  const pct = Math.round(confidence * 100);
+  const pct = Math.round(confidence);
   const isHigh = pct >= 70;
   const color = isHigh ? "var(--profit)" : (pct < 40 ? "var(--loss)" : "var(--accent)");
 

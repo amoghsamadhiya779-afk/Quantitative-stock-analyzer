@@ -61,7 +61,7 @@ export default function AnalystDashboardView({ stockData, prediction, currency }
             </div>
 
             <div className="p-3 rounded-lg bg-black/20 border border-[var(--border)] text-xs text-[var(--foreground)]/70 font-mono leading-relaxed">
-              Model outputs indicate a {Math.round(prediction.confidence * 100)}% probability of {prediction.forecast_direction} movement over the next 5 periods, conditioned on recent {Number(stockData.volatility).toFixed(1)}% volatility regime.
+              Model outputs indicate a {Math.round(prediction.confidence)}% probability of {prediction.forecast_direction} movement over the next 5 periods, conditioned on recent {Number(stockData.volatility).toFixed(1)}% volatility regime.
             </div>
           </div>
         ) : (
