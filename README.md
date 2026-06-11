@@ -1,3 +1,12 @@
+---
+title: Quant Modeling
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # Quantum Yield: Enterprise MLOps Trading OS and Quantitative Analytics Platform
 
 Quantum Yield is a containerized, full-stack Machine Learning Operations (MLOps) platform designed for algorithmic capital allocation. It features a decoupled microservices architecture, linking a deep learning inference engine with a low-latency, immersive Next.js 14 user interface.
