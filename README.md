@@ -95,14 +95,14 @@ quantum-yield/
 ### 1. Backend API Server Setup
 Create a virtual environment and install dependencies:
 ```bash
-python -m venv venv
+py -m venv venv
 venv\Scripts\activate      # On Windows
 source venv/bin/activate    # On Unix
 pip install -r requirements.txt
 ```
 Run the FastAPI development server:
 ```bash
-python api/main.py
+py api/main.py
 ```
 The API Swagger documentation will be accessible at `http://localhost:7860/docs`.
 
