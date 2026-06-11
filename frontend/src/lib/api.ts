@@ -1,4 +1,4 @@
-const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL || "http://localhost:7860");
+const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL || "https://1amogh212-quant-modeling.hf.space");
 
 function normalizeApiUrl(url: string): string {
   return url.replace(/\/+$/, "");
