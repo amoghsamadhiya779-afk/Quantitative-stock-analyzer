@@ -186,6 +186,9 @@ def get_market_data(market_name: str, ticker: str):
         if 'Volume' in data.columns:
             data['Volume'] = pd.to_numeric(data['Volume'], errors='coerce')
             
+        if 'Close' in data.columns and 'Adj Close' not in data.columns:
+            data['Adj Close'] = data['Close']
+            
         data = data.ffill().bfill().dropna(subset=['Close'])
         
         # Drop any remaining infinite values that break Pydantic validation
@@ -281,6 +284,9 @@ def execute_prediction(req: InferenceRequest):
         if artifacts and len(df) >= SEQ_LENGTH:
             features = artifacts["features"]
             try:
+                if 'Adj Close' in features and 'Adj Close' not in df.columns and 'Close' in df.columns:
+                    df['Adj Close'] = df['Close']
+                
                 # 1. Extract feature subset and Scale
                 data_slice = df[features].tail(SEQ_LENGTH).values
                 scaled_recent = artifacts["scaler"].transform(data_slice)
@@ -397,6 +403,9 @@ def execute_backtest(req: InferenceRequest):
                 features = artifacts["features"]
                 scaler = artifacts["scaler"]
                 model = artifacts["model"]
+                
+                if 'Adj Close' in features and 'Adj Close' not in df.columns and 'Close' in df.columns:
+                    df['Adj Close'] = df['Close']
                 
                 data_slice = df[features].values[-(backtest_days + SEQ_LENGTH):]
                 scaled_data = scaler.transform(data_slice)
