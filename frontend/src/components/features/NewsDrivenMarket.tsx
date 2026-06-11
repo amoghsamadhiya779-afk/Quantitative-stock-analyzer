@@ -312,7 +312,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
               <div className="font-mono text-[var(--foreground)]/30 uppercase tracking-widest text-xs z-10">Splicing macro time series data...</div>
             </div>
           ) : chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis dataKey="date" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.35, fontSize: 9, fontFamily: "monospace" }} axisLine={false} tickLine={false} dy={10} />
                 <YAxis domain={["auto", "auto"]} stroke="var(--border)" tickFormatter={(v) => `${v}%`} tick={{ fill: "var(--foreground)", opacity: 0.35, fontSize: 9, fontFamily: "monospace" }} axisLine={false} tickLine={false} dx={-5} />

@@ -247,18 +247,18 @@ export default function Home() {
               label="Live Valuation"
               value={stockData ? stockData.latest_close.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
               sub={currency}
-              delta={stockData ? `${stockData.pct_change >= 0 ? "+" : ""}${stockData.pct_change.toFixed(2)}%` : undefined}
+              delta={stockData ? `${stockData.pct_change >= 0 ? "+" : ""}${Number(stockData.pct_change).toFixed(2)}%` : undefined}
               deltaColor={stockData && stockData.pct_change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}
             />
             <StatBlock
               label="Annual Volatility"
-              value={stockData ? `${stockData.volatility.toFixed(1)}%` : "—"}
-              sub={stockData ? `Beta: ${(stockData.volatility / 15).toFixed(2)}` : ""}
+              value={stockData ? `${Number(stockData.volatility).toFixed(1)}%` : "—"}
+              sub={stockData ? `Beta: ${Number(stockData.volatility / 15).toFixed(2)}` : ""}
             />
             <StatBlock
               label="VWAP (20d)"
               value={stockData ? stockData.vwap.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
-              sub={stockData ? `Dev: ${(((stockData.latest_close / stockData.vwap) - 1) * 100).toFixed(2)}%` : ""}
+              sub={stockData ? `Dev: ${Number(((stockData.latest_close / stockData.vwap) - 1) * 100).toFixed(2)}%` : ""}
             />
             <div className="flex-1 min-w-[140px] p-5 flex flex-col justify-center">
               <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/40 mb-2">Order Imbalance</span>
