@@ -67,7 +67,7 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
         onMouseLeave={() => setCursorType("default")}
       >
         <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">Price Action & Bollinger Channels</h3>
-        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0} className="cursor-none">
+        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0}>
           <ComposedChart data={data}>
             <defs>
               <linearGradient id="colorClose" x1="0" y1="0" x2="0" y2="1">
@@ -93,7 +93,7 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
           onMouseLeave={() => setCursorType("default")}
         >
           <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">Liquidity Density</h3>
-          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0} className="cursor-none">
+          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0}>
             <BarChart data={data.slice(-60)}>
               <XAxis dataKey="date" hide />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--surface)' }} />
@@ -109,7 +109,7 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
           onMouseLeave={() => setCursorType("default")}
         >
           <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">MACD Oscillator</h3>
-          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0} className="cursor-none">
+          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0}>
             <ComposedChart data={data.slice(-60)}>
               <XAxis dataKey="date" hide />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1, strokeDasharray: '4 4' }} />
@@ -127,7 +127,7 @@ export default function DeepTechnicalSuite({ stockData }: Props) {
           onMouseLeave={() => setCursorType("default")}
         >
           <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-3">RSI (14)</h3>
-          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0} className="cursor-none">
+          <ResponsiveContainer width="100%" height="85%" minWidth={0} minHeight={0}>
             <AreaChart data={data.slice(-60)}>
               <defs>
                 <linearGradient id="colorRsi" x1="0" y1="0" x2="0" y2="1">

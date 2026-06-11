@@ -4,7 +4,6 @@ import IntroReveal from "@/components/ui/IntroReveal";
 
 import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
 import { CursorProvider } from "@/components/providers/CursorProvider";
-import LiquidCursor from "@/components/ui/LiquidCursor";
 import DatamorphicBackground from "@/components/ui/DatamorphicBackground";
 
 export const metadata: Metadata = {
@@ -19,10 +18,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="no-custom-cursor relative min-h-screen">
+      <body className="relative min-h-screen">
         <SmoothScrollProvider>
           <CursorProvider>
-            <LiquidCursor />
             <DatamorphicBackground />
             <IntroReveal />
             {children}

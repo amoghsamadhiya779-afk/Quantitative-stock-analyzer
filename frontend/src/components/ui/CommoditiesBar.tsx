@@ -50,7 +50,7 @@ export default function CommoditiesBar() {
           transition={{ delay: idx * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           onMouseEnter={() => setCursorType("hover-button")}
           onMouseLeave={() => setCursorType("default")}
-          className="flex-shrink-0 flex items-center gap-3 p-3 glass-card hover:border-[var(--accent)]/50 transition-all cursor-none min-w-[180px]"
+          className="flex-shrink-0 flex items-center gap-3 p-3 glass-card hover:border-[var(--accent)]/50 transition-all min-w-[180px]"
         >
           <div className="p-1.5 rounded-lg bg-foreground/5" style={{ color: c.color }}>
             {c.icon}
