@@ -51,6 +51,17 @@ MARKET_META = {
     "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv", "region": "Asia", "currency": "IDR"}
 }
 
+FALLBACK_TICKERS = {
+    "United States (S&P 500)": ["AAPL", "MSFT", "AMZN", "NVDA", "META", "GOOGL", "BRK-B", "JNJ", "JPM", "V"],
+    "India (NIFTY 50)": ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ICICIBANK.NS", "HINDUNILVR.NS", "ITC.NS", "SBI.NS", "BHARTIARTL.NS", "LTIM.NS"],
+    "Japan (Nikkei 225)": ["7203.T", "6758.T", "9984.T", "6861.T", "8035.T", "6501.T", "4502.T", "6098.T", "9432.T", "4063.T"],
+    "United Kingdom (FTSE 100)": ["SHEL.L", "AZN.L", "HSBA.L", "ULVR.L", "BP.L", "GSK.L", "DGE.L", "BATS.L", "RIO.L", "LLOY.L"],
+    "Germany (DAX 40)": ["SAP.DE", "SIE.DE", "ALV.DE", "DTE.DE", "BAS.DE", "BMW.DE", "BAYN.DE", "MBG.DE", "VOW3.DE", "DPW.DE"],
+    "Turkey (BIST 100)": ["THYAO.IS", "EREGL.IS", "ASELS.IS", "TUPRS.IS", "AKBNK.IS", "GARAN.IS", "KCHOL.IS", "SAHOL.IS", "YKBNK.IS", "BIMAS.IS"],
+    "Brazil (Bovespa)": ["VALE3.SA", "PETR4.SA", "ITUB4.SA", "BBDC4.SA", "ABEV3.SA", "BBAS3.SA", "B3SA3.SA", "WEGE3.SA", "ITSAs.SA", "GGBR4.SA"],
+    "Indonesia (IDX)": ["BBCA.JK", "BBRI.JK", "BMRI.JK", "TLKM.JK", "BYAN.JK", "ASII.JK", "TPIA.JK", "BBNI.JK", "UNVR.JK", "GOTO.JK"]
+}
+
 SEQ_LENGTH = 60
 
 # Force absolute pathing to guarantee models are found regardless of terminal execution directory
