@@ -271,8 +271,14 @@ def get_ticker_subset(df, ticker):
 
 @st.cache_data(ttl=60, show_spinner=False)
 def call_nexus_api(market_name, ticker, local_df, algo_name):
+    algo_map = {
+        "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
+        "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
+        "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM"
+    }
+    model_type = algo_map.get(algo_name, "CNN_BiLSTM_Attention")
     try:
-        res = requests.post(f"{API_URL}/api/v1/predict", json={"market_name": market_name, "ticker": ticker}, timeout=15)
+        res = requests.post(f"{API_URL}/api/v1/predict", json={"market_name": market_name, "ticker": ticker, "model_type": model_type}, timeout=15)
         if res.status_code == 200: 
             data = res.json()
             return data["predicted_price"], data["delta"], data["pct_change"], f"{algo_name} Execution", random.uniform(99.1, 99.9)
@@ -363,7 +369,7 @@ with col_nav2:
 
 with col_nav3:
     st.markdown("<span style='font-size:0.65rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-left:4px;'>AI Architecture</span>", unsafe_allow_html=True)
-    algos = ["Quantum Transformer (QTN) - Max Yield", "Liquid Neural Net (LTC) - Robust", "Temporal Fusion Coder (TFC) - Balanced"]
+    algos = ["Quantum CNN-Attention Engine (Max Yield)", "Temporal Transformer Model (Robust)", "Advanced BiLSTM Layer (Balanced)"]
     default_idx = algos.index(st.session_state.selected_algo) if st.session_state.selected_algo in algos else 0
     selected_algo = st.selectbox("Architecture", algos, index=default_idx, label_visibility="collapsed")
     if selected_algo != st.session_state.selected_algo:
@@ -481,7 +487,13 @@ elif selected_page == "Backtesting Engine":
     if st.button("▶ EXECUTE QUANTITATIVE BACKTEST", use_container_width=True, type="primary"):
         with st.spinner(f"Vectorizing 1-Year Historical Data and Simulating '{st.session_state.selected_algo}' for {st.session_state.selected_ticker}..."):
             try:
-                res = requests.post(f"{API_URL}/api/v1/backtest", json={"market_name": st.session_state.selected_market, "ticker": st.session_state.selected_ticker}, timeout=20)
+                algo_map = {
+                    "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
+                    "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
+                    "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM"
+                }
+                model_type = algo_map.get(st.session_state.selected_algo, "CNN_BiLSTM_Attention")
+                res = requests.post(f"{API_URL}/api/v1/backtest", json={"market_name": st.session_state.selected_market, "ticker": st.session_state.selected_ticker, "model_type": model_type}, timeout=20)
                 if res.status_code == 200:
                     data = res.json()
                     st.markdown(f"<div style='text-align:right; font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; font-family:var(--font-body);'>Simulation Engine: <strong style='color:var(--text-main);'>{st.session_state.selected_algo}</strong></div>", unsafe_allow_html=True)
