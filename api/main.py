@@ -15,7 +15,7 @@ import logging
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-# Explicitly import TensorFlow and Keras (Removed the silent bypass)
+# Explicitly import TensorFlow and Keras
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
@@ -62,10 +62,33 @@ FALLBACK_TICKERS = {
     "Indonesia (IDX)": ["BBCA.JK", "BBRI.JK", "BMRI.JK", "TLKM.JK", "BYAN.JK", "ASII.JK", "TPIA.JK", "BBNI.JK", "UNVR.JK", "GOTO.JK"]
 }
 
+# --- DYNAMIC CACHE REGISTRY ---
+DYNAMIC_CACHE = {
+    "SP500": []
+}
+
 SEQ_LENGTH = 60
 
 # Force absolute pathing to guarantee models are found regardless of terminal execution directory
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+# --- STARTUP DIAGNOSTICS ---
+logger.info("=" * 80)
+logger.info(f"PROJECT_ROOT = {PROJECT_ROOT}")
+
+if os.path.exists(PROJECT_ROOT):
+    logger.info(f"ROOT FILES = {os.listdir(PROJECT_ROOT)}")
+
+raw_dir = os.path.join(PROJECT_ROOT, "data", "raw")
+logger.info(f"RAW_DIR = {raw_dir}")
+
+if os.path.exists(raw_dir):
+    logger.info(f"RAW FILES = {os.listdir(raw_dir)}")
+else:
+    logger.warning("data/raw directory does not exist")
+logger.info("=" * 80)
+# ---------------------------
+
 MODEL_DIR = os.path.join(PROJECT_ROOT, "mlops_artifacts", "models")
 DB_PATH = os.path.join(PROJECT_ROOT, "data", "nexus_trading.db")
 
@@ -137,8 +160,15 @@ def get_market_data(market_name: str, ticker: str):
                 
     # Fallback to CSV
     file_path = os.path.join(PROJECT_ROOT, "data", "raw", MARKET_CONFIG[market_name]["stock_file"])
+    
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=500, detail=f"Data unavailable. Looked in DB and at {file_path}")
+        if ticker in FALLBACK_TICKERS.get(market_name, []) or (market_name == "United States (S&P 500)" and ticker in DYNAMIC_CACHE["SP500"]):
+            logger.warning(f"Dataset missing for {market_name}: {file_path}")
+            raise HTTPException(
+                status_code=503,
+                detail="Market dataset is not deployed on the server. Ticker list is available but predictions require historical market data."
+            )
+        raise HTTPException(status_code=404, detail="Ticker not available")
         
     df = pd.read_csv(file_path, parse_dates=['Date'])
     subset = df[df['Ticker'] == ticker].sort_values('Date')
@@ -164,7 +194,6 @@ def execute_prediction(req: InferenceRequest):
             if os.path.exists(model_path) and os.path.exists(scaler_path):
                 try:
                     logger.info(f"Mounting BiLSTM Model for {idx_key} from {model_path}...")
-                    # Fix: Added compile=False to bypass metric deserialization errors in newer TF versions
                     MODEL_CACHE[idx_key] = {"model": load_model(model_path, compile=False), "scaler": joblib.load(scaler_path)}
                     logger.info(f"✅ Architecture successfully mounted for {idx_key}.")
                 except Exception as e:
@@ -235,7 +264,6 @@ def execute_backtest(req: InferenceRequest):
             model_path, scaler_path = get_model_paths(idx_key)
             if os.path.exists(model_path) and os.path.exists(scaler_path):
                 try:
-                    # Fix: Added compile=False here as well
                     MODEL_CACHE[idx_key] = {"model": load_model(model_path, compile=False), "scaler": joblib.load(scaler_path)}
                 except Exception as e:
                     logger.error(f"❌ Failed to mount model for backtesting: {e}")
@@ -350,21 +378,71 @@ def get_real_time_news(req: NewsRequest):
 def get_markets():
     return {"markets": MARKET_META}
 
+# --- CACHED WIKIPEDIA MATERILIZER ---
+def fetch_dynamic_sp500():
+    """Fetches S&P 500 constituents from Wikipedia with an in-memory cache layer."""
+    if DYNAMIC_CACHE["SP500"]:
+        return DYNAMIC_CACHE["SP500"]
+    
+    try:
+        logger.info("Cache miss: Fetching S&P 500 dynamically from Wikipedia...")
+        # attrs={'id': 'constituents'} ensures we parse the correct table even if Wiki edits the page layout
+        sp500 = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies", attrs={'id': 'constituents'})[0]
+        
+        # Interview Trap: Wikipedia formats tickers like 'BRK.B', but yfinance needs 'BRK-B'
+        tickers = sp500["Symbol"].str.replace('.', '-', regex=False).tolist()
+        
+        DYNAMIC_CACHE["SP500"] = tickers
+        logger.info(f"Successfully cached {len(tickers)} S&P 500 tickers in RAM.")
+        return tickers
+    except Exception as e:
+        logger.error(f"Wikipedia fetch failed (Rate limit / Parsing error): {e}")
+        return []
 
+# --- HARDENED TICKER ENDPOINT ---
 @app.get("/api/v1/tickers/{market_name}")
 def get_tickers(market_name: str):
-    if market_name not in MARKET_CONFIG:
-        raise HTTPException(status_code=404, detail="Market not found")
-    stock_file = MARKET_CONFIG[market_name]["stock_file"]
-    file_path = os.path.join(PROJECT_ROOT, "data", "raw", stock_file)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=500, detail="Data file not found")
-    df = pd.read_csv(file_path, parse_dates=['Date'])
-    df['Dollar_Volume'] = df['Close'] * df['Volume']
-    recent = df[df['Date'] >= (df['Date'].max() - pd.Timedelta(days=90))]
-    top_30 = recent.groupby('Ticker')['Dollar_Volume'].median().sort_values(ascending=False).head(30).index.tolist()
-    return {"tickers": top_30, "market": market_name}
+    try:
+        if market_name not in MARKET_CONFIG:
+            raise HTTPException(status_code=404, detail=f"Market '{market_name}' not found")
 
+        stock_file = MARKET_CONFIG[market_name]["stock_file"]
+        file_path = os.path.join(PROJECT_ROOT, "data", "raw", stock_file)
+
+        logger.info(f"Requested Market: {market_name}")
+
+        # TIER 1: LOAD FROM CSV FOR LIQUIDITY RANKING
+        if os.path.exists(file_path):
+            try:
+                df = pd.read_csv(file_path, parse_dates=["Date"])
+                required_cols = ["Ticker", "Close", "Volume", "Date"]
+                if not any(col not in df.columns for col in required_cols):
+                    df["Dollar_Volume"] = df["Close"] * df["Volume"]
+                    latest_date = df["Date"].max()
+                    recent = df[df["Date"] >= (latest_date - pd.Timedelta(days=90))]
+                    top_30 = recent.groupby("Ticker")["Dollar_Volume"].median().sort_values(ascending=False).head(30).index.tolist()
+                    
+                    if top_30:
+                        return {"market": market_name, "source": "dataset", "tickers": top_30}
+            except Exception as e:
+                logger.error(f"CSV parsing failed: {e}")
+
+        # TIER 2: DYNAMIC WIKIPEDIA FETCH (Specifically for US S&P 500)
+        if market_name == "United States (S&P 500)":
+            dynamic_tickers = fetch_dynamic_sp500()
+            if dynamic_tickers:
+                return {"market": market_name, "source": "wikipedia_dynamic", "tickers": dynamic_tickers}
+
+        # TIER 3: HARDCODED FALLBACK (Ultimate safety net)
+        logger.warning(f"Using hardcoded fallback tickers for {market_name}.")
+        return {"market": market_name, "source": "static_fallback", "tickers": FALLBACK_TICKERS.get(market_name, [])}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error in get_tickers: {e}")
+        return {"market": market_name, "source": "error_fallback", "tickers": FALLBACK_TICKERS.get(market_name, [])}
+# --------------------------------
 
 @app.get("/api/v1/stock/{market_name}/{ticker}")
 def get_stock_data(market_name: str, ticker: str):
@@ -398,6 +476,16 @@ def get_stock_data(market_name: str, ticker: str):
     }
     return result
 
+# --- DEBUG ENDPOINT ---
+@app.get("/api/v1/debug")
+def debug_environment():
+    raw_dir = os.path.join(PROJECT_ROOT, "data", "raw")
+    return {
+        "project_root": PROJECT_ROOT,
+        "raw_dir_exists": os.path.exists(raw_dir),
+        "raw_files": os.listdir(raw_dir) if os.path.exists(raw_dir) else []
+    }
+# ----------------------
 
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=7860, reload=False)
