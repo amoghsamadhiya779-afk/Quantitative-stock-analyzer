@@ -68,7 +68,7 @@ export default function MacroRiskEngine({ stockData, prediction, currency, selec
           <LineChart data={chartData}>
             <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} />
             <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} tickFormatter={(v) => v.toLocaleString()} />
-            <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: "8px", fontSize: 12 }} formatter={(v: number) => v?.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
+            <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: "8px", fontSize: 12 }} formatter={(v: any) => v?.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
             {Array.from({ length: 8 }).map((_, i) => (
               <Line key={i} type="monotone" dataKey={`path${i}`} stroke="var(--accent)" strokeWidth={1} dot={false} opacity={0.15} connectNulls={false} />
             ))}

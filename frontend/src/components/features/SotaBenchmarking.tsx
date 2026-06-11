@@ -73,7 +73,7 @@ export default function SotaBenchmarking({ stockData, prediction, currency, sele
           <LineChart data={chartData}>
             <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} interval={Math.floor(chartData.length / 10)} />
             <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} tickFormatter={(v) => v.toLocaleString()} />
-            <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v: number) => v?.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
+            <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v: any) => v?.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
             <Line type="monotone" dataKey="historical" stroke="var(--foreground)" strokeWidth={2} dot={false} name="Historical" connectNulls={false} />
             <Line type="monotone" dataKey="aiTarget" stroke="var(--accent)" strokeWidth={3} dot={{ r: 4, fill: "var(--accent)" }} name="AI Target" connectNulls />
             <Line type="monotone" dataKey="smaTarget" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="SMA Base" connectNulls />
