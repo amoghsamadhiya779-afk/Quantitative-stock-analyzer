@@ -81,14 +81,15 @@ export default function AnalystDashboardView({ stockData, prediction, allPredict
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
               {allPredictions.map((p: PredictionResult, idx: number) => {
-                const isUp = p.forecast_direction === "UP";
+                const isUp = p.delta > 0;
+                const direction = isUp ? "UP" : "DOWN";
                 const displayModel = p.model_type.split('_').join(' ').replace('CNN BiLSTM Attention', 'CNN-Attn Engine').replace('TimeSeriesTransformer', 'Temporal Transf.').replace('AdvancedBiLSTM', 'BiLSTM Layer');
                 return (
                   <div key={idx} className="p-3 bg-black/20 rounded-lg border border-[var(--border)] flex flex-col items-center text-center justify-center relative overflow-hidden group/model">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover/model:opacity-100 transition-opacity" />
                     <div className="text-[9px] uppercase tracking-widest text-[var(--foreground)]/50 mb-1 w-full truncate px-1" title={p.model_type}>{displayModel}</div>
                     <div className={`text-xl font-bold font-mono ${isUp ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
-                      {p.forecast_direction}
+                      {direction}
                     </div>
                     <div className="text-[10px] text-[var(--foreground)]/60 mt-1">{Math.round(p.confidence)}% Conf.</div>
                   </div>
@@ -97,7 +98,7 @@ export default function AnalystDashboardView({ stockData, prediction, allPredict
             </div>
 
             <div className="p-4 rounded-xl bg-black/10 border border-[var(--border)] text-xs text-[var(--foreground)]/80 font-mono leading-relaxed backdrop-blur-md">
-              Real-time multi-model consensus indicates a {Math.round(allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length)}% aggregated probability of {allPredictions.filter((p: PredictionResult) => p.forecast_direction === "UP").length > allPredictions.length / 2 ? "UP" : "DOWN"} movement over the next 5 periods across {allPredictions.length} models, conditioned on {Number(stockData.volatility).toFixed(1)}% volatility regime.
+              Real-time multi-model consensus indicates a {Math.round(allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length)}% aggregated probability of {allPredictions.filter((p: PredictionResult) => p.delta > 0).length > allPredictions.length / 2 ? "UP" : "DOWN"} movement over the next 5 periods across {allPredictions.length} models, conditioned on {Number(stockData.volatility).toFixed(1)}% volatility regime.
             </div>
           </div>
         ) : prediction ? (
@@ -106,13 +107,13 @@ export default function AnalystDashboardView({ stockData, prediction, allPredict
             
             <div onMouseEnter={(e) => { e.stopPropagation(); setCursorType("hover-data"); }} onMouseLeave={(e) => { e.stopPropagation(); setCursorType("hover-card"); }}>
               <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--foreground)]/50 mb-1">Directional Bias</div>
-              <div className={`text-2xl font-bold font-mono ${prediction.forecast_direction === "UP" ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
-                {prediction.forecast_direction}
+              <div className={`text-2xl font-bold font-mono ${prediction.delta > 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+                {prediction.delta > 0 ? "UP" : "DOWN"}
               </div>
             </div>
 
             <div className="p-4 rounded-xl bg-black/10 border border-[var(--border)] text-xs text-[var(--foreground)]/80 font-mono leading-relaxed backdrop-blur-md">
-              Model outputs indicate a {Math.round(prediction.confidence)}% probability of {prediction.forecast_direction} movement over the next 5 periods, conditioned on recent {Number(stockData.volatility).toFixed(1)}% volatility regime.
+              Model outputs indicate a {Math.round(prediction.confidence)}% probability of {prediction.delta > 0 ? "UP" : "DOWN"} movement over the next 5 periods, conditioned on recent {Number(stockData.volatility).toFixed(1)}% volatility regime.
             </div>
           </div>
         ) : (
