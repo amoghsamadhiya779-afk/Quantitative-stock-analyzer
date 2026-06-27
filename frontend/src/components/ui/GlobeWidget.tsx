@@ -35,8 +35,14 @@ interface Props {
 }
 
 export default function GlobeWidget({ activeLocation, onSelectMarket, onHoverNode }: Props) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
-    <div className="w-full aspect-square relative max-w-[500px] mx-auto drop-shadow-2xl">
+    <div 
+      className="w-full aspect-square relative max-w-[500px] mx-auto drop-shadow-2xl"
+      onPointerOver={() => setIsHovered(true)}
+      onPointerOut={() => setIsHovered(false)}
+    >
       <Canvas
         camera={{ position: [0, 0, 6], fov: 45 }}
         style={{ width: "100%", height: "100%" }}
@@ -45,7 +51,12 @@ export default function GlobeWidget({ activeLocation, onSelectMarket, onHoverNod
         <pointLight position={[10, 10, 10]} intensity={1.8} />
         <pointLight position={[-10, -10, -10]} intensity={0.6} />
         
-        <GlobeScene activeLocation={activeLocation} onSelectMarket={onSelectMarket} onHoverNode={onHoverNode} />
+        <GlobeScene 
+          activeLocation={activeLocation} 
+          onSelectMarket={onSelectMarket} 
+          onHoverNode={onHoverNode}
+          isHovered={isHovered}
+        />
         
         <OrbitControls
           enableZoom={false}
@@ -80,7 +91,8 @@ function MarketNode({ name, position, isActive, onClick, onHoverNode }: NodeProp
       
       const material = ringRef.current.material as THREE.MeshBasicMaterial;
       if (material) {
-        material.opacity = Math.max(0, 0.8 - (time % 1));
+        // scale 1 -> 1.4 -> 1 over 400ms pulse equivalent
+        material.opacity = Math.max(0, (1 - (time % 1)) * 0.8);
       }
     }
   });
@@ -159,14 +171,38 @@ function OrbitRings({ radius }: { radius: number }) {
   );
 }
 
-function GlobeScene({ activeLocation, onSelectMarket, onHoverNode }: Props) {
+interface SceneProps extends Props {
+  isHovered: boolean;
+}
+
+function GlobeScene({ activeLocation, onSelectMarket, onHoverNode, isHovered }: SceneProps) {
   const globeRef = useRef<THREE.Group>(null);
+  const targetRotation = useRef<THREE.Quaternion | null>(null);
   const radius = 2.2;
 
-  // Auto-rotation
-  useFrame(() => {
+  // Calculate target quaternion when active location changes
+  useEffect(() => {
+    if (activeLocation && globeRef.current) {
+      const pos = convertLatLngToVector3(activeLocation[0], activeLocation[1], radius).normalize();
+      const targetDir = new THREE.Vector3(0, 0, 1); // Front of the camera
+      const q = new THREE.Quaternion().setFromUnitVectors(pos, targetDir);
+      targetRotation.current = q;
+    }
+  }, [activeLocation]);
+
+  // Easing and auto-rotation
+  useFrame((_, delta) => {
     if (globeRef.current) {
-      globeRef.current.rotation.y += 0.002;
+      if (targetRotation.current) {
+        // Ease towards the selected node over ~500ms
+        globeRef.current.quaternion.slerp(targetRotation.current, 8 * delta);
+        if (globeRef.current.quaternion.angleTo(targetRotation.current) < 0.01) {
+          targetRotation.current = null;
+        }
+      } else if (!isHovered) {
+        // Continuous auto-rotation (1 rev ~40s = 0.0026 rad/frame at 60fps)
+        globeRef.current.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), 0.0026);
+      }
     }
   });
 

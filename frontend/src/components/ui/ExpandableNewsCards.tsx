@@ -92,7 +92,7 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                     layoutId={`button-${active.title}-${id}`}
                     href={active.link}
                     target="_blank"
-                    className="shrink-0 ml-4 px-4 py-2 text-[10px] uppercase tracking-widest rounded-full font-bold bg-[var(--accent)] text-white hover:bg-orange-500 transition-colors"
+                    className="shrink-0 ml-4 px-4 py-2 text-[10px] uppercase tracking-widest rounded-full font-bold bg-[var(--accent)] text-white hover:bg-orange-500 transition-colors press-feedback"
                   >
                     Read Full
                   </motion.a>
@@ -112,7 +112,7 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                     <div className="p-4 rounded-xl border border-[var(--border)] bg-surface w-full">
                       <h4 className="text-[10px] font-bold tracking-widest uppercase mb-2 text-[var(--color-slate)]">AI Impact Assessment</h4>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border" style={{ backgroundColor: `${active.color}15`, borderColor: `${active.color}30`, color: active.color }}>
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border sentiment-crossfade" style={{ backgroundColor: `${active.color}15`, borderColor: `${active.color}30`, color: active.color }}>
                           {active.tag.includes("BULLISH") ? <TrendingUp className="w-3 h-3" /> : active.tag.includes("BEARISH") ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
                           {active.tag}
                         </span>
@@ -135,12 +135,13 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
           
           return (
             <motion.div
+              layout
               layoutId={`card-${item.title}-${id}`}
               key={`card-${item.title}-${id}`}
               onClick={() => setActive(item)}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="p-4 rounded-xl bg-[var(--background)]/40 border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all duration-200 group flex items-start justify-between gap-4 cursor-pointer"
             >
               <div className="space-y-1.5 flex-1">
@@ -157,7 +158,7 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                 </motion.h3>
               </div>
               <div className="shrink-0 flex flex-col items-end gap-1.5">
-                <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border" style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}30`, color: item.color }}>
+                <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border sentiment-crossfade" style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}30`, color: item.color }}>
                   {isBullish && <TrendingUp className="w-2.5 h-2.5" />}
                   {isBearish && <TrendingDown className="w-2.5 h-2.5" />}
                   {!isBullish && !isBearish && <Minus className="w-2.5 h-2.5" />}
@@ -165,7 +166,7 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                 </span>
                 <motion.button
                   layoutId={`button-${item.title}-${id}`}
-                  className="opacity-0 group-hover:opacity-100 px-3 py-1 text-[9px] uppercase tracking-widest rounded-full font-bold bg-[var(--accent)] text-white transition-all mt-2"
+                  className="opacity-0 group-hover:opacity-100 px-3 py-1 text-[9px] uppercase tracking-widest rounded-full font-bold bg-[var(--accent)] text-white transition-all mt-2 press-feedback"
                 >
                   Analyze
                 </motion.button>

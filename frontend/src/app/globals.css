@@ -456,6 +456,15 @@ select {
 }
 
 /* ============================================ */
+/* Focus States (Accessibility)                  */
+/* ============================================ */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  transition: none !important; /* No transition delay per requirements */
+}
+
+/* ============================================ */
 /* Sentiment Crossfade                           */
 /* ============================================ */
 .sentiment-crossfade {
