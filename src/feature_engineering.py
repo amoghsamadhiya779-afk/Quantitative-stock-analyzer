@@ -18,7 +18,8 @@ class FeatureEngineering:
         
         # Base Returns
         df['Daily_Return'] = close.pct_change()
-        df['Ret_1D'] = df['Daily_Return']
+        df['Log_Return'] = np.log(close / close.shift(1))
+        df['Ret_1D'] = df['Log_Return'] # Switch to log returns for stationarity
         df['Ret_5D'] = close.pct_change(5)
         df['Ret_20D'] = close.pct_change(20)
 
@@ -56,8 +57,19 @@ class FeatureEngineering:
         rs = gain / (loss + 1e-9)
         df['RSI_14'] = 100 - (100 / (1 + rs))
 
-        # Volatility
-        df['Volatility_20'] = df['Daily_Return'].rolling(window=20).std()
+        # Stochastic RSI
+        rsi_min = df['RSI_14'].rolling(window=14).min()
+        rsi_max = df['RSI_14'].rolling(window=14).max()
+        df['Stoch_RSI'] = (df['RSI_14'] - rsi_min) / (rsi_max - rsi_min + 1e-9)
+
+        # Volatility (Standard & Garman-Klass)
+        df['Volatility_20'] = df['Log_Return'].rolling(window=20).std()
+        
+        # Garman-Klass Volatility (More efficient OHLC estimator)
+        log_hl = np.log(high / low) ** 2
+        log_co = np.log(close / df['Open']) ** 2
+        gk_daily = 0.5 * log_hl - (2 * np.log(2) - 1) * log_co
+        df['GK_Vol_20'] = np.sqrt(gk_daily.rolling(window=20).mean()) * np.sqrt(252)
         
         # Average True Range (ATR)
         tr1 = high - low
@@ -77,9 +89,12 @@ class FeatureEngineering:
         df['Volume_MA_20'] = volume.rolling(window=20).mean()
         df['Volume_Ratio'] = volume / (df['Volume_MA_20'] + 1e-9)
         
-        # On-Balance Volume (OBV)
+        # On-Balance Volume (OBV) & Price-Volume Trend (PVT)
         obv_direction = np.sign(delta).fillna(0)
         df['OBV'] = (volume * obv_direction).cumsum()
+        
+        # Price-Volume Trend (multiplies volume by % change, better than OBV)
+        df['PVT'] = (volume * df['Daily_Return'].fillna(0)).cumsum()
 
         # VWAP
         df['VWAP_20'] = (close * volume).rolling(20).sum() / (volume.rolling(20).sum() + 1e-9)

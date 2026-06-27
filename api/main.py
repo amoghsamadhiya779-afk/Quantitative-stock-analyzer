@@ -305,7 +305,24 @@ def execute_prediction(req: InferenceRequest):
                 predicted_price = float(artifacts["scaler"].inverse_transform(dummy)[0][close_idx])
                 
                 model_type_resp = f"Neural Network ({req.model_type})"
-                conf = float(np.random.uniform(88.5, 98.2))
+                
+                # Dynamic Confidence Calculation based on Signal-to-Noise Ratio (SNR)
+                # We use the prediction delta against rolling volatility.
+                delta_abs = abs(predicted_price - latest_close)
+                # Fallback to simple standard deviation if Volatility_20 or GK_Vol is missing
+                vol = df['Volatility_20'].iloc[-1] if 'Volatility_20' in df.columns else (latest_close * 0.02)
+                
+                # Signal strength is ratio of expected move vs daily noise
+                signal_to_noise = delta_abs / (vol + 1e-9)
+                
+                # Map SNR to a 75-99% confidence interval using a sigmoid curve
+                base_conf = 75.0
+                max_conf = 99.5
+                sigmoid = 1 / (1 + np.exp(-signal_to_noise)) # Range 0.5 to 1.0
+                scaled_sigmoid = (sigmoid - 0.5) * 2.0 # Range 0.0 to 1.0
+                
+                conf = float(np.clip(base_conf + (scaled_sigmoid * (max_conf - base_conf)), base_conf, max_conf))
+                
             except Exception as e:
                 logger.error(f"❌ TensorFlow Inference Failed: {e}")
                 raise e
@@ -420,12 +437,7 @@ def execute_backtest(req: InferenceRequest):
                 dummy_batch[:, close_idx] = preds_scaled.flatten()
                 preds = scaler.inverse_transform(dummy_batch)[:, close_idx]
                 
-                # Apply prediction weight and bias for optimization
-                prediction_weight = 1.02  # Slight trend momentum multiplier
-                prediction_bias = actual_closes * 0.001  # 10 bps optimistic bias
-                
-                adjusted_preds = (preds * prediction_weight) + prediction_bias
-                signals = np.where(adjusted_preds > actual_closes, 1, -1)
+                signals = np.where(preds > actual_closes, 1, -1)
                 model_used = f"Neural Network ({req.model_type})"
             except Exception as e:
                 logger.error(f"❌ Backtest inference failed: {e}")
@@ -441,11 +453,7 @@ def execute_backtest(req: InferenceRequest):
         trade_signals = np.roll(signals, 1)
         trade_signals[0] = 0
 
-        # Fine-tune strategy returns with portfolio weight and alpha bias
-        portfolio_leverage_weight = 1.25 # 1.25x leverage
-        alpha_bias = 0.0003 # 3 bps daily alpha bias
-        
-        strategy_returns = (trade_signals * asset_returns * portfolio_leverage_weight) + alpha_bias
+        strategy_returns = trade_signals * asset_returns
         
         # Equity Curves
         start_capital = 100000.0

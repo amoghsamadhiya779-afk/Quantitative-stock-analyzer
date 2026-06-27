@@ -3,8 +3,10 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Input, Dense, Dropout, Bidirectional, LSTM, 
     Conv1D, BatchNormalization, MultiHeadAttention, 
-    LayerNormalization, Add, Flatten, GlobalAveragePooling1D
+    LayerNormalization, Add, Flatten, GlobalAveragePooling1D,
+    SpatialDropout1D
 )
+from tensorflow.keras.regularizers import l2
 
 class ModelFactory:
     """Institutional-Grade Model Architectures for Time Series Forecasting"""
@@ -21,7 +23,7 @@ class ModelFactory:
         # 1. Local Feature Extraction
         x = Conv1D(filters=filters, kernel_size=kernel_size, padding='same', activation='relu')(inputs)
         x = BatchNormalization()(x)
-        x = Dropout(dropout)(x)
+        x = SpatialDropout1D(dropout)(x) # Upgraded to SpatialDropout for sequence data
         
         # 2. Sequential Modeling
         x = Bidirectional(LSTM(lstm_units, return_sequences=True))(x)
@@ -35,13 +37,13 @@ class ModelFactory:
         
         # 4. Global Pooling & Dense Head
         x = GlobalAveragePooling1D()(x)
-        x = Dense(32, activation='relu')(x)
+        x = Dense(32, activation='relu', kernel_regularizer=l2(1e-4))(x)
         x = Dropout(dropout)(x)
-        outputs = Dense(1)(x)
+        outputs = Dense(1, kernel_regularizer=l2(1e-4))(x)
         
         model = Model(inputs=inputs, outputs=outputs, name="CNN_BiLSTM_Attention")
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)
-        model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        model.compile(optimizer=optimizer, loss=tf.keras.losses.Huber(), metrics=['mae'])
         return model
 
     @staticmethod
@@ -69,14 +71,14 @@ class ModelFactory:
 
         x = GlobalAveragePooling1D()(x)
         for dim in mlp_units:
-            x = Dense(dim, activation="relu")(x)
+            x = Dense(dim, activation="relu", kernel_regularizer=l2(1e-4))(x)
             x = Dropout(dropout)(x)
             
-        outputs = Dense(1)(x)
+        outputs = Dense(1, kernel_regularizer=l2(1e-4))(x)
         
         model = Model(inputs=inputs, outputs=outputs, name="TimeSeriesTransformer")
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)
-        model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        model.compile(optimizer=optimizer, loss=tf.keras.losses.Huber(), metrics=['mae'])
         return model
 
     @staticmethod
