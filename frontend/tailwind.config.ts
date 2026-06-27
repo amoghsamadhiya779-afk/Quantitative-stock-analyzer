@@ -32,6 +32,8 @@ const config: Config = {
         nav: "var(--radius-navpill)",
         input: "var(--radius-inputs)",
         tag: "var(--radius-tags)",
+        '24': '24px',
+        '32': '32px',
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "-apple-system", "sans-serif"],

@@ -5,31 +5,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  /* Colors — Ventriloc Palette */
+  /* Colors — Ventriloc Palette (Refactored to Black Luxury Theme) */
   --color-signal-orange: #ff682c;
   --color-sienna-bronze: #816729;
-  --color-carbon: #202020;
-  --color-graphite: #4d4d4d;
-  --color-slate: #828282;
-  --color-fog: #f5f5f5;
-  --color-mist: #efefef;
-  --color-chalk: #e8e8e8;
-  --color-paper: #ffffff;
+  --color-carbon: #ffffff;
+  --color-graphite: #a3a3a3;
+  --color-slate: #737373;
+  --color-fog: #0d0d0d;
+  --color-mist: #030303;
+  --color-chalk: rgba(255, 255, 255, 0.08);
+  --color-paper: #0a0a0a;
 
   /* Semantic Aliases */
-  --background: var(--color-mist);
-  --surface: var(--color-paper);
-  --surface-hover: var(--color-fog);
-  --border: var(--color-chalk);
-  --foreground: var(--color-carbon);
-  --accent: var(--color-signal-orange);
-  --accent-secondary: var(--color-sienna-bronze);
-  --profit: #059669;
-  --loss: #dc2626;
+  --background: #030303;
+  --surface: #0a0a0a;
+  --surface-hover: #141414;
+  --border: rgba(255, 255, 255, 0.08);
+  --foreground: #f3f4f6;
+  --accent: #ff682c;
+  --accent-secondary: #d97706;
+  --profit: #10b981;
+  --loss: #ef4444;
 
   /* Typography — Font Families */
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'PolySans', 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter: 'Inter UI', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Typography — Scale */
   --text-caption: 12px;
@@ -70,28 +70,29 @@
   --card-padding: 32px;
   --element-gap: 20px;
 
-  /* Border Radius */
-  --radius-sm: 3px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 20px;
-  --radius-full: 200px;
+  /* Border Radius (Refactored to 24px and 32px) */
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-outer: 32px;
+  --radius-full: 9999px;
 
   /* Named Radii */
-  --radius-tags: 20px;
-  --radius-cards: 8px;
-  --radius-inputs: 8px;
-  --radius-buttons: 20px;
-  --radius-navpill: 200px;
+  --radius-tags: 9999px;
+  --radius-cards: 24px;
+  --radius-inputs: 12px;
+  --radius-buttons: 9999px;
+  --radius-navpill: 9999px;
 
   /* Surfaces */
-  --surface-canvas: #efefef;
-  --surface-paper: #ffffff;
-  --surface-fog: #f5f5f5;
-  --surface-chalk: #e8e8e8;
+  --surface-canvas: #030303;
+  --surface-paper: #0a0a0a;
+  --surface-fog: #0d0d0d;
+  --surface-chalk: rgba(255, 255, 255, 0.08);
 
   /* Elevation — subtle only */
-  --elevation-card: 0 1px 3px rgba(32, 32, 32, 0.04), 0 4px 12px rgba(32, 32, 32, 0.03);
+  --elevation-card: 0 4px 30px rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -103,35 +104,73 @@ body {
 
 html {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-chalk) transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Global Theme Contract Classes */
+.bg-luxury-black {
+  background-color: #030303 !important;
+}
+
+.border-luxury-glass {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.backdrop-blur-md {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  word-wrap: break-word;
+}
+
+/* Premium Radial Gradients & Frosted Glass Utilities */
+.bg-luxury-radial {
+  background: radial-gradient(circle at top, rgba(255, 104, 44, 0.12) 0%, rgba(3, 3, 3, 0) 75%);
+}
+
+.glass-premium {
+  background: rgba(10, 10, 10, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 /* Ventriloc Card — replaces glass-card */
 .ventriloc-card {
   background: var(--surface-paper);
   border-radius: var(--radius-cards);
+  border: 1px solid var(--border);
   box-shadow: var(--elevation-card);
   transition: all 0.3s ease;
 }
 
 .ventriloc-card:hover {
-  box-shadow: 0 2px 6px rgba(32, 32, 32, 0.06), 0 6px 16px rgba(32, 32, 32, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* Legacy glass-card alias — maps to ventriloc-card */
 .glass-card {
   background: var(--surface-paper);
   border-radius: var(--radius-cards);
+  border: 1px solid var(--border);
   box-shadow: var(--elevation-card);
   transition: all 0.3s ease;
 }
 
 .glass-card:hover {
-  box-shadow: 0 2px 6px rgba(32, 32, 32, 0.06), 0 6px 16px rgba(32, 32, 32, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* Pill Button */
@@ -197,4 +236,8 @@ select {
 .font-display {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused !important;
 }
