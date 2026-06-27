@@ -448,12 +448,12 @@ export default function LandingPage() {
             <div
               id="platform"
               ref={platformRef}
-              className="w-full min-h-screen py-24 flex items-center justify-between gap-12 relative z-20"
+              className="w-full min-h-screen py-24 flex items-center justify-between gap-8 relative z-20"
             >
               {/* Left Column: Three.js Canvas & Active Feature text overlay */}
-              <div className="w-1/2 h-[600px] relative rounded-card border border-white/10 bg-black/40 backdrop-blur-md p-8 flex flex-col justify-between overflow-hidden">
+              <div className="w-[30%] h-[600px] relative rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md p-8 flex flex-col justify-between overflow-hidden">
                 <div className="absolute inset-0 z-0 opacity-80 pointer-events-auto">
-                  <Canvas camera={{ position: [0, 0, 5], fof: 45 } as any}>
+                  <Canvas camera={{ position: [0, 0, 5], fov: 45 } as any}>
                     <ambientLight intensity={0.5} />
                     <pointLight position={[10, 10, 10]} intensity={1} />
                     {activeFeature === 0 && <NewsModel />}
@@ -467,23 +467,55 @@ export default function LandingPage() {
 
                 <div className="relative z-10 flex flex-col justify-between h-full pointer-events-none">
                   <div>
-                    <span className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase">
+                    <span className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase bg-black/50 p-2 rounded">
                       ACTIVE NODE PIPELINE
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-3xl font-display font-bold text-white mb-2">
+                    <h3 className="text-2xl font-display font-bold text-white mb-2 drop-shadow-lg">
                       {features[activeFeature].title}
                     </h3>
-                    <p className="text-sm text-neutral-400 leading-relaxed max-w-md bg-black/60 backdrop-blur-sm p-4 rounded-xl border border-white/5">
+                    <p className="text-xs text-neutral-300 leading-relaxed max-w-md bg-black/60 backdrop-blur-sm p-4 rounded-xl border border-white/5">
                       {features[activeFeature].description}
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* Middle Column: Live Component Preview Window */}
+              <div className="w-[45%] h-[600px] rounded-[32px] border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-none">
+                {/* Mock MacOS Header */}
+                <div className="w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-6 gap-2 shrink-0">
+                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
+                  <div className="flex-1 flex justify-center">
+                    <div className="px-3 py-1 rounded bg-black/50 text-[10px] font-mono text-neutral-500 border border-white/5 flex items-center gap-2">
+                      <span className="text-cyan-500">🔒</span> nexus.quant-platform.app
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Component Container */}
+                <div className="relative flex-1 w-full overflow-hidden bg-[#0a0a0a] p-6">
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={activeFeature}
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 1.05, y: -10 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="w-full h-full transform-gpu origin-top"
+                      style={{ transform: "scale(0.9)" }} 
+                    >
+                      {renderActiveWorkflow()}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+
               {/* Right Column: Interactive Step Buttons */}
-              <div className="w-1/2 flex flex-col gap-4">
+              <div className="w-[25%] flex flex-col gap-3">
                 <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-neutral-400 mb-2">
                   System Pipeline Modules
                 </div>
@@ -499,7 +531,7 @@ export default function LandingPage() {
                         handleFeatureClick(i);
                       }
                     }}
-                    className={`flex items-center justify-between p-5 rounded-[20px] border transition-all text-left cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                    className={`flex items-center justify-between p-4 rounded-[16px] border transition-all text-left cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
                       activeFeature === i
                         ? "bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.15)]"
                         : "bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20"
@@ -509,7 +541,7 @@ export default function LandingPage() {
                       <span className="text-[10px] font-mono opacity-50 block mb-1">
                         MODULE 0{i + 1}
                       </span>
-                      <span className="text-base font-bold">{feat.name}</span>
+                      <span className="text-sm font-bold">{feat.name}</span>
                     </div>
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center border font-mono ${
