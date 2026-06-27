@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { Activity } from "lucide-react";
 
 import MarketDataIngestion from "@/components/workflows/MarketDataIngestion";
 import TechnicalIndicators from "@/components/workflows/TechnicalIndicators";
