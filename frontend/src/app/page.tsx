@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { ParticleNetwork } from '@/components/ui/ParticleNetwork';
 import { Activity } from 'lucide-react';
@@ -15,6 +16,7 @@ import TechnicalIndicators from '@/components/workflows/TechnicalIndicators';
 import NewsDrivenMarket from '@/components/workflows/NewsDrivenMarket';
 
 export default function LandingPage() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -45,6 +47,7 @@ export default function LandingPage() {
   }, [scrollYProgress]);
 
   const [booting, setBooting] = useState(false);
+  const [revealing, setRevealing] = useState(false);
 
   // Mock Props for Live Components
   const dummyTickers = ["AAPL", "MSFT", "NVDA", "AMZN", "META"];
@@ -244,15 +247,16 @@ export default function LandingPage() {
       </div>
 
       {/* 3. The Gateway (Final CTA) */}
-      <div className="relative z-30 w-full h-screen flex flex-col items-center justify-center bg-black">
+      <div className="relative z-30 w-full h-screen flex flex-col items-center justify-center bg-black overflow-hidden">
         {/* Deep shadow masking the top edge */}
         <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-transparent to-black pointer-events-none -translate-y-full" />
         
         <AnimatePresence>
-          {!booting ? (
+          {!booting && !revealing ? (
             <motion.div
-              exit={{ opacity: 0, scale: 1.2, filter: "blur(10px)" }}
-              className="flex flex-col items-center"
+              exit={{ opacity: 0, scale: 1.5, filter: "blur(20px)" }}
+              transition={{ duration: 0.8, ease: "easeIn" }}
+              className="flex flex-col items-center z-10"
             >
               <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-12">Ready to deploy?</h2>
               <button 
@@ -263,31 +267,60 @@ export default function LandingPage() {
                 <span className="relative z-10 group-hover:text-white transition-colors duration-300">Initialize Terminal</span>
               </button>
             </motion.div>
-          ) : (
+          ) : booting && !revealing ? (
             <motion.div 
+              key="boot-sequence"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-start font-mono text-green-500 text-lg sm:text-2xl gap-4 max-w-3xl w-[90%]"
+              exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
+              className="flex flex-col items-start font-mono text-cyan-400 text-lg sm:text-2xl gap-4 max-w-3xl w-[90%] z-10 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
             >
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>$ nexus-core --boot</motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>{">"} Loading Neural Weights... OK</motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.4 }}>{">"} Syncing Global Market Feeds... OK</motion.div>
-              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 2.0 }}>{">"} Handshake Established.</motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>{">"} Loading Neural Weights... [OK]</motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.0 }}>{">"} Syncing Global Market Feeds... [OK]</motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.4 }}>{">"} Handshake Established.</motion.div>
               <motion.div 
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
-                transition={{ delay: 2.8 }}
+                transition={{ delay: 1.8 }}
                 onAnimationComplete={() => {
                   setTimeout(() => {
-                    // Navigate to terminal after boot sequence
-                    window.location.href = "/terminal";
-                  }, 800);
+                    setRevealing(true);
+                  }, 400);
                 }}
               >
                 {">"} Routing to Interface...
               </motion.div>
             </motion.div>
-          )}
+          ) : revealing ? (
+            <motion.div
+              key="hyper-reveal"
+              initial={{ scale: 0, opacity: 0, rotateX: 45 }}
+              animate={{ scale: 1, opacity: 1, rotateX: 0 }}
+              transition={{ type: "spring", stiffness: 100, damping: 20, duration: 1.5 }}
+              onAnimationComplete={() => {
+                setTimeout(() => {
+                  router.push("/terminal");
+                }, 200); // Slight delay after animation completes before hard routing
+              }}
+              className="absolute inset-0 m-auto w-[90vw] h-[90vh] bg-[#0a0a0a] rounded-[40px] border-[2px] border-cyan-500/50 shadow-[0_0_100px_rgba(34,211,238,0.6)] overflow-hidden flex flex-col z-50"
+            >
+              {/* Fake Terminal Skeleton UI */}
+              <div className="w-full h-16 border-b border-white/10 flex items-center px-8 gap-4 bg-white/5">
+                <div className="w-8 h-8 rounded bg-cyan-500/20 animate-pulse" />
+                <div className="w-32 h-4 rounded bg-white/10 animate-pulse" />
+                <div className="flex-1" />
+                <div className="w-12 h-4 rounded bg-white/10 animate-pulse" />
+                <div className="w-12 h-4 rounded bg-white/10 animate-pulse" />
+                <div className="w-12 h-4 rounded bg-white/10 animate-pulse" />
+              </div>
+              <div className="flex-1 flex p-8 gap-8">
+                <div className="w-1/4 h-full rounded-2xl bg-white/5 animate-pulse delay-75" />
+                <div className="w-1/2 h-full rounded-2xl bg-white/5 animate-pulse delay-150" />
+                <div className="w-1/4 h-full rounded-2xl bg-white/5 animate-pulse delay-200" />
+              </div>
+            </motion.div>
+          ) : null}
         </AnimatePresence>
       </div>
 
