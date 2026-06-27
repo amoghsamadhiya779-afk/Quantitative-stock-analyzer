@@ -68,56 +68,6 @@ export interface BacktestResult {
   strategy_equity: number[];
   buy_hold_equity: number[];
   total_return: number;
-
-export interface MarketInfo {
-  index_key: string;
-  stock_file: string;
-  region: string;
-  currency: string;
-}
-
-export interface StockData {
-  ticker: string;
-  market: string;
-  currency: string;
-  region: string;
-  latest_close: number;
-  prev_close: number;
-  price_delta: number;
-  pct_change: number;
-  rsi: number;
-  volatility: number;
-  vwap: number;
-  ma_20: number;
-  ma_50: number;
-  dates: string[];
-  closes: number[];
-  opens: number[];
-  highs: number[];
-  lows: number[];
-  volumes: number[];
-  bb_upper: number[];
-  bb_lower: number[];
-  macd: number[];
-  signal_line: number[];
-  rsi_series: number[];
-}
-
-export interface PredictionResult {
-  ticker: string;
-  latest_close: number;
-  predicted_price: number;
-  delta: number;
-  pct_change: number;
-  model_type: string;
-  confidence: number;
-}
-
-export interface BacktestResult {
-  dates: string[];
-  strategy_equity: number[];
-  buy_hold_equity: number[];
-  total_return: number;
   bh_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
