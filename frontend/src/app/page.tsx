@@ -219,7 +219,7 @@ export default function Home() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
-        className="w-full max-w-[1200px] mx-auto px-6 md:px-12 lg:px-24 py-32 md:py-48 z-10 flex flex-col gap-16 md:gap-24 relative"
+        className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-12 py-12 md:py-16 z-10 flex flex-col gap-8 md:gap-12 relative"
       >
         {/* Massive Hero Section */}
         <motion.div variants={itemVariants} className="max-w-4xl">
@@ -239,7 +239,7 @@ export default function Home() {
         </motion.div>
 
         {/* Large Control Bar */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-5 gap-4 relative z-40">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 relative z-40">
           <CustomSelect label="Global Node" value={selectedMarket} options={marketNames} onChange={(v) => setSelectedMarket(v)} />
           <CustomSelect label="Target Asset" value={selectedTicker} options={tickers} onChange={(v) => setSelectedTicker(v)} />
           <CustomSelect label="AI Architecture" value={selectedAlgo} options={algos} onChange={(v) => setSelectedAlgo(v)} />
@@ -257,7 +257,7 @@ export default function Home() {
         </motion.div>
 
         {/* Live Valuation Giant Header */}
-        <motion.div variants={itemVariants} className="flex flex-col xl:flex-row gap-8 items-center bg-white border border-[var(--border)] rounded-[32px] p-8 md:p-12 shadow-card hover:shadow-card-hover transition-all duration-700">
+        <motion.div variants={itemVariants} className="flex flex-col lg:flex-row gap-6 items-center bg-white border border-[var(--border)] rounded-[24px] p-6 md:p-8 shadow-card hover:shadow-card-hover transition-all duration-700">
           {/* Logo + Name */}
           <div className="flex-1 flex flex-col items-start gap-6 w-full">
             <img
