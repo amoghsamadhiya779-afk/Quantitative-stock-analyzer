@@ -371,7 +371,7 @@ export default function LandingPage() {
                 href="#launch-terminal"
                 onClick={(e) => {
                   e.preventDefault();
-                  ScrollManager.scrollToElement("launch-terminal");
+                  router.push("/terminal");
                 }}
                 className="text-xs font-semibold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 transition-colors"
               >
@@ -380,7 +380,7 @@ export default function LandingPage() {
             </nav>
             <div>
               <button
-                onClick={() => ScrollManager.scrollToElement("launch-terminal")}
+                onClick={() => router.push("/terminal")}
                 className="px-5 py-2 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all"
               >
                 Terminal
@@ -406,13 +406,13 @@ export default function LandingPage() {
               </p>
               <div className="flex gap-4">
                 <button
-                  onClick={() => ScrollManager.scrollToElement("launch-terminal")}
+                  onClick={() => router.push("/terminal")}
                   className="px-8 py-4 rounded-full bg-white text-black font-bold text-sm hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)]"
                 >
                   Start Live Sandbox
                 </button>
                 <button
-                  onClick={() => setBooting(true)}
+                  onClick={() => router.push("/terminal")}
                   className="px-8 py-4 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-bold text-sm hover:bg-white hover:text-black transition-all"
                 >
                   Dedicated Console
@@ -484,18 +484,6 @@ export default function LandingPage() {
 
               {/* Middle Column: Live Component Preview Window */}
               <div className="w-[45%] h-[600px] rounded-[32px] border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-none">
-                {/* Mock MacOS Header */}
-                <div className="w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-6 gap-2 shrink-0">
-                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
-                  <div className="flex-1 flex justify-center">
-                    <div className="px-3 py-1 rounded bg-black/50 text-[10px] font-mono text-neutral-500 border border-white/5 flex items-center gap-2">
-                      <span className="text-cyan-500">🔒</span> nexus.quant-platform.app
-                    </div>
-                  </div>
-                </div>
-
                 {/* Live Component Container */}
                 <div className="relative flex-1 w-full overflow-hidden bg-[#0a0a0a] p-6">
                   <AnimatePresence mode="wait">
