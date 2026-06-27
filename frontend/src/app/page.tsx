@@ -1,250 +1,250 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { LandingBackground } from '@/components/ui/LandingBackground';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { ParticleNetwork } from '@/components/ui/ParticleNetwork';
+import { useTheme } from 'next-themes';
+
+// Live Components
+import Backtesting from '@/components/workflows/Backtesting';
+import RiskAnalytics from '@/components/workflows/RiskAnalytics';
+import PortfolioOptimization from '@/components/workflows/PortfolioOptimization';
 
 export default function LandingPage() {
-  return (
-    <div className="relative min-h-screen text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden">
-      <LandingBackground />
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
 
-      {/* Navigation */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-3xl flex justify-center">
-        <div className="flex items-center gap-4 sm:gap-6 px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl">
-          <Link href="#ai-solutions" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
-            AI Solutions
-          </Link>
-          <Link href="#infrastructure" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
-            Infrastructure
-          </Link>
-          <Link href="#risk-analytics" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
-            Risk Analytics
-          </Link>
-          <Link 
-            href="https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-white/70 hover:text-white transition-colors"
-          >
-            Github
-          </Link>
-          
-          <div className="hidden sm:block w-px h-4 bg-white/20 mx-2" />
-          
-          <Link 
-            href="/terminal"
-            className="text-sm font-semibold bg-white/10 hover:bg-white/20 border border-white/10 px-5 py-2 rounded-full transition-all hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] flex items-center gap-2 whitespace-nowrap"
-          >
-            Launch Terminal
-          </Link>
+  // Fade out hero on scroll
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.9]);
+
+  // Feature Section Snap points
+  // 0.2 to 0.4: Backtesting
+  // 0.4 to 0.6: Risk
+  // 0.6 to 0.8: Portfolio
+  const [activeFeature, setActiveFeature] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+    const unsubscribe = scrollYProgress.on("change", (latest) => {
+      if (latest < 0.3) setActiveFeature(0);
+      else if (latest >= 0.3 && latest < 0.6) setActiveFeature(1);
+      else if (latest >= 0.6) setActiveFeature(2);
+    });
+    return () => unsubscribe();
+  }, [scrollYProgress]);
+
+  const [booting, setBooting] = useState(false);
+
+  // Mock Props for Live Components
+  const dummyTickers = ["AAPL", "MSFT", "NVDA", "AMZN", "META"];
+  const dummyMarket = "United States (S&P 500)";
+
+  if (!mounted) return null; // Avoid hydration mismatch
+
+  return (
+    <div ref={containerRef} className="relative bg-background text-foreground min-h-[400vh] selection:bg-cyan-500/30 font-sans">
+      <ParticleNetwork />
+
+      {/* Modern Theme Switcher & Nav */}
+      <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center w-full px-6 pointer-events-none">
+        <div className="flex items-center justify-between w-full max-w-7xl">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+            <span className="font-display font-bold text-xl tracking-tight text-white drop-shadow-md">NEXUS</span>
+          </div>
+
+          <div className="pointer-events-auto flex items-center gap-2 p-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-xl">
+            {['dark', 'light', 'cyber'].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                  theme === t 
+                    ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
+                    : 'text-neutral-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <main className="flex flex-col items-center justify-center min-h-screen px-4 text-center z-10 relative pt-32 pb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 animate-fade-in-up">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-          <span className="text-xs font-medium tracking-wide text-cyan-50">Nexus Quant Platform is Live</span>
-        </div>
-        
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight max-w-5xl bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/40 mb-6 drop-shadow-lg leading-tight animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-          Next-gen Quantitative Intelligence with AI Agents
-        </h1>
-        
-        <p className="text-lg md:text-xl text-white/60 max-w-2xl mb-12 font-light leading-relaxed animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-          Accelerate the speed of business with the Nexus Quant Platform. Unify alternative data, predictive models, and autonomous AI for unparallelled market edges.
-        </p>
-        
-        <Link 
-          href="/terminal"
-          className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,165,0,0.25)] backdrop-blur-md overflow-hidden animate-fade-in-up"
-          style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+      {/* 1. Hero Section */}
+      <motion.div 
+        style={{ opacity: heroOpacity, scale: heroScale }}
+        className="sticky top-0 h-screen w-full flex flex-col items-center justify-center px-4 pointer-events-none z-10"
+      >
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md mb-8"
         >
-          {/* Subtle moving glare effect */}
-          <div className="absolute inset-0 -translate-x-full group-hover:animate-[glare_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
-          
-          <span>View Dashboard</span>
-          <svg 
-            className="w-5 h-5 group-hover:translate-x-1 transition-transform" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </Link>
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+          <span className="text-xs font-mono tracking-wider text-cyan-50">QUANTITATIVE INTELLIGENCE V2.0</span>
+        </motion.div>
         
-        {/* Abstract mock terminal snippet floating at the bottom */}
-        <div className="mt-24 w-full max-w-5xl h-[300px] rounded-t-3xl border-t border-l border-r border-white/10 bg-black/40 backdrop-blur-xl relative overflow-hidden flex flex-col items-start justify-start p-8 [mask-image:linear-gradient(to_bottom,white,transparent)] animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
-          <div className="flex gap-2 mb-6">
+        <motion.h1 
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="text-6xl md:text-8xl lg:text-[100px] font-extrabold tracking-tighter max-w-6xl text-center leading-[0.9] drop-shadow-2xl text-white"
+        >
+          Outsmart the Market with <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">AI Agents.</span>
+        </motion.h1>
+        
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.8 }}
+          className="text-lg md:text-2xl text-neutral-300 max-w-2xl text-center mt-8 font-light"
+        >
+          An institutional-grade terminal built on predictive neural networks and systemic risk engines. Scroll to explore.
+        </motion.p>
+      </motion.div>
+
+      {/* 2. Scroll-Linked Feature Walkthrough */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 pt-32 pb-64 flex gap-12 lg:gap-24 items-start">
+        
+        {/* Left Side: Sticky Content */}
+        <div className="hidden lg:flex flex-col sticky top-[30vh] w-[40%] gap-32 pointer-events-none">
+          <div className={`transition-opacity duration-500 ${activeFeature === 0 ? 'opacity-100' : 'opacity-20'}`}>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Institutional Backtesting</h2>
+            <p className="text-lg text-neutral-400">Don't guess. Know. Test your algorithms against decades of historical data with zero look-ahead bias. Our engine simulates slippage, commissions, and extreme volatility instantly.</p>
+          </div>
+          
+          <div className={`transition-opacity duration-500 ${activeFeature === 1 ? 'opacity-100' : 'opacity-20'}`}>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Systemic Risk Analytics</h2>
+            <p className="text-lg text-neutral-400">See the invisible. Dynamically calculate your Value at Risk (VaR) and systemic exposure across global markets in real-time. Identify dangerous correlations before they break your portfolio.</p>
+          </div>
+          
+          <div className={`transition-opacity duration-500 ${activeFeature === 2 ? 'opacity-100' : 'opacity-20'}`}>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Autonomous Portfolio Optimization</h2>
+            <p className="text-lg text-neutral-400">Let AI find the Efficient Frontier. Optimize asset allocation for maximum Sharpe ratio mathematically. The engine runs thousands of Monte Carlo simulations to find the perfect risk/reward balance.</p>
+          </div>
+        </div>
+
+        {/* Right Side: Live Component Preview Window */}
+        <div className="w-full lg:w-[60%] sticky top-[15vh] h-[70vh] rounded-[32px] border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-none">
+          
+          {/* Mock MacOS Header */}
+          <div className="w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-6 gap-2 shrink-0">
             <div className="w-3 h-3 rounded-full bg-red-500/50" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-            <div className="w-3 h-3 rounded-full bg-green-500/50" />
+            <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
+            <div className="flex-1 flex justify-center">
+              <div className="px-3 py-1 rounded bg-black/50 text-[10px] font-mono text-neutral-500 border border-white/5 flex items-center gap-2">
+                <span className="text-cyan-500">🔒</span> nexus.quant-platform.app
+              </div>
+            </div>
           </div>
-          <div className="w-full flex flex-col gap-4 font-mono text-sm text-white/40">
-            <div className="flex items-center gap-4">
-              <span className="text-cyan-400/60">~</span>
-              <span className="text-green-400/60">nexus</span>
-              <span>initialize --agents=4</span>
-            </div>
-            <div className="flex items-center gap-4 pl-4 text-white/30">
-              <span>[+] Booting quantitative reasoning models...</span>
-            </div>
-            <div className="flex items-center gap-4 pl-4 text-white/30">
-              <span>[+] Connecting to live market data feeds...</span>
-            </div>
-            <div className="flex items-center gap-4 pl-4 text-white/30">
-              <span>[+] Agents ready. Standing by.</span>
-            </div>
-            <div className="flex items-center gap-4 mt-2">
-              <span className="text-cyan-400/60">~</span>
-              <span className="w-2 h-4 bg-white/40 animate-pulse" />
-            </div>
+
+          {/* Live Component Container */}
+          <div className="relative flex-1 w-full overflow-hidden bg-background p-6">
+            <AnimatePresence mode="wait">
+              {activeFeature === 0 && (
+                <motion.div 
+                  key="backtest"
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.05, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="w-full h-full transform-gpu origin-top"
+                  style={{ transform: "scale(0.85)" }} // Scale down to fit the preview window
+                >
+                  <Backtesting selectedMarket={dummyMarket} selectedTicker="AAPL" selectedAlgo="MACD" />
+                </motion.div>
+              )}
+              {activeFeature === 1 && (
+                <motion.div 
+                  key="risk"
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.05, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="w-full h-full transform-gpu origin-top"
+                  style={{ transform: "scale(0.85)" }}
+                >
+                  <RiskAnalytics tickers={dummyTickers} selectedMarket={dummyMarket} />
+                </motion.div>
+              )}
+              {activeFeature === 2 && (
+                <motion.div 
+                  key="portfolio"
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.05, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="w-full h-full transform-gpu origin-top"
+                  style={{ transform: "scale(0.85)" }}
+                >
+                  <PortfolioOptimization tickers={dummyTickers} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </main>
 
-      {/* Feature Sections */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-24 flex flex-col gap-32 pb-48">
-        
-        {/* Section 1: AI Solutions */}
-        <motion.section 
-          id="ai-solutions"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
-        >
-          <div>
-            <div className="text-cyan-400 font-mono text-sm tracking-widest uppercase mb-4">Neural Architecture</div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">Predictive AI Models</h2>
-            <p className="text-lg text-white/60 leading-relaxed mb-8">
-              Deploy state-of-the-art machine learning algorithms including CNN-BiLSTM Attention engines and Temporal Transformers. Extract alpha from high-dimensional datasets with unparalleled precision.
-            </p>
-            <ul className="flex flex-col gap-4 text-white/80 font-medium">
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-cyan-400" /> Deep Learning Price Forecasting</li>
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-cyan-400" /> Sentiment Analysis via NLP</li>
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-cyan-400" /> Autonomous Agent Swarms</li>
-            </ul>
-          </div>
-          <div className="h-[400px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md p-8 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            {/* Mock UI Element */}
-            <div className="flex flex-col gap-4 h-full">
-               <div className="w-full h-8 bg-white/5 rounded-md" />
-               <div className="flex-1 w-full bg-white/5 rounded-md flex items-end p-4 gap-2">
-                  {[40, 60, 45, 80, 55, 90, 75, 100].map((h, i) => (
-                    <motion.div 
-                      key={i}
-                      initial={{ height: 0 }}
-                      whileInView={{ height: `${h}%` }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1, duration: 1, ease: "easeOut" }}
-                      className="flex-1 bg-cyan-500/40 rounded-t-sm"
-                    />
-                  ))}
-               </div>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* Section 2: Quantitative Infrastructure */}
-        <motion.section 
-          id="infrastructure"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
-        >
-          <div className="h-[400px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md p-8 relative overflow-hidden group order-2 lg:order-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <div className="flex flex-col gap-3 h-full justify-center">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-full bg-black/40 rounded-xl p-4 border border-white/5 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse" />
-                  <div className="flex-1">
-                    <div className="h-2 w-1/3 bg-white/20 rounded-full mb-2" />
-                    <div className="h-2 w-1/2 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="order-1 lg:order-2">
-            <div className="text-orange-400 font-mono text-sm tracking-widest uppercase mb-4">Infrastructure</div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">Robust Backtesting</h2>
-            <p className="text-lg text-white/60 leading-relaxed mb-8">
-              Validate your hypotheses against decades of historical tick data. Our high-performance backtesting engine simulates slippage, latency, and institutional trading costs to ensure real-world robustness.
-            </p>
-            <ul className="flex flex-col gap-4 text-white/80 font-medium">
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> High-frequency tick simulation</li>
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> Strategy optimization matrices</li>
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> Risk-adjusted return profiling</li>
-            </ul>
-          </div>
-        </motion.section>
-
-        {/* Section 3: Risk Analytics */}
-        <motion.section 
-          id="risk-analytics"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
-        >
-          <div>
-            <div className="text-green-400 font-mono text-sm tracking-widest uppercase mb-4">Portfolio Engineering</div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">Advanced Risk Analytics</h2>
-            <p className="text-lg text-white/60 leading-relaxed mb-8">
-              Construct highly optimized portfolios using Markowitz Efficient Frontier models. Monitor systemic risk, beta exposure, and dynamic correlation matrices in real-time.
-            </p>
-            <ul className="flex flex-col gap-4 text-white/80 font-medium">
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Value at Risk (VaR) monitoring</li>
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Dynamic Asset Allocation</li>
-              <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Correlation heatmaps</li>
-            </ul>
-          </div>
-          <div className="h-[400px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md p-8 relative overflow-hidden group flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-48 h-48 rounded-full border border-dashed border-green-500/30 flex items-center justify-center"
-            >
-              <div className="w-32 h-32 rounded-full border border-green-500/50 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-green-500/20 blur-xl" />
-              </div>
-            </motion.div>
-          </div>
-        </motion.section>
       </div>
-      
-      {/* Inline styles for custom animations */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes glare {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes fade-in-up {
-          0% {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-      `}} />
+
+      {/* 3. The Gateway (Final CTA) */}
+      <div className="relative z-30 w-full h-screen flex flex-col items-center justify-center bg-black">
+        {/* Deep shadow masking the top edge */}
+        <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-transparent to-black pointer-events-none -translate-y-full" />
+        
+        <AnimatePresence>
+          {!booting ? (
+            <motion.div
+              exit={{ opacity: 0, scale: 1.2, filter: "blur(10px)" }}
+              className="flex flex-col items-center"
+            >
+              <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-12">Ready to deploy?</h2>
+              <button 
+                onClick={() => setBooting(true)}
+                className="group relative px-12 py-5 bg-white text-black font-bold text-xl rounded-full overflow-hidden transition-transform hover:scale-105 active:scale-95"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <span className="relative z-10 group-hover:text-white transition-colors duration-300">Initialize Terminal</span>
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-start font-mono text-green-500 text-lg sm:text-2xl gap-4 max-w-3xl w-[90%]"
+            >
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>$ nexus-core --boot</motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>{">"} Loading Neural Weights... OK</motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.4 }}>{">"} Syncing Global Market Feeds... OK</motion.div>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 2.0 }}>{">"} Handshake Established.</motion.div>
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                transition={{ delay: 2.8 }}
+                onAnimationComplete={() => {
+                  setTimeout(() => {
+                    // Navigate to terminal after boot sequence
+                    window.location.href = "/terminal";
+                  }, 800);
+                }}
+              >
+                {">"} Routing to Interface...
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
 }
