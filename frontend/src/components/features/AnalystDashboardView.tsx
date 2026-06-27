@@ -46,30 +46,33 @@ export default function AnalystDashboardView({ stockData, prediction, allPredict
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-50px" }}
-      className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8"
+      className="w-full flex flex-col gap-6 md:gap-8"
     >
-      {/* Left Column */}
-      <motion.div variants={staggerItem} className="flex flex-col gap-6 md:gap-8">
-        <ResearchSnapshotCard data={stockData} currency={currency} />
-        <div className="p-8 ventriloc-card group relative overflow-hidden transition-all duration-500 hover:-translate-y-1">
-          <div className="flex justify-between items-center mb-8 relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-slate)]">Market State</span>
-            <MarketRegimeBadge pctChange={stockData.pct_change} volatility={stockData.volatility} />
+      {/* Top Metrics Row */}
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        {/* Left Column */}
+        <motion.div variants={staggerItem} className="flex flex-col gap-6 md:gap-8">
+          <ResearchSnapshotCard data={stockData} currency={currency} />
+          <div className="p-8 ventriloc-card group relative overflow-hidden transition-all duration-500 hover:-translate-y-1">
+            <div className="flex justify-between items-center mb-8 relative z-10">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-slate)]">Market State</span>
+              <MarketRegimeBadge pctChange={stockData.pct_change} volatility={stockData.volatility} />
+            </div>
+            <div className="relative z-10">
+              <InstitutionalRiskMeter volatility={stockData.volatility} />
+            </div>
           </div>
-          <div className="relative z-10">
-            <InstitutionalRiskMeter volatility={stockData.volatility} />
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Middle Column */}
-      <motion.div variants={staggerItem} className="flex flex-col gap-6 md:gap-8">
-        <QuantResearchScore score={compositeScore} />
-        <MarketPulseWidget rsi={stockData.rsi} macd={stockData.macd} />
-        <PortfolioHealthWidget ticker={stockData.ticker} pctChange={stockData.pct_change} />
-      </motion.div>
+        {/* Right Column */}
+        <motion.div variants={staggerItem} className="flex flex-col gap-6 md:gap-8">
+          <QuantResearchScore score={compositeScore} />
+          <MarketPulseWidget rsi={stockData.rsi} macd={stockData.macd} />
+          <PortfolioHealthWidget ticker={stockData.ticker} pctChange={stockData.pct_change} />
+        </motion.div>
+      </div>
 
-      {/* Right Column (AI Insights) */}
+      {/* Bottom Section (AI Insights) */}
       <motion.div variants={staggerItem} className="p-8 lg:p-10 ventriloc-card relative overflow-hidden group transition-all duration-500 hover:-translate-y-1">
         <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-8 border-b border-[var(--border)] pb-4 relative z-10 flex items-center justify-between text-[var(--color-carbon)]">
           <span>AI Consensus Engine</span>
@@ -95,11 +98,11 @@ export default function AnalystDashboardView({ stockData, prediction, allPredict
                 const displayModel = p.model_type.split('_').join(' ').replace('CNN BiLSTM Attention', 'CNN-Attn').replace('TimeSeriesTransformer', 'Transf.').replace('AdvancedBiLSTM', 'BiLSTM');
                 return (
                   <div key={idx} className="p-4 bg-[var(--color-fog)] rounded-card border border-[var(--border)] flex flex-col items-center text-center justify-center relative overflow-hidden group/model hover:shadow-card-hover hover:bg-white transition-all duration-500">
-                    <div className="text-[9px] uppercase tracking-widest text-[var(--color-slate)] mb-2 w-full truncate px-1 font-semibold" title={p.model_type}>{displayModel}</div>
-                    <div className={`text-2xl font-bold font-mono ${isUp ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+                    <div className="text-[10px] uppercase tracking-widest text-[var(--color-slate)] mb-2 w-full truncate px-1 font-semibold" title={p.model_type}>{displayModel}</div>
+                    <div className={`text-xl md:text-2xl font-bold font-mono ${isUp ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
                       {direction}
                     </div>
-                    <div className="text-[10px] text-[var(--color-graphite)] mt-2 font-medium">{Math.round(p.confidence)}% Conf.</div>
+                    <div className="text-[11px] text-[var(--color-graphite)] mt-2 font-medium">{Math.round(p.confidence)}% Conf.</div>
                   </div>
                 );
               })}
