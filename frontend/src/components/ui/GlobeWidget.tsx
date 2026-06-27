@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 export const MARKET_LOCATIONS: Record<string, [number, number]> = {
@@ -31,9 +31,10 @@ function convertLatLngToVector3(lat: number, lng: number, radius: number): THREE
 interface Props {
   activeLocation?: [number, number];
   onSelectMarket?: (marketName: string) => void;
+  onHoverNode?: (name: string | null) => void;
 }
 
-export default function GlobeWidget({ activeLocation, onSelectMarket }: Props) {
+export default function GlobeWidget({ activeLocation, onSelectMarket, onHoverNode }: Props) {
   return (
     <div className="w-full aspect-square relative max-w-[500px] mx-auto drop-shadow-2xl">
       <Canvas
@@ -44,7 +45,7 @@ export default function GlobeWidget({ activeLocation, onSelectMarket }: Props) {
         <pointLight position={[10, 10, 10]} intensity={1.8} />
         <pointLight position={[-10, -10, -10]} intensity={0.6} />
         
-        <GlobeScene activeLocation={activeLocation} onSelectMarket={onSelectMarket} />
+        <GlobeScene activeLocation={activeLocation} onSelectMarket={onSelectMarket} onHoverNode={onHoverNode} />
         
         <OrbitControls
           enableZoom={false}
@@ -63,9 +64,10 @@ interface NodeProps {
   position: THREE.Vector3;
   isActive: boolean;
   onClick: () => void;
+  onHoverNode?: (name: string | null) => void;
 }
 
-function MarketNode({ name, position, isActive, onClick }: NodeProps) {
+function MarketNode({ name, position, isActive, onClick, onHoverNode }: NodeProps) {
   const [hovered, setHovered] = useState(false);
   const ringRef = useRef<THREE.Mesh>(null);
 
@@ -94,11 +96,13 @@ function MarketNode({ name, position, isActive, onClick }: NodeProps) {
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
+          onHoverNode?.(name);
           document.body.style.cursor = "pointer";
         }}
         onPointerOut={(e) => {
           e.stopPropagation();
           setHovered(false);
+          onHoverNode?.(null);
           document.body.style.cursor = "default";
         }}
       >
@@ -120,15 +124,6 @@ function MarketNode({ name, position, isActive, onClick }: NodeProps) {
         />
       </mesh>
 
-      {/* R3F Drei HTML Tooltip */}
-      {(hovered || isActive) && (
-        <Html distanceFactor={8} position={[0, 0.35, 0]} center>
-          <div className="bg-slate-950/90 border border-slate-800 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap font-medium flex items-center gap-1.5 select-none pointer-events-none transition-all">
-            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-400 animate-pulse" : "bg-blue-400"}`} />
-            {name}
-          </div>
-        </Html>
-      )}
     </group>
   );
 }
@@ -164,7 +159,7 @@ function OrbitRings({ radius }: { radius: number }) {
   );
 }
 
-function GlobeScene({ activeLocation, onSelectMarket }: Props) {
+function GlobeScene({ activeLocation, onSelectMarket, onHoverNode }: Props) {
   const globeRef = useRef<THREE.Group>(null);
   const radius = 2.2;
 
@@ -215,6 +210,7 @@ function GlobeScene({ activeLocation, onSelectMarket }: Props) {
             position={pos}
             isActive={!!isActive}
             onClick={() => onSelectMarket?.(name)}
+            onHoverNode={onHoverNode}
           />
         );
       })}

@@ -87,14 +87,29 @@ export default function MacroRiskEngine({ stockData, prediction, currency, selec
         <h3 className="text-[10px] tracking-widest text-[var(--color-slate)] uppercase mb-3">Monte Carlo Projection — {selectedAlgo.split("-")[0].trim()}</h3>
         <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0}>
           <LineChart data={chartData}>
+            <defs>
+              <linearGradient id="gradientHistorical" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#60a5fa" />
+              </linearGradient>
+              <linearGradient id="gradientAI" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#4ade80" />
+                <stop offset="100%" stopColor="#22d3ee" />
+              </linearGradient>
+              <linearGradient id="gradientMC" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#60a5fa" />
+              </linearGradient>
+            </defs>
             <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--color-slate)", fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickMargin={10} />
             <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--color-slate)", fontSize: 10, fontFamily: 'monospace' }} tickFormatter={(v) => v.toLocaleString()} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--color-chalk)', strokeWidth: 1, strokeDasharray: '4 4' }} />
             {Array.from({ length: 8 }).map((_, i) => (
-              <Line key={i} type="monotone" dataKey={`path${i}`} stroke="var(--accent)" strokeWidth={1.5} dot={false} opacity={0.15} connectNulls={false} isAnimationActive={true} />
+              <Line key={i} type="monotone" dataKey={`path${i}`} stroke="url(#gradientMC)" strokeWidth={1.5} dot={false} opacity={0.12} connectNulls={false} isAnimationActive={true} />
             ))}
-            <Line type="monotone" dataKey="historical" stroke="var(--foreground)" strokeWidth={2.5} dot={false} isAnimationActive={true} name="Historical" />
-            <Line type="monotone" dataKey="aiTarget" stroke="var(--profit)" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 6, fill: "var(--profit)", stroke: 'var(--surface)', strokeWidth: 2 }} isAnimationActive={true} name="AI Target" />
+            <Line type="monotone" dataKey="historical" stroke="url(#gradientHistorical)" strokeWidth={2.5} dot={false} isAnimationActive={true} name="Historical" />
+            <Line type="monotone" dataKey="aiTarget" stroke="url(#gradientAI)" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 6, fill: "#4ade80", stroke: 'var(--surface)', strokeWidth: 2 }} isAnimationActive={true} name="AI Target" />
           </LineChart>
         </ResponsiveContainer>
       </div>

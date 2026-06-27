@@ -2,30 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  /* Colors — Ventriloc Palette (Refactored to Black Luxury Theme) */
+  /* Colors — COSMOQ Cosmic Palette */
   --color-signal-orange: #ff682c;
   --color-sienna-bronze: #816729;
   --color-carbon: #ffffff;
   --color-graphite: #a3a3a3;
   --color-slate: #737373;
   --color-fog: #0d0d0d;
-  --color-mist: #030303;
+  --color-mist: #05060A;
   --color-chalk: rgba(255, 255, 255, 0.08);
   --color-paper: #0a0a0a;
 
-  /* Semantic Aliases */
-  --background: #030303;
-  --surface: #0a0a0a;
-  --surface-hover: #141414;
+  /* Semantic Aliases — COSMOQ */
+  --background: #05060A;
+  --surface: rgba(20, 20, 26, 0.55);
+  --surface-solid: #0e0e14;
+  --surface-hover: rgba(25, 25, 35, 0.7);
   --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
   --foreground: #f3f4f6;
   --accent: #ff682c;
   --accent-secondary: #d97706;
-  --profit: #10b981;
-  --loss: #ef4444;
+
+  /* COSMOQ Multi-Color Sentiment */
+  --profit: #4ADE80;
+  --loss: #F87171;
+  --neutral-badge: #60A5FA;
+  --slate-badge: #94A3B8;
+  --violet-badge: #a78bfa;
+  --amber-badge: #fbbf24;
 
   /* Typography — Font Families */
   --font-display: 'PolySans', 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -67,10 +75,10 @@
   /* Layout */
   --page-max-width: 1200px;
   --section-gap: 80px;
-  --card-padding: 32px;
+  --card-padding: 24px;
   --element-gap: 20px;
 
-  /* Border Radius (Refactored to 24px and 32px) */
+  /* Border Radius */
   --radius-sm: 8px;
   --radius-lg: 16px;
   --radius-xl: 20px;
@@ -80,24 +88,25 @@
 
   /* Named Radii */
   --radius-tags: 9999px;
-  --radius-cards: 24px;
+  --radius-cards: 20px;
   --radius-inputs: 12px;
   --radius-buttons: 9999px;
   --radius-navpill: 9999px;
 
   /* Surfaces */
-  --surface-canvas: #030303;
-  --surface-paper: #0a0a0a;
+  --surface-canvas: #05060A;
+  --surface-paper: rgba(20, 20, 26, 0.55);
   --surface-fog: #0d0d0d;
   --surface-chalk: rgba(255, 255, 255, 0.08);
 
-  /* Elevation — subtle only */
-  --elevation-card: 0 4px 30px rgba(0, 0, 0, 0.4);
+  /* Elevation — COSMOQ depth */
+  --elevation-card: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --elevation-card-hover: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #05060A;
   font-family: var(--font-inter);
   overflow-x: hidden;
 }
@@ -111,9 +120,97 @@ html {
   box-sizing: border-box;
 }
 
-/* Global Theme Contract Classes */
+/* ============================================ */
+/* COSMOQ Glass Card System                     */
+/* ============================================ */
+.cosmoq-card {
+  background: rgba(20, 20, 26, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  padding: 24px;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.cosmoq-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Legacy ventriloc-card and glass-card aliases */
+.ventriloc-card, .glass-card {
+  background: rgba(20, 20, 26, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-cards);
+  border: 1px solid var(--border);
+  box-shadow: var(--elevation-card);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.ventriloc-card:hover, .glass-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: var(--elevation-card-hover);
+}
+
+/* ============================================ */
+/* Floating Pill Navigation                     */
+/* ============================================ */
+.cosmoq-nav-pill {
+  background: rgba(15, 15, 20, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+}
+
+/* CTA Glow Button */
+.cosmoq-cta {
+  position: relative;
+  background: #0a0a0a;
+  color: #fff;
+  border-radius: 9999px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.cosmoq-cta::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #3B6FE0, #FF8A3D, #6E4DE0);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.cosmoq-cta:hover::before {
+  opacity: 1;
+}
+
+.cosmoq-cta:hover {
+  background: #0a0a0a;
+  box-shadow: 0 0 20px rgba(59, 111, 224, 0.3), 0 0 40px rgba(255, 138, 61, 0.15);
+}
+
+/* ============================================ */
+/* Premium Utilities                            */
+/* ============================================ */
 .bg-luxury-black {
-  background-color: #030303 !important;
+  background-color: transparent !important;
+}
+
+.bg-luxury-radial {
+  background: transparent;
 }
 
 .border-luxury-glass {
@@ -133,47 +230,16 @@ html {
   word-wrap: break-word;
 }
 
-/* Premium Radial Gradients & Frosted Glass Utilities */
-.bg-luxury-radial {
-  background: radial-gradient(circle at top, rgba(255, 104, 44, 0.12) 0%, rgba(3, 3, 3, 0) 75%);
-}
-
 .glass-premium {
-  background: rgba(10, 10, 10, 0.65);
+  background: rgba(15, 15, 20, 0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Ventriloc Card — replaces glass-card */
-.ventriloc-card {
-  background: var(--surface-paper);
-  border-radius: var(--radius-cards);
-  border: 1px solid var(--border);
-  box-shadow: var(--elevation-card);
-  transition: all 0.3s ease;
-}
-
-.ventriloc-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* Legacy glass-card alias — maps to ventriloc-card */
-.glass-card {
-  background: var(--surface-paper);
-  border-radius: var(--radius-cards);
-  border: 1px solid var(--border);
-  box-shadow: var(--elevation-card);
-  transition: all 0.3s ease;
-}
-
-.glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* Pill Button */
+/* ============================================ */
+/* Pill Buttons                                  */
+/* ============================================ */
 .pill-button {
   display: inline-flex;
   align-items: center;
@@ -208,15 +274,58 @@ html {
   background: var(--color-fog);
 }
 
-/* Premium Select Styling */
+/* ============================================ */
+/* Sentiment Badge System (COSMOQ)              */
+/* ============================================ */
+.badge-bullish {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ADE80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-bearish {
+  background: rgba(248, 113, 113, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-neutral {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================ */
+/* Premium Select Styling                        */
+/* ============================================ */
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23202020' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 28px !important;
 }
 
-/* Custom scrollbar */
+/* ============================================ */
+/* Custom Scrollbar                              */
+/* ============================================ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -232,12 +341,45 @@ select {
   background: var(--color-slate);
 }
 
-/* Display typography utility */
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================ */
+/* Typography                                    */
+/* ============================================ */
 .font-display {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
 
+/* ============================================ */
+/* Marquee                                       */
+/* ============================================ */
 .animate-marquee:hover {
   animation-play-state: paused !important;
+}
+
+/* ============================================ */
+/* Reduced Motion                                */
+/* ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .cosmoq-card,
+  .ventriloc-card,
+  .glass-card {
+    transition: none;
+  }
+  .cosmoq-card:hover,
+  .ventriloc-card:hover,
+  .glass-card:hover {
+    transform: none;
+  }
+  .animate-marquee {
+    animation: none !important;
+  }
 }
