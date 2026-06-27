@@ -1,3 +1,11 @@
+---
+title: Quant Modeling
+emoji: 📈
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
 
 # Quantum Yield: Enterprise MLOps Trading OS and Quantitative Analytics Platform
 
