@@ -19,6 +19,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # Explicitly import TensorFlow and Keras (Removed the silent bypass)
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+
+# --- HOTFIX: Monkey-patch Keras Dense to ignore quantization_config ---
+# TensorFlow 2.16+ saves models with 'quantization_config' in Dense layers,
+# which causes deserialization to fail on older Keras versions or certain HF environments.
+original_dense_init = tf.keras.layers.Dense.__init__
+def patched_dense_init(self, *args, **kwargs):
+    kwargs.pop('quantization_config', None)
+    original_dense_init(self, *args, **kwargs)
+tf.keras.layers.Dense.__init__ = patched_dense_init
+# ----------------------------------------------------------------------
 from sklearn.preprocessing import MinMaxScaler
 import uvicorn
 
@@ -249,19 +259,20 @@ def health_check():
 def debug_info():
     import tensorflow as tf
     import traceback
-    info = {"tf_version": tf.__version__, "files": {}, "errors": {}}
+    import subprocess
+    pip_list = subprocess.check_output(["pip", "freeze"]).decode("utf-8").split("\n")
+    info = {"tf_version": tf.__version__, "pip": pip_list, "files": {}, "errors": {}}
     for f in os.listdir(MODEL_DIR):
         if f.endswith(".keras"):
             path = os.path.join(MODEL_DIR, f)
             info["files"][f] = os.path.getsize(path)
-            # Try to load one to get the error
             if "SP500_AdvancedBiLSTM.keras" in f:
                 try:
                     from tensorflow.keras.models import load_model
                     load_model(path, compile=False)
                     info["errors"][f] = "Loaded successfully"
                 except Exception as e:
-                    info["errors"][f] = str(e) + "\n" + traceback.format_exc()
+                    info["errors"][f] = str(e)
     return info
 
 @app.post("/api/v1/predict", response_model=InferenceResponse)
