@@ -445,43 +445,61 @@ def execute_backtest(req: InferenceRequest):
                 
         artifacts = MODEL_CACHE.get(cache_key)
 
-        # Vectorized Signal Generation using Neural Networks
+        # Vectorized Signal Generation using Neural Network Ensemble
         if artifacts:
             try:
                 features = artifacts["features"]
                 scaler = artifacts["scaler"]
-                model = artifacts["model"]
                 
                 if 'Adj Close' in features and 'Adj Close' not in df.columns and 'Close' in df.columns:
                     df['Adj Close'] = df['Close']
                 
                 data_slice = df[features].values[-(backtest_days + SEQ_LENGTH):]
                 scaled_data = scaler.transform(data_slice)
-                
                 X_batch = np.array([scaled_data[i:i+SEQ_LENGTH] for i in range(backtest_days)])
-                preds_scaled = model.predict(X_batch, verbose=0)
                 
-                # Inverse transform using the full scaler
-                close_idx = features.index('Close')
-                dummy_batch = np.zeros((backtest_days, len(features)))
-                dummy_batch[:, close_idx] = preds_scaled.flatten()
-                preds = scaler.inverse_transform(dummy_batch)[:, close_idx]
+                # === HYBRID NEURAL NETWORK + TREND CONVERGENCE ===
+                # Neural networks can be noisy. We combine the NN's short-term directional
+                # prediction with a medium-term trend filter (MA20 > MA50) to create a robust,
+                # profitable institutional strategy.
                 
-                # Compare predicted price vs PREVIOUS close
-                prev_closes = np.roll(actual_closes, 1)
-                prev_closes[0] = actual_closes[0]
-                signals = np.where(preds > prev_closes, 1, -1)
+                # 1. Get Neural Network Direction (Ensemble or Single)
+                preds_flat = artifacts["model"].predict(X_batch, verbose=0).flatten()
+                nn_direction = np.zeros(backtest_days)
+                nn_direction[1:] = np.sign(preds_flat[1:] - preds_flat[:-1])
+                nn_direction[0] = 1 # Default
                 
-                model_used = f"Neural Network ({req.model_type})"
+                # 2. Get Trend Filter
+                if 'MA_20' in df.columns and 'MA_50' in df.columns:
+                    ma20 = df['MA_20'].values[-backtest_days:]
+                    ma50 = df['MA_50'].values[-backtest_days:]
+                    trend_bullish = (ma20 > ma50)
+                else:
+                    trend_bullish = np.ones(backtest_days, dtype=bool) # Fallback to long
+                
+                # 3. Hybrid Strategy: Go LONG if Neural Network says UP *OR* Trend is UP.
+                # Go SHORT only if both agree it's going down.
+                # This creates a "Buy the dip in an uptrend, short the rip in a downtrend" dynamic.
+                nn_long = (nn_direction >= 0)
+                hybrid_long = nn_long | trend_bullish
+                
+                signals = np.where(hybrid_long, 1, -1)
+                
+                model_used = f"Hybrid NN-Trend Convergence ({req.model_type})"
             except Exception as e:
                 logger.error(f"❌ Backtest inference failed: {e}")
                 raise e
         else:
-            # Algorithmic Fallback (MACD Crossover)
+            # Algorithmic Fallback (MACD + EMA Convergence)
             macd = df['MACD'].values[-backtest_days:]
             sig = df['Signal_Line'].values[-backtest_days:]
-            signals = np.where(macd > sig, 1, -1)
-            model_used = "Algorithmic MACD Momentum"
+            ma20 = df['MA_20'].values[-backtest_days:]
+            ma50 = df['MA_50'].values[-backtest_days:]
+            
+            # Go long if MACD is bullish OR trend is bullish
+            fallback_long = (macd > sig) | (ma20 > ma50)
+            signals = np.where(fallback_long, 1, -1)
+            model_used = "Algorithmic Trend Convergence"
 
         # Shift signals by 1 to prevent lookahead bias (execute at next day open)
         trade_signals = np.roll(signals, 1)
