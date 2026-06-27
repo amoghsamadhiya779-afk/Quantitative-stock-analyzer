@@ -450,20 +450,8 @@ export default function LandingPage() {
               ref={platformRef}
               className="w-full min-h-screen py-24 flex items-center justify-between gap-8 relative z-20"
             >
-              {/* Left Column: Three.js Canvas & Active Feature text overlay */}
-              <div className="w-[30%] h-[600px] relative rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md p-8 flex flex-col justify-between overflow-hidden">
-                <div className="absolute inset-0 z-0 opacity-80 pointer-events-auto">
-                  <Canvas camera={{ position: [0, 0, 5], fov: 45 } as any}>
-                    <ambientLight intensity={0.5} />
-                    <pointLight position={[10, 10, 10]} intensity={1} />
-                    {activeFeature === 0 && <NewsModel />}
-                    {activeFeature === 1 && <IndicatorModel />}
-                    {activeFeature === 2 && <MLModel />}
-                    {activeFeature === 3 && <PortfolioModel />}
-                    {activeFeature === 4 && <RiskModel />}
-                    {activeFeature === 5 && <BacktestModel />}
-                  </Canvas>
-                </div>
+              {/* Left Column: Active Feature text overlay */}
+              <div className="w-[25%] h-[600px] relative rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md p-8 flex flex-col justify-between overflow-hidden">
 
                 <div className="relative z-10 flex flex-col justify-between h-full pointer-events-none">
                   <div>
@@ -483,7 +471,23 @@ export default function LandingPage() {
               </div>
 
               {/* Middle Column: Live Component Preview Window */}
-              <div className="w-[45%] h-[600px] rounded-[32px] border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-none">
+              <div className="w-[50%] h-[600px] rounded-[32px] border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-none">
+                {/* Windows 11 Style Header */}
+                <div className="w-full h-10 bg-black/80 border-b border-white/10 flex items-center justify-between px-4 shrink-0 select-none">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-cyan-400">⚡</span>
+                    <span className="text-xs font-sans text-neutral-300">Nexus Terminal</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-neutral-400">
+                    <div className="w-3 h-[1px] bg-neutral-400" /> {/* Minimize */}
+                    <div className="w-3 h-3 border border-neutral-400" /> {/* Maximize */}
+                    <div className="relative w-3 h-3 flex items-center justify-center">
+                      <div className="absolute w-[14px] h-[1px] bg-neutral-400 rotate-45" />
+                      <div className="absolute w-[14px] h-[1px] bg-neutral-400 -rotate-45" />
+                    </div> {/* Close */}
+                  </div>
+                </div>
+
                 {/* Live Component Container */}
                 <div className="relative flex-1 w-full overflow-hidden bg-[#0a0a0a] p-6">
                   <AnimatePresence mode="wait">
