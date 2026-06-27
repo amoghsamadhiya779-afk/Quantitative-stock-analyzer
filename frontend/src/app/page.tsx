@@ -14,14 +14,11 @@ export default function LandingPage() {
           <Link href="#ai-solutions" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
             AI Solutions
           </Link>
-          <Link href="#about" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
-            About
+          <Link href="#infrastructure" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
+            Infrastructure
           </Link>
-          <Link href="#pricing" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
-            Pricing
-          </Link>
-          <Link href="#contact" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
-            Contact
+          <Link href="#risk-analytics" className="hidden sm:block text-sm font-medium text-white/70 hover:text-white transition-colors">
+            Risk Analytics
           </Link>
           <Link 
             href="https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer" 
@@ -154,6 +151,7 @@ export default function LandingPage() {
 
         {/* Section 2: Quantitative Infrastructure */}
         <motion.section 
+          id="infrastructure"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -190,6 +188,7 @@ export default function LandingPage() {
 
         {/* Section 3: Risk Analytics */}
         <motion.section 
+          id="risk-analytics"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
