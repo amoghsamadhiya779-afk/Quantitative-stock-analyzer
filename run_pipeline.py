@@ -17,22 +17,15 @@ from src.advanced_models import ModelFactory
 # 1. CONFIGURATION
 # ==========================================
 MARKET_REGISTRY = {
-    "SP500": "SP500_DATASET.csv",
-    "NIFTY50": "NIFTY50_India.csv",
-    "Nikkei225": "Nikkei225_Japan.csv",
-    "FTSE100": "FTSE100_UK.csv",
-    "DAX40": "DAX40_Germany.csv",
-    "BIST100": "BIST100_Turkey.csv",
-    "Bovespa": "Bovespa_Brazil.csv",
-    "IDX": "IDX_Indonesia.csv"
+    "SP500": "SP500_DATASET.csv"
 }
 
 SEQ_LENGTH = 60
 MODEL_DIR = os.path.join("mlops_artifacts", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-# Enable mixed precision for speed
-tf.keras.mixed_precision.set_global_policy('mixed_float16')
+# Remove mixed precision for standard CPU/accuracy
+# tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
 # ==========================================
 # 2. CORE TRAINING LOGIC
@@ -107,15 +100,16 @@ def train_market(index_key, filename):
         model_save_path = os.path.join(MODEL_DIR, f"{index_key}_{model_name}.keras")
         
         callbacks = [
-            EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True),
-            ModelCheckpoint(filepath=model_save_path, monitor='val_loss', save_best_only=True)
+            EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True),
+            ModelCheckpoint(filepath=model_save_path, monitor='val_loss', save_best_only=True),
+            tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-5)
         ]
         
         model.fit(
             X_train, y_train,
             validation_data=(X_test, y_test),
-            epochs=5,
-            batch_size=32,
+            epochs=50,
+            batch_size=64,
             callbacks=callbacks,
             verbose=2
         )

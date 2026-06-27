@@ -12,7 +12,7 @@ class ModelFactory:
     """Institutional-Grade Model Architectures for Time Series Forecasting"""
 
     @staticmethod
-    def build_cnn_bilstm_attention(input_shape, learning_rate=1e-3, filters=64, kernel_size=3, lstm_units=64, dropout=0.2, attention_heads=4):
+    def build_cnn_bilstm_attention(input_shape, learning_rate=1e-3, filters=128, kernel_size=3, lstm_units=128, dropout=0.2, attention_heads=4):
         """
         CNN + BiLSTM + Multi-Head Attention Model
         Extracts local features using Conv1D, captures long-term dependencies with BiLSTM,
@@ -39,7 +39,7 @@ class ModelFactory:
         x = GlobalAveragePooling1D()(x)
         x = Dense(32, activation='relu', kernel_regularizer=l2(1e-4))(x)
         x = Dropout(dropout)(x)
-        outputs = Dense(1, kernel_regularizer=l2(1e-4))(x)
+        outputs = Dense(1, kernel_regularizer=l2(1e-4), dtype='float32')(x)
         
         model = Model(inputs=inputs, outputs=outputs, name="CNN_BiLSTM_Attention")
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)
@@ -47,7 +47,7 @@ class ModelFactory:
         return model
 
     @staticmethod
-    def build_transformer_forecaster(input_shape, learning_rate=1e-3, head_size=64, num_heads=4, ff_dim=64, num_transformer_blocks=2, mlp_units=[32], dropout=0.2):
+    def build_transformer_forecaster(input_shape, learning_rate=1e-3, head_size=64, num_heads=4, ff_dim=128, num_transformer_blocks=3, mlp_units=[64, 32], dropout=0.2):
         """
         Pure Time Series Transformer
         Uses Multi-Head Attention blocks for pure self-attention forecasting.
@@ -74,7 +74,7 @@ class ModelFactory:
             x = Dense(dim, activation="relu", kernel_regularizer=l2(1e-4))(x)
             x = Dropout(dropout)(x)
             
-        outputs = Dense(1, kernel_regularizer=l2(1e-4))(x)
+        outputs = Dense(1, kernel_regularizer=l2(1e-4), dtype='float32')(x)
         
         model = Model(inputs=inputs, outputs=outputs, name="TimeSeriesTransformer")
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)
@@ -82,7 +82,7 @@ class ModelFactory:
         return model
 
     @staticmethod
-    def build_advanced_bilstm(input_shape, learning_rate=1e-3, lstm_units=[128, 64], dropout=0.3):
+    def build_advanced_bilstm(input_shape, learning_rate=1e-3, lstm_units=[256, 128], dropout=0.3):
         """
         Upgraded version of the original BiLSTM with Residual connections and LayerNorm.
         """
@@ -100,7 +100,7 @@ class ModelFactory:
         
         # Dense Head
         x = Dense(32, activation='relu')(x)
-        outputs = Dense(1)(x)
+        outputs = Dense(1, dtype='float32')(x)
         
         model = Model(inputs=inputs, outputs=outputs, name="AdvancedBiLSTM")
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)

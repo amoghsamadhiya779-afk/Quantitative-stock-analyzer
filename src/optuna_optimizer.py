@@ -118,7 +118,7 @@ class Objective:
         model.fit(
             X_train, y_train,
             validation_data=(X_val, y_val),
-            epochs=30, # Capped for tuning speed
+            epochs=5, # Capped for tuning speed
             batch_size=batch_size,
             callbacks=callbacks,
             verbose=0
@@ -139,7 +139,8 @@ class Objective:
         return da, rmse
 
 def run_optimization(study_name="cnn_bilstm_attention_study", n_trials=50):
-    data_path = os.path.join("data", "raw", "SP500_DATASET.csv") # Use SP500 as baseline for tuning
+    data_slice = os.path.join("data", "raw", "Bovespa_Brazil.csv") # Use smaller dataset for fast tuning
+    data_path = data_slice
     
     # Use SQLite for parallel trial support
     os.makedirs("mlops_artifacts/optuna", exist_ok=True)
@@ -172,4 +173,4 @@ def run_optimization(study_name="cnn_bilstm_attention_study", n_trials=50):
             print(f"    {key}: {value}")
 
 if __name__ == "__main__":
-    run_optimization(n_trials=5) # Defaulting to 5 for test run
+    run_optimization(n_trials=2) # Defaulting to 2 for test run

@@ -467,7 +467,11 @@ def execute_backtest(req: InferenceRequest):
                 dummy_batch[:, close_idx] = preds_scaled.flatten()
                 preds = scaler.inverse_transform(dummy_batch)[:, close_idx]
                 
-                signals = np.where(preds > actual_closes, 1, -1)
+                # Compare predicted price vs PREVIOUS close
+                prev_closes = np.roll(actual_closes, 1)
+                prev_closes[0] = actual_closes[0]
+                signals = np.where(preds > prev_closes, 1, -1)
+                
                 model_used = f"Neural Network ({req.model_type})"
             except Exception as e:
                 logger.error(f"❌ Backtest inference failed: {e}")
