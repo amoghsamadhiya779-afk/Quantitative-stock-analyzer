@@ -9,6 +9,47 @@ import { Activity } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { BacktestModel, RiskModel, PortfolioModel, MLModel, IndicatorModel, NewsModel } from '@/components/ui/FeatureModels';
 
+const TypewriterText = ({ lines, delay = 0, speed = 50 }: { lines: string[], delay?: number, speed?: number }) => {
+  const [displayedLines, setDisplayedLines] = useState<string[]>(Array(lines.length).fill(""));
+  const [activeLine, setActiveLine] = useState(0);
+
+  useEffect(() => {
+    if (activeLine >= lines.length) return;
+    
+    let i = 0;
+    const currentText = lines[activeLine];
+    const timer = setTimeout(() => {
+      const interval = setInterval(() => {
+        setDisplayedLines(prev => {
+          const newLines = [...prev];
+          newLines[activeLine] = currentText.substring(0, i + 1);
+          return newLines;
+        });
+        i++;
+        if (i >= currentText.length) {
+          clearInterval(interval);
+          setActiveLine(prev => prev + 1);
+        }
+      }, speed);
+      return () => clearInterval(interval);
+    }, activeLine === 0 ? delay * 1000 : 0);
+    
+    return () => clearTimeout(timer);
+  }, [lines, delay, activeLine, speed]);
+
+  return (
+    <>
+      {lines.map((_, index) => (
+        <React.Fragment key={index}>
+          {displayedLines[index]}
+          {index === activeLine && <motion.span animate={{opacity:[0,1,0]}} transition={{repeat:Infinity, duration:0.8}} className="text-cyan-400 font-light">|</motion.span>}
+          {index < lines.length - 1 && <br />}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
 // Live Components
 import Backtesting from '@/components/workflows/Backtesting';
 import RiskAnalytics from '@/components/workflows/RiskAnalytics';
@@ -113,19 +154,23 @@ export default function LandingPage() {
         <motion.h1 
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4 }}
+          transition={{ duration: 1, delay: 0.2 }}
           className="text-6xl md:text-8xl lg:text-[100px] font-extrabold tracking-tight max-w-5xl text-center leading-[1.05] drop-shadow-2xl text-white"
         >
-          Next-gen enterprise<br />with AI Agents
+          <TypewriterText lines={["Quantitative Intelligence", "for Modern Markets"]} delay={0.5} />
         </motion.h1>
         
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.8 }}
-          className="text-lg md:text-xl text-neutral-300 max-w-2xl text-center mt-6 font-medium leading-relaxed"
+          transition={{ duration: 1, delay: 0.4 }}
+          className="text-lg md:text-xl text-neutral-300 max-w-2xl text-center mt-6 font-medium leading-relaxed h-[60px]"
         >
-          Accelerate the speed of business with the COSMOC Platform<br />and our AI solutions for work, service, and process.
+          <TypewriterText 
+            lines={["Accelerate your trading edge with predictive neural networks, backtesting, and systemic risk engines."]} 
+            delay={3.0} 
+            speed={30} 
+          />
         </motion.p>
 
         <motion.div
