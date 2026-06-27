@@ -221,7 +221,7 @@ export default function TerminalPage() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md shadow-xl hover:scale-105 transition-transform pointer-events-auto z-50 relative">
               <span className="font-display font-bold text-xl tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                COSMOQ
+                NEXUS
               </span>
             </Link>
             {/* Navigation Links */}

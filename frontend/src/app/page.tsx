@@ -65,7 +65,7 @@ export default function LandingPage() {
           {/* Unifying Logo */}
           <div className="flex items-center gap-3 pointer-events-auto">
             <span className="font-display font-bold text-3xl tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-              COSMOQ
+              NEXUS
             </span>
           </div>
 

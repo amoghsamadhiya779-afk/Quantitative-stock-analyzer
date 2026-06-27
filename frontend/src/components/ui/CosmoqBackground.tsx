@@ -32,7 +32,7 @@ export default function CosmoqBackground() {
       <div 
         className="absolute inset-0 opacity-50 mix-blend-screen"
         style={{
-          backgroundImage: 
+          backgroundImage: `
             radial-gradient(1px 1px at 10% 20%, white, transparent),
             radial-gradient(1px 1px at 30% 10%, rgba(255,255,255,0.8), transparent),
             radial-gradient(2px 2px at 50% 30%, rgba(255,255,255,0.5), transparent),
@@ -45,19 +45,19 @@ export default function CosmoqBackground() {
             radial-gradient(1.5px 1.5px at 85% 60%, white, transparent),
             radial-gradient(1px 1px at 25% 90%, rgba(255,255,255,0.4), transparent),
             radial-gradient(2px 2px at 75% 90%, rgba(255,255,255,0.9), transparent)
-          ,
+          `,
           backgroundSize: '150px 150px',
         }}
       />
       <motion.div 
         className="absolute inset-0 opacity-40 mix-blend-screen"
         style={{
-          backgroundImage: 
+          backgroundImage: `
             radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.8), transparent),
             radial-gradient(1px 1px at 45% 15%, white, transparent),
             radial-gradient(2px 2px at 65% 35%, rgba(255,255,255,0.5), transparent),
             radial-gradient(1px 1px at 85% 20%, white, transparent)
-          ,
+          `,
           backgroundSize: '200px 200px',
         }}
         animate={{
