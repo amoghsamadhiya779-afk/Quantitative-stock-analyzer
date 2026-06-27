@@ -164,19 +164,24 @@ export async function fetchCorrelationMatrix(marketName: string): Promise<Correl
 
 export function getLogoUrl(ticker: string): string {
   const clean = ticker.split('.')[0].replace('^', '').toLowerCase();
-  if (clean === 'aapl') return '/assets/aapl_logo.png';
-  if (clean === 'msft') return '/assets/msft_logo.png';
-  if (clean === 'amzn') return '/assets/amzn_logo.png';
-  if (clean === 'nvda') return '/assets/nvda_logo.png';
-  if (clean === 'meta') return '/assets/meta_logo.png';
-  if (clean === 'reliance') return '/assets/reliance_logo.png';
+  
+  // Vercel does not pull Git LFS objects by default. 
+  // We must bypass local paths and stream directly from the GitHub LFS media server.
+  const LFS_BASE = 'https://media.githubusercontent.com/media/amoghsamadhiya779-afk/Quantitative-stock-analyzer/main/frontend/public';
+  
+  if (clean === 'aapl') return `${LFS_BASE}/assets/aapl_logo.png`;
+  if (clean === 'msft') return `${LFS_BASE}/assets/msft_logo.png`;
+  if (clean === 'amzn') return `${LFS_BASE}/assets/amzn_logo.png`;
+  if (clean === 'nvda') return `${LFS_BASE}/assets/nvda_logo.png`;
+  if (clean === 'meta') return `${LFS_BASE}/assets/meta_logo.png`;
+  if (clean === 'reliance') return `${LFS_BASE}/assets/reliance_logo.png`;
   
   // Indian Market Leaders
-  if (clean === 'tcs') return '/assets/tcs_logo.png';
-  if (clean === 'hdfcbank') return '/assets/hdfc_logo.png';
-  if (clean === 'infy') return '/assets/infy_logo.png';
-  if (clean === 'sbin') return '/assets/sbin_logo.png';
-  if (clean === 'bhartiartl') return '/assets/airtel_logo.png';
+  if (clean === 'tcs') return `${LFS_BASE}/assets/tcs_logo.png`;
+  if (clean === 'hdfcbank') return `${LFS_BASE}/assets/hdfc_logo.png`;
+  if (clean === 'infy') return `${LFS_BASE}/assets/infy_logo.png`;
+  if (clean === 'sbin') return `${LFS_BASE}/assets/sbin_logo.png`;
+  if (clean === 'bhartiartl') return `${LFS_BASE}/assets/airtel_logo.png`;
   
   // Try Clearbit, but if it 404s, the frontend onError will catch it and call getFallbackLogo
   return `https://logo.clearbit.com/${clean}.com`;
@@ -184,5 +189,5 @@ export function getLogoUrl(ticker: string): string {
 
 export function getFallbackLogo(ticker: string): string {
   // Return the highly premium Ventriloc generic asset logo instead of cheap ui-avatars
-  return '/assets/generic_logo.png';
+  return 'https://media.githubusercontent.com/media/amoghsamadhiya779-afk/Quantitative-stock-analyzer/main/frontend/public/assets/generic_logo.png';
 }
