@@ -10,6 +10,7 @@ const ALGO_MAP: Record<string, string> = {
   "Quantum CNN-BiLSTM": "CNN_BiLSTM_Attention",
   "Temporal Transformer": "Temporal_Transformer",
   "Reinforcement Agent": "Reinforcement_Agent",
+  "Mean Reversion": "Mean_Reversion",
 };
 const algos = Object.keys(ALGO_MAP);
 
