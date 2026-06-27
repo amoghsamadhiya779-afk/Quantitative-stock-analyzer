@@ -48,3 +48,42 @@ Ventriloc speaks in a quiet, professional whisper against an off-white canvas.
 - No heavy drop shadows.
 
 (See Tailwind config provided by user for exact mappings)
+
+## Follow-up Request — 2026-06-27T09:43:00Z
+
+Build a production-ready, exact UI replica of the CosmoQ website (https://cosmoq.framer.website) directly over our existing quant platform components. Transform the aesthetic into a premium, frosted glass, institutional-grade quantitative research platform named "Nexus Quant" while retaining all existing quant functionalities.
+
+Working directory: c:\Users\Lenovo\Desktop\S&P 500\frontend
+Integrity mode: demo
+
+## Requirements
+
+### R1. Premium Fintech Aesthetic & Branding
+Recreate the visual design, spacing, interaction quality, and premium aesthetic of the CosmoQ Framer landing page. Completely replace all original content with "Nexus Quant" branding. Implement a black luxury interface, frosted glass morphism, soft radial gradients, ultra-smooth 120 FPS animations, large editorial typography, and rounded containers (24-32px). The navbar must contain: Platform, Research, Technology, Documentation, GitHub, Launch Terminal.
+
+### R2. Quantitative Finance Workflows & Mockups
+Replace every "AI Agent" section from the CosmoQ template with quantitative finance workflows (Market data ingestion, Technical indicators, ML prediction, Portfolio optimization, Risk analytics, Backtesting). Create interactive product mockups featuring candlestick charts, portfolio dashboards, correlation matrices, and risk heatmaps.
+
+### R3. Animations & Responsiveness
+Maintain sticky blurred navigation, smooth scroll, scroll-triggered fade-up transitions, hover elevations, animated counters, and an infinite logo marquee (integrating Yahoo Finance, Polygon, Finnhub, Alpha Vantage, NASDAQ, NSE, TradingView). The layout must be fully responsive, accessible, and mobile-first.
+
+### R4. Direct Component Replacement
+Modify and replace the existing UI components in the codebase directly. Ensure clean component architecture and a reusable design system while doing so, preventing any broken routing.
+
+## Acceptance Criteria
+
+### Aesthetic & Branding
+- [ ] The application successfully boots on `npm run build` without compilation errors.
+- [ ] The global stylesheet implements the black luxury theme with frosted glass utility classes.
+- [ ] The Navbar renders all 6 specified links (Platform, Research, Technology, Documentation, GitHub, Launch Terminal).
+- [ ] The Hero section renders the text "Institutional Quantitative Intelligence".
+
+### Features & Mockups
+- [ ] The UI renders the quantitative workflow sections replacing the AI agent sections.
+- [ ] Interactive mockups (e.g., charting or correlation matrices) are rendered and integrated into the new UI layout.
+- [ ] The infinite logo marquee renders the specified financial integration logos.
+
+### Animations
+- [ ] Framer Motion (or equivalent) is used to implement scroll-triggered fade-up transitions on page elements.
+- [ ] Sticky navigation bar successfully blurs the background content on scroll.
+

@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -700,6 +701,7 @@ def get_watchlist(market_name: str):
     try:
         tickers = FALLBACK_TICKERS.get(market_name, [])[:10]
         results = []
+        errors = []
         for t in tickers:
             try:
                 df = get_market_data(market_name, t)
@@ -719,9 +721,10 @@ def get_watchlist(market_name: str):
                         "volume": vol
                     })
             except Exception as e:
+                errors.append(f"{t}: {str(e)}")
                 logger.warning(f"Skipping {t} for watchlist: {e}")
                 continue
-        return {"watchlist": results}
+        return {"watchlist": results, "debug_errors": errors}
     except Exception as e:
         logger.error(f"Watchlist failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate watchlist")
@@ -731,17 +734,19 @@ def get_correlation(market_name: str):
     try:
         tickers = FALLBACK_TICKERS.get(market_name, [])[:10]
         series_dict = {}
+        errors = []
         for t in tickers:
             try:
                 df = get_market_data(market_name, t)
                 df_recent = df.tail(90) # Use 90 days for stable correlation
                 if len(df_recent) >= 30:
-                    series_dict[t] = df_recent.set_index('Date')['Close']
-            except Exception:
+                    series_dict[t] = df_recent['Close']
+            except Exception as e:
+                errors.append(f"{t}: {str(e)}")
                 continue
                 
         if not series_dict:
-            return {"tickers": [], "matrix": []}
+            return {"tickers": [], "matrix": [], "debug_errors": errors}
             
         # Combine into single DataFrame and compute Pearson correlation
         combined = pd.DataFrame(series_dict).ffill().bfill().fillna(0)
