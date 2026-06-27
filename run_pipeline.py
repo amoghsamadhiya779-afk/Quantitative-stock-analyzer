@@ -17,7 +17,14 @@ from src.advanced_models import ModelFactory
 # 1. CONFIGURATION
 # ==========================================
 MARKET_REGISTRY = {
-    "SP500": "SP500_DATASET.csv"
+    "SP500": "SP500_DATASET.csv",
+    "NIFTY50": "NIFTY50_India.csv",
+    "Nikkei225": "Nikkei225_Japan.csv",
+    "FTSE100": "FTSE100_UK.csv",
+    "DAX40": "DAX40_Germany.csv",
+    "BIST100": "BIST100_Turkey.csv",
+    "Bovespa": "Bovespa_Brazil.csv",
+    "IDX": "IDX_Indonesia.csv"
 }
 
 SEQ_LENGTH = 60

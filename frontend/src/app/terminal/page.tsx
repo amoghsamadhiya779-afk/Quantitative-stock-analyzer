@@ -334,7 +334,7 @@ export default function TerminalPage() {
               {activePage === "technical" && <TechnicalIndicators />}
               {activePage === "ml-prediction" && <MLPrediction />}
               {activePage === "portfolio" && <PortfolioOptimization tickers={tickers} />}
-              {activePage === "risk" && <RiskAnalytics />}
+              {activePage === "risk" && <RiskAnalytics tickers={tickers} selectedMarket={selectedMarket} />}
               {activePage === "backtesting" && <Backtesting selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
               {(activePage === "news-macro" || activePage === "macro-globe" || activePage === "live-news" || activePage === "sentiment") && (
                 <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />
