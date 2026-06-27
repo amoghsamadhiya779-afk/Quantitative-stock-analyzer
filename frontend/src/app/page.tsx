@@ -9,6 +9,7 @@ import MLPrediction from "@/components/workflows/MLPrediction";
 import PortfolioOptimization from "@/components/workflows/PortfolioOptimization";
 import RiskAnalytics from "@/components/workflows/RiskAnalytics";
 import Backtesting from "@/components/workflows/Backtesting";
+import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
 
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -33,6 +34,7 @@ const pages = [
   "Portfolio optimization",
   "Risk analytics",
   "Backtesting",
+  "News-driven macro",
 ];
 
 const ALGO_MAP: Record<string, string> = {
@@ -344,6 +346,7 @@ export default function Home() {
                 {activePage === "Portfolio optimization" && <PortfolioOptimization />}
                 {activePage === "Risk analytics" && <RiskAnalytics />}
                 {activePage === "Backtesting" && <Backtesting />}
+                {activePage === "News-driven macro" && <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />}
               </motion.div>
             </AnimatePresence>
           </div>
