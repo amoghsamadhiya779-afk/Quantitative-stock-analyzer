@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Globe2, Rss, TrendingUp, TrendingDown, Minus, Layers, Cpu } from "lucide-react";
+import { Globe2, Rss, Layers, Cpu } from "lucide-react";
 import { useState, useEffect } from "react";
 import GlobeWidget, { MARKET_LOCATIONS } from "@/components/ui/GlobeWidget";
+import ExpandableNewsCards from "@/components/ui/ExpandableNewsCards";
 import { fetchNews, fetchTickers, fetchStockData, type NewsItem, type StockData } from "@/lib/api";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 
@@ -234,35 +235,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
                 <div className="font-mono text-[var(--foreground)]/30 uppercase tracking-widest text-xs z-10">Extracting Google News RSS...</div>
               </div>
             ) : news.length > 0 ? (
-              news.map((item, idx) => {
-                const isBullish = item.tag.includes("BULLISH");
-                const isBearish = item.tag.includes("BEARISH");
-                
-                return (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
-                    key={idx} 
-                    className="p-4 rounded-xl bg-[var(--background)]/40 border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all duration-200 group flex items-start justify-between gap-4"
-                  >
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/40">
-                        <span>{item.source}</span><span>•</span><span>LIVE FEED</span>
-                      </div>
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-[var(--foreground)] hover:text-[var(--accent)] transition-colors leading-snug block decoration-dotted hover:underline">
-                        {item.title}
-                      </a>
-                    </div>
-                    <div className="shrink-0 flex flex-col items-end gap-1.5">
-                      <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border" style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}30`, color: item.color }}>
-                        {isBullish && <TrendingUp className="w-2.5 h-2.5" />}
-                        {isBearish && <TrendingDown className="w-2.5 h-2.5" />}
-                        {!isBullish && !isBearish && <Minus className="w-2.5 h-2.5" />}
-                        {isBullish ? "BULLISH" : isBearish ? "BEARISH" : "NEUTRAL"}
-                      </span>
-                    </div>
-                  </motion.div>
-                );
-              })
+              <ExpandableNewsCards news={news} />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-[var(--foreground)]/30 font-mono text-sm text-center px-4 border border-[var(--border)] border-dashed rounded-xl">
                 No significant geopolitical or economic events extracted.
