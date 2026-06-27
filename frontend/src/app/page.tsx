@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CosmoqBackground from '@/components/ui/CosmoqBackground';
 import { Activity } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
+import { BacktestModel, RiskModel, PortfolioModel, MLModel, IndicatorModel, NewsModel } from '@/components/ui/FeatureModels';
 
 // Live Components
 import Backtesting from '@/components/workflows/Backtesting';
@@ -70,18 +72,25 @@ export default function LandingPage() {
           </div>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-8 px-8 py-3 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl pointer-events-auto">
-            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">AI Solutions</Link>
-            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">About</Link>
-            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">Pricing</Link>
-            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">Contact</Link>
+          <div className="hidden md:flex items-center gap-6 px-8 py-3 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl pointer-events-auto">
+            {['Backtesting', 'Risk', 'Portfolio', 'ML', 'Indicators', 'News'].map((feat, i) => (
+              <button 
+                key={feat}
+                onClick={() => {
+                  window.scrollTo({ top: window.innerHeight * (i + 1), behavior: 'smooth' });
+                }}
+                className={`text-sm font-medium transition-colors ${activeFeature === i ? 'text-cyan-400' : 'text-white/70 hover:text-white'}`}
+              >
+                {feat}
+              </button>
+            ))}
           </div>
 
           <div className="pointer-events-auto">
             <button onClick={() => {
               window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             }} className="px-6 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-white font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:bg-white hover:text-black transition-all">
-              Get Started
+              Launch Terminal
             </button>
           </div>
         </div>
@@ -128,44 +137,63 @@ export default function LandingPage() {
           <button onClick={() => {
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
           }} className="px-8 py-4 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-semibold text-lg shadow-[0_0_30px_rgba(56,189,248,0.3)] hover:bg-white hover:text-black transition-all">
-            Get Started
+            Launch Terminal
           </button>
         </motion.div>
       </motion.div>
 
       {/* 2. Scroll-Linked Feature Walkthrough */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 pt-32 pb-64 flex gap-12 lg:gap-24 items-start">
+      <div className="relative w-full max-w-7xl mx-auto px-6 py-32 flex justify-between gap-12 z-20">
         
-        {/* Left Side: Sticky Content */}
-        <div className="hidden lg:flex flex-col sticky top-[30vh] w-[40%] gap-32 pointer-events-none">
-          <div className={`transition-opacity duration-500 ${activeFeature === 0 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">Institutional Backtesting</h2>
-            <p className="text-lg text-neutral-400">Test your algorithms against decades of historical data with zero look-ahead bias. Our engine simulates slippage, commissions, and extreme volatility instantly.</p>
-          </div>
+        {/* Left Side: Copy and 3D Models */}
+        <div className="hidden lg:flex flex-col sticky top-[20vh] w-[40%] h-[70vh] pointer-events-none relative">
           
-          <div className={`transition-opacity duration-500 ${activeFeature === 1 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">Systemic Risk Analytics</h2>
-            <p className="text-lg text-neutral-400">Dynamically calculate your Value at Risk (VaR) and systemic exposure across global markets in real-time. Identify dangerous correlations before they break your portfolio.</p>
-          </div>
-          
-          <div className={`transition-opacity duration-500 ${activeFeature === 2 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">Portfolio Optimization</h2>
-            <p className="text-lg text-neutral-400">Optimize asset allocation for maximum Sharpe ratio mathematically. The engine runs thousands of Monte Carlo simulations to find the perfect risk/reward balance.</p>
-          </div>
-
-          <div className={`transition-opacity duration-500 ${activeFeature === 3 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">ML Predictions</h2>
-            <p className="text-lg text-neutral-400">Leverage custom-trained CNN-BiLSTM-Attention networks utilizing Huber loss and Spatial Dropout to forecast short-term price vectors with statistical confidence bounds.</p>
-          </div>
-
-          <div className={`transition-opacity duration-500 ${activeFeature === 4 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">Technical Indicators</h2>
-            <p className="text-lg text-neutral-400">Visualize complex momentum oscillators, volatility bands, and moving average cross-overs in real-time to augment algorithmic strategies.</p>
+          {/* 3D Model Canvas Background */}
+          <div className="absolute inset-0 -left-12 -right-12 -z-10 opacity-70 pointer-events-auto">
+            <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} intensity={1} />
+              <AnimatePresence mode="wait">
+                {activeFeature === 0 && <BacktestModel key="m0" />}
+                {activeFeature === 1 && <RiskModel key="m1" />}
+                {activeFeature === 2 && <PortfolioModel key="m2" />}
+                {activeFeature === 3 && <MLModel key="m3" />}
+                {activeFeature === 4 && <IndicatorModel key="m4" />}
+                {activeFeature === 5 && <NewsModel key="m5" />}
+              </AnimatePresence>
+            </Canvas>
           </div>
 
-          <div className={`transition-opacity duration-500 ${activeFeature === 5 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">Live Macro & Sentiment</h2>
-            <p className="text-lg text-neutral-400">Track real-time NLP sentiment analysis from financial news. Gauge fear, greed, and macroeconomic shifts the second they hit the wire.</p>
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col gap-32">
+            <div className={`transition-opacity duration-500 absolute w-full ${activeFeature === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <h2 className="text-4xl font-display font-bold text-white mb-4 drop-shadow-xl">Institutional Backtesting</h2>
+              <p className="text-lg text-neutral-300 drop-shadow-md bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/5">Test your algorithms against decades of historical data with zero look-ahead bias. Our engine simulates slippage, commissions, and extreme volatility instantly.</p>
+            </div>
+            
+            <div className={`transition-opacity duration-500 absolute w-full ${activeFeature === 1 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <h2 className="text-4xl font-display font-bold text-white mb-4 drop-shadow-xl">Systemic Risk Analytics</h2>
+              <p className="text-lg text-neutral-300 drop-shadow-md bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/5">Dynamically calculate your Value at Risk (VaR) and systemic exposure across global markets in real-time. Identify dangerous correlations before they break your portfolio.</p>
+            </div>
+            
+            <div className={`transition-opacity duration-500 absolute w-full ${activeFeature === 2 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <h2 className="text-4xl font-display font-bold text-white mb-4 drop-shadow-xl">Portfolio Optimization</h2>
+              <p className="text-lg text-neutral-300 drop-shadow-md bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/5">Optimize asset allocation for maximum Sharpe ratio mathematically. The engine runs thousands of Monte Carlo simulations to find the perfect risk/reward balance.</p>
+            </div>
+
+            <div className={`transition-opacity duration-500 absolute w-full ${activeFeature === 3 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <h2 className="text-4xl font-display font-bold text-white mb-4 drop-shadow-xl">ML Predictions</h2>
+              <p className="text-lg text-neutral-300 drop-shadow-md bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/5">Leverage custom-trained CNN-BiLSTM-Attention networks utilizing Huber loss and Spatial Dropout to forecast short-term price vectors with statistical confidence bounds.</p>
+            </div>
+
+            <div className={`transition-opacity duration-500 absolute w-full ${activeFeature === 4 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <h2 className="text-4xl font-display font-bold text-white mb-4 drop-shadow-xl">Technical Indicators</h2>
+              <p className="text-lg text-neutral-300 drop-shadow-md bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/5">Visualize complex momentum oscillators, volatility bands, and moving average cross-overs in real-time to augment algorithmic strategies.</p>
+            </div>
+
+            <div className={`transition-opacity duration-500 absolute w-full ${activeFeature === 5 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <h2 className="text-4xl font-display font-bold text-white mb-4 drop-shadow-xl">Live Macro & Sentiment</h2>
+              <p className="text-lg text-neutral-300 drop-shadow-md bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/5">Track real-time NLP sentiment analysis from financial news. Gauge fear, greed, and macroeconomic shifts the second they hit the wire.</p>
+            </div>
           </div>
         </div>
 
