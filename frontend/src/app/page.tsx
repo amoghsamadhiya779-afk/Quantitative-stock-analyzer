@@ -128,10 +128,8 @@ export default function LandingPage() {
           </div>
 
           <div className="pointer-events-auto">
-            <button onClick={() => {
-              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }} className="px-6 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-white font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:bg-white hover:text-black transition-all">
-              Launch Terminal
+            <button onClick={() => setBooting(true)} className="px-6 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-white font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:bg-white hover:text-black transition-all">
+              Initialize Terminal
             </button>
           </div>
         </div>
@@ -179,10 +177,8 @@ export default function LandingPage() {
           transition={{ duration: 1, delay: 1.0 }}
           className="mt-10 pointer-events-auto"
         >
-          <button onClick={() => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-          }} className="px-8 py-4 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-semibold text-lg shadow-[0_0_30px_rgba(56,189,248,0.3)] hover:bg-white hover:text-black transition-all">
-            Launch Terminal
+          <button onClick={() => setBooting(true)} className="px-8 py-4 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-semibold text-lg shadow-[0_0_30px_rgba(56,189,248,0.3)] hover:bg-white hover:text-black transition-all">
+            Initialize Terminal
           </button>
         </motion.div>
       </motion.div>
@@ -345,7 +341,7 @@ export default function LandingPage() {
       </div>
 
       {/* 3. The Gateway (Final CTA) */}
-      <div className="relative z-30 w-full h-screen flex flex-col items-center justify-center bg-black overflow-hidden">
+      <div className={`${booting || revealing ? 'fixed inset-0 z-[100]' : 'relative z-30'} w-full h-screen flex flex-col items-center justify-center bg-black overflow-hidden`}>
         {/* Deep shadow masking the top edge */}
         <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-transparent to-black pointer-events-none -translate-y-full" />
         
