@@ -46,24 +46,46 @@ const ALGO_MAP: Record<string, string> = {
 
 const algos = Object.keys(ALGO_MAP);
 
-const containerVariants = {
+/* Orchestrated load sequence — resolves in ~1.2s total */
+const bgVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const navVariants = {
+  hidden: { opacity: 0, y: -8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.15 } },
+};
+
+const heroVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
-    },
+    transition: { staggerChildren: 0.06, delayChildren: 0.3 },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
+const heroLineVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const tickerVariants = {
+  hidden: { opacity: 0, x: -30 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.5 } },
+};
+
+const dashboardVariants = {
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    transition: { staggerChildren: 0.04, delayChildren: 0.7 },
   },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const TICKER_DATA = [
@@ -184,7 +206,12 @@ export default function Home() {
       <CosmoqBackground />
 
       {/* Floating Glass Pill Navigation */}
-      <header className="sticky top-0 z-50 w-full px-4 md:px-8 pt-4 transform-gpu">
+      <motion.header
+        variants={navVariants}
+        initial="hidden"
+        animate="visible"
+        className="sticky top-0 z-50 w-full px-4 md:px-8 pt-4 transform-gpu"
+      >
         <div className="max-w-[1200px] mx-auto cosmoq-nav-pill px-4 md:px-8 py-3 flex justify-between items-center">
           {/* Logo & Wordmark */}
           <div className="flex items-center gap-3">
@@ -218,58 +245,68 @@ export default function Home() {
             </a>
           </nav>
         </div>
-      </header>
+      </motion.header>
 
       {/* Market Ticker Ribbon */}
-      <div className="w-full overflow-hidden py-3 border-b border-white/5 bg-black/30 backdrop-blur-sm z-30 relative">
+      <motion.div
+        variants={tickerVariants}
+        initial="hidden"
+        animate="visible"
+        className="w-full overflow-hidden py-3 border-b border-white/5 bg-black/30 backdrop-blur-sm z-30 relative"
+      >
         <div className="flex w-max animate-marquee">
           {[0, 1].map((copy) => (
             <div key={copy} className="flex gap-12 px-6 text-xs font-mono tracking-widest text-neutral-400 uppercase">
-              {TICKER_DATA.map((item) => (
-                <span key={`${copy}-${item.name}`} className="flex items-center gap-2">
+              {TICKER_DATA.map((item, i) => (
+                <motion.span
+                  key={`${copy}-${item.name}`}
+                  className="flex items-center gap-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 + i * 0.03, duration: 0.3 }}
+                >
                   <span className={`w-1.5 h-1.5 rounded-full ${item.pos ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'} inline-block`} />
                   <span className="text-white font-bold">{item.name}</span>
                   <span className="text-neutral-500">${item.price}</span>
                   <span className={item.pos ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}>{item.change}</span>
-                </span>
+                </motion.span>
               ))}
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       <motion.div
-        variants={containerVariants}
+        variants={dashboardVariants}
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        animate="visible"
         className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-12 py-12 md:py-16 z-10 flex flex-col gap-[20px] relative"
       >
         {/* Hero Section */}
-        <motion.div id="research" variants={itemVariants} className="max-w-4xl transform-gpu pt-4">
-          <h2 className="font-display text-5xl md:text-[66px] font-semibold text-white leading-[0.95] mb-6 tracking-tight">
+        <motion.div id="research" variants={heroVariants} initial="hidden" animate="visible" className="max-w-4xl transform-gpu pt-4">
+          <motion.h2 variants={heroLineVariants} className="font-display text-5xl md:text-[66px] font-semibold text-white leading-[0.95] mb-6 tracking-tight">
             Institutional Quantitative Intelligence
-          </h2>
-          <p className="text-body-lg text-[#A0A0AC] max-w-2xl leading-relaxed">
+          </motion.h2>
+          <motion.p variants={heroLineVariants} className="text-body-lg text-[#A0A0AC] max-w-2xl leading-relaxed">
             Nexus Quant synthesizes global macroeconomic data, real-time liquidity flow, and state-of-the-art neural networks into a singular, highly responsive interface.
-          </p>
+          </motion.p>
         </motion.div>
 
         {/* Global Liquidity Nodes */}
-        <motion.div id="technology" variants={itemVariants} className="transform-gpu">
+        <motion.div id="technology" variants={cardVariants} className="transform-gpu">
           <div className="text-[10px] uppercase tracking-[0.2em] text-[#A0A0AC] font-semibold mb-5">Global Liquidity Nodes</div>
           <CommoditiesBar />
         </motion.div>
 
         {/* Control Bar */}
-        <motion.div id="launch-terminal" variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 relative z-40 cosmoq-card p-6 transform-gpu">
+        <motion.div id="launch-terminal" variants={cardVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 relative z-40 cosmoq-card p-6 transform-gpu">
           <CustomSelect label="Global Node" value={selectedMarket} options={marketNames} onChange={(v) => setSelectedMarket(v)} />
           <CustomSelect label="Target Asset" value={selectedTicker} options={tickers} onChange={(v) => setSelectedTicker(v)} />
           <CustomSelect label="AI Architecture" value={selectedAlgo} options={algos} onChange={(v) => setSelectedAlgo(v)} />
           <CustomSelect label="Execution Routing" value="Dark Pool Aggregator" options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]} onChange={() => {}} />
           <div className="p-4 rounded-[20px] border border-white/5 bg-white/5 flex flex-col justify-center transition-all duration-200">
             <div className="flex items-center gap-2 mb-2">
-              <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-[var(--profit)]"} animate-pulse`} />
+              <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-[var(--profit)]"} live-indicator`} />
               <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-400">{loading ? "Syncing Network..." : "Compute Online"}</span>
             </div>
             <div className="flex justify-between text-[10px] font-mono text-neutral-500">
@@ -280,7 +317,7 @@ export default function Home() {
         </motion.div>
 
         {/* Live Valuation Header */}
-        <motion.div variants={itemVariants} className="flex flex-col lg:flex-row gap-[20px] items-stretch cosmoq-card p-6 md:p-8 transform-gpu">
+        <motion.div variants={cardVariants} className="flex flex-col lg:flex-row gap-[20px] items-stretch cosmoq-card p-6 md:p-8 transform-gpu">
           {/* Logo + Name */}
           <div className="flex-1 flex flex-col items-start gap-6 w-full">
             <img
@@ -327,18 +364,26 @@ export default function Home() {
         </motion.div>
 
         {/* COSMOQ Segmented Tab Navigation */}
-        <motion.div id="platform" variants={itemVariants} className="w-full overflow-x-auto pb-2 hide-scrollbar transform-gpu">
-          <div className="flex w-max gap-1.5 cosmoq-nav-pill p-1.5">
+        <motion.div id="platform" variants={cardVariants} className="w-full overflow-x-auto pb-2 hide-scrollbar transform-gpu">
+          <div className="flex w-max gap-1.5 cosmoq-nav-pill p-1.5 relative">
             {pages.map((page) => (
               <button
                 key={page}
                 onClick={() => setActivePage(page)}
-                className={`px-3 md:px-5 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-semibold uppercase tracking-[0.12em] transition-all duration-300 whitespace-nowrap ${
+                className={`px-3 md:px-5 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-semibold uppercase tracking-[0.12em] whitespace-nowrap relative z-10 press-feedback transition-colors duration-[var(--dur-base)] ${
                   activePage === page
-                    ? "bg-white/95 text-[#0a0a0a] shadow-lg font-bold"
-                    : "text-neutral-400 hover:bg-white/5 hover:text-white"
+                    ? "text-[#0a0a0a] font-bold"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
+                {activePage === page && (
+                  <motion.span
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-white/95 rounded-full shadow-lg"
+                    style={{ zIndex: -1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
                 {page}
               </button>
             ))}
@@ -346,15 +391,15 @@ export default function Home() {
         </motion.div>
 
         {/* Content Area */}
-        <motion.div variants={itemVariants} className="w-full relative z-20 min-h-[600px] flex flex-col lg:flex-row gap-[20px] transform-gpu">
+        <motion.div variants={cardVariants} className="w-full relative z-20 min-h-[600px] flex flex-col lg:flex-row gap-[20px] transform-gpu">
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activePage + selectedTicker}
-                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                 className="transform-gpu"
               >
                 {activePage === "Market data ingestion" && <MarketDataIngestion />}

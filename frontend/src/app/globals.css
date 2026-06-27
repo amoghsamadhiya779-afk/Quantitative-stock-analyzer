@@ -35,6 +35,13 @@
   --violet-badge: #a78bfa;
   --amber-badge: #fbbf24;
 
+  /* Motion Tokens */
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 600ms;
+
   /* Typography — Font Families */
   --font-display: 'PolySans', 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-inter: 'Inter UI', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -369,17 +376,88 @@ select {
 /* Reduced Motion                                */
 /* ============================================ */
 @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--dur-fast) !important;
+  }
   .cosmoq-card,
   .ventriloc-card,
   .glass-card {
-    transition: none;
+    transition: opacity var(--dur-fast) ease !important;
   }
   .cosmoq-card:hover,
   .ventriloc-card:hover,
   .glass-card:hover {
-    transform: none;
+    transform: none !important;
   }
   .animate-marquee {
     animation: none !important;
   }
+  .skeleton-shimmer {
+    animation: none !important;
+    background: var(--surface) !important;
+  }
+}
+
+/* ============================================ */
+/* Skeleton Loading Shimmer                      */
+/* ============================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(20, 20, 26, 0.55) 25%,
+    rgba(40, 40, 50, 0.4) 50%,
+    rgba(20, 20, 26, 0.55) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-cards);
+}
+
+/* ============================================ */
+/* Live Data Pulse Effects                       */
+/* ============================================ */
+@keyframes price-flash-up {
+  0% { background-color: rgba(74, 222, 128, 0.25); }
+  100% { background-color: transparent; }
+}
+@keyframes price-flash-down {
+  0% { background-color: rgba(248, 113, 113, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.price-flash-up {
+  animation: price-flash-up 600ms var(--ease-standard) forwards;
+}
+.price-flash-down {
+  animation: price-flash-down 600ms var(--ease-standard) forwards;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.live-indicator {
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================ */
+/* Press / Active Feedback                       */
+/* ============================================ */
+.press-feedback:active {
+  transform: scale(0.97);
+  transition: transform var(--dur-fast) ease;
+}
+
+/* ============================================ */
+/* Sentiment Crossfade                           */
+/* ============================================ */
+.sentiment-crossfade {
+  transition: color 300ms ease, background-color 300ms ease, border-color 300ms ease;
 }

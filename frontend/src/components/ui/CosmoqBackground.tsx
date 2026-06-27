@@ -28,10 +28,13 @@ export default function CosmoqBackground() {
   const parallaxY = prefersReduced ? 0 : mouse.y * 12;
 
   return (
-    <div
+    <motion.div
       className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none"
       style={{ zIndex: 0, background: "#05060A" }}
       aria-hidden="true"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
     >
       {/* Layer 1: Warm amber/orange radial — top-right */}
       <motion.div
@@ -48,11 +51,11 @@ export default function CosmoqBackground() {
           mixBlendMode: "screen",
         }}
         animate={{
-          x: [parallaxX, parallaxX + 30, parallaxX - 20, parallaxX],
-          y: [parallaxY, parallaxY - 25, parallaxY + 15, parallaxY],
+          x: [parallaxX, parallaxX + 15, parallaxX - 10, parallaxX],
+          y: [parallaxY, parallaxY - 12, parallaxY + 8, parallaxY],
         }}
         transition={{
-          duration: 28,
+          duration: 75,
           ease: "easeInOut",
           repeat: Infinity,
           repeatType: "reverse",
@@ -74,11 +77,11 @@ export default function CosmoqBackground() {
           mixBlendMode: "screen",
         }}
         animate={{
-          x: [parallaxX * 0.7, parallaxX * 0.7 - 35, parallaxX * 0.7 + 25, parallaxX * 0.7],
-          y: [parallaxY * 0.7, parallaxY * 0.7 + 30, parallaxY * 0.7 - 20, parallaxY * 0.7],
+          x: [parallaxX * 0.7, parallaxX * 0.7 - 18, parallaxX * 0.7 + 12, parallaxX * 0.7],
+          y: [parallaxY * 0.7, parallaxY * 0.7 + 15, parallaxY * 0.7 - 10, parallaxY * 0.7],
         }}
         transition={{
-          duration: 32,
+          duration: 90,
           ease: "easeInOut",
           repeat: Infinity,
           repeatType: "reverse",
@@ -100,12 +103,12 @@ export default function CosmoqBackground() {
           mixBlendMode: "screen",
         }}
         animate={{
-          x: [0, 40, -30, 0],
-          y: [0, -35, 25, 0],
-          opacity: [0.6, 0.9, 0.5, 0.6],
+          x: [0, 20, -15, 0],
+          y: [0, -18, 12, 0],
+          opacity: [0.6, 0.8, 0.5, 0.6],
         }}
         transition={{
-          duration: 24,
+          duration: 65,
           ease: "easeInOut",
           repeat: Infinity,
           repeatType: "reverse",
@@ -147,12 +150,12 @@ export default function CosmoqBackground() {
           mixBlendMode: "screen",
         }}
         animate={{
-          x: [parallaxX * 0.5, parallaxX * 0.5 + 50, parallaxX * 0.5 - 40, parallaxX * 0.5],
-          y: [parallaxY * 0.5, parallaxY * 0.5 - 45, parallaxY * 0.5 + 35, parallaxY * 0.5],
-          opacity: [0.4, 0.7, 0.35, 0.4],
+          x: [parallaxX * 0.5, parallaxX * 0.5 + 25, parallaxX * 0.5 - 20, parallaxX * 0.5],
+          y: [parallaxY * 0.5, parallaxY * 0.5 - 22, parallaxY * 0.5 + 18, parallaxY * 0.5],
+          opacity: [0.4, 0.6, 0.35, 0.4],
         }}
         transition={{
-          duration: 22,
+          duration: 80,
           ease: "easeInOut",
           repeat: Infinity,
           repeatType: "reverse",
@@ -180,6 +183,6 @@ export default function CosmoqBackground() {
           pointerEvents: "none",
         }}
       />
-    </div>
+    </motion.div>
   );
 }
