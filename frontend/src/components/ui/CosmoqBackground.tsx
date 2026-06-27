@@ -24,165 +24,104 @@ export default function CosmoqBackground() {
     return () => window.removeEventListener("mousemove", handleMove);
   }, [prefersReduced]);
 
-  const parallaxX = prefersReduced ? 0 : mouse.x * 18;
-  const parallaxY = prefersReduced ? 0 : mouse.y * 12;
+  const parallaxX = prefersReduced ? 0 : mouse.x * 20;
+  const parallaxY = prefersReduced ? 0 : mouse.y * 10;
 
   return (
-    <motion.div
-      className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none"
-      style={{ zIndex: 0, background: "#05060A" }}
-      aria-hidden="true"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {/* Layer 1: Warm amber/orange radial — top-right */}
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#020202] pointer-events-none z-0">
+      <div 
+        className="absolute inset-0 opacity-50 mix-blend-screen"
+        style={{
+          backgroundImage: 
+            radial-gradient(1px 1px at 10% 20%, white, transparent),
+            radial-gradient(1px 1px at 30% 10%, rgba(255,255,255,0.8), transparent),
+            radial-gradient(2px 2px at 50% 30%, rgba(255,255,255,0.5), transparent),
+            radial-gradient(1px 1px at 70% 15%, white, transparent),
+            radial-gradient(2px 2px at 80% 40%, rgba(255,255,255,0.7), transparent),
+            radial-gradient(1px 1px at 90% 10%, white, transparent),
+            radial-gradient(1px 1px at 20% 50%, rgba(255,255,255,0.6), transparent),
+            radial-gradient(2px 2px at 40% 70%, white, transparent),
+            radial-gradient(1px 1px at 60% 80%, rgba(255,255,255,0.8), transparent),
+            radial-gradient(1.5px 1.5px at 85% 60%, white, transparent),
+            radial-gradient(1px 1px at 25% 90%, rgba(255,255,255,0.4), transparent),
+            radial-gradient(2px 2px at 75% 90%, rgba(255,255,255,0.9), transparent)
+          ,
+          backgroundSize: '150px 150px',
+        }}
+      />
+      <motion.div 
+        className="absolute inset-0 opacity-40 mix-blend-screen"
+        style={{
+          backgroundImage: 
+            radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.8), transparent),
+            radial-gradient(1px 1px at 45% 15%, white, transparent),
+            radial-gradient(2px 2px at 65% 35%, rgba(255,255,255,0.5), transparent),
+            radial-gradient(1px 1px at 85% 20%, white, transparent)
+          ,
+          backgroundSize: '200px 200px',
+        }}
+        animate={{
+          y: [0, -20, 0],
+          opacity: [0.3, 0.6, 0.3],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+      <motion.div
+        className="absolute"
+        style={{
+          width: "140vw",
+          height: "100vh",
+          bottom: "-40%",
+          left: "-30%",
+          background: "radial-gradient(ellipse at 40% 100%, rgba(245, 124, 0, 0.35) 0%, rgba(255, 61, 0, 0.15) 30%, transparent 60%)",
+          filter: "blur(120px)",
+          willChange: "transform",
+        }}
+        animate={{
+          x: parallaxX * 0.5,
+          y: parallaxY * 0.5,
+        }}
+        transition={{ type: "spring", stiffness: 50, damping: 20 }}
+      />
       <motion.div
         className="absolute"
         style={{
           width: "120vw",
           height: "120vh",
-          top: "-20%",
-          right: "-30%",
-          background:
-            "radial-gradient(ellipse at 70% 30%, rgba(255,138,61,0.18) 0%, rgba(232,93,44,0.08) 40%, transparent 70%)",
-          filter: "blur(200px)",
+          bottom: "-50%",
+          right: "-20%",
+          background: "radial-gradient(ellipse at 60% 100%, rgba(0, 140, 255, 0.35) 0%, rgba(61, 90, 254, 0.15) 35%, transparent 65%)",
+          filter: "blur(140px)",
           willChange: "transform",
-          mixBlendMode: "screen",
         }}
         animate={{
-          x: [parallaxX, parallaxX + 15, parallaxX - 10, parallaxX],
-          y: [parallaxY, parallaxY - 12, parallaxY + 8, parallaxY],
+          x: parallaxX * 0.7,
+          y: parallaxY * 0.7,
         }}
-        transition={{
-          duration: 75,
-          ease: "easeInOut",
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
+        transition={{ type: "spring", stiffness: 50, damping: 20 }}
       />
-
-      {/* Layer 2: Cool indigo/blue radial — bottom-left */}
       <motion.div
         className="absolute"
         style={{
-          width: "130vw",
-          height: "130vh",
-          bottom: "-25%",
-          left: "-35%",
-          background:
-            "radial-gradient(ellipse at 30% 70%, rgba(59,111,224,0.15) 0%, rgba(110,77,224,0.1) 35%, transparent 65%)",
-          filter: "blur(220px)",
-          willChange: "transform",
-          mixBlendMode: "screen",
-        }}
-        animate={{
-          x: [parallaxX * 0.7, parallaxX * 0.7 - 18, parallaxX * 0.7 + 12, parallaxX * 0.7],
-          y: [parallaxY * 0.7, parallaxY * 0.7 + 15, parallaxY * 0.7 - 10, parallaxY * 0.7],
-        }}
-        transition={{
-          duration: 90,
-          ease: "easeInOut",
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
-      />
-
-      {/* Layer 3: Cyan accent glow — center-left drift */}
-      <motion.div
-        className="absolute"
-        style={{
-          width: "60vw",
+          width: "80vw",
           height: "60vh",
-          top: "20%",
+          bottom: "-20%",
           left: "10%",
-          background:
-            "radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 60%)",
-          filter: "blur(180px)",
+          background: "radial-gradient(ellipse at 50% 100%, rgba(255, 235, 150, 0.15) 0%, transparent 50%)",
+          filter: "blur(100px)",
           willChange: "transform",
-          mixBlendMode: "screen",
         }}
         animate={{
-          x: [0, 20, -15, 0],
-          y: [0, -18, 12, 0],
-          opacity: [0.6, 0.8, 0.5, 0.6],
+          x: parallaxX * 0.3,
+          y: parallaxY * 0.3,
         }}
-        transition={{
-          duration: 65,
-          ease: "easeInOut",
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
+        transition={{ type: "spring", stiffness: 50, damping: 20 }}
       />
-
-      {/* Layer 4: Slow-drifting mesh gradient */}
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          background:
-            "conic-gradient(from 180deg at 50% 50%, rgba(110,77,224,0.04) 0deg, rgba(255,138,61,0.03) 120deg, rgba(59,111,224,0.04) 240deg, rgba(110,77,224,0.04) 360deg)",
-          filter: "blur(260px)",
-          willChange: "transform",
-          mixBlendMode: "screen",
-        }}
-        animate={{
-          rotate: [0, 360],
-          scale: [1, 1.08, 1],
-        }}
-        transition={{
-          rotate: { duration: 120, ease: "linear", repeat: Infinity },
-          scale: { duration: 35, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" },
-        }}
-      />
-
-      {/* Layer 5: Floating organic glow blob */}
-      <motion.div
-        className="absolute"
-        style={{
-          width: "45vw",
-          height: "45vh",
-          top: "50%",
-          right: "5%",
-          background:
-            "radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 55%)",
-          filter: "blur(200px)",
-          willChange: "transform",
-          mixBlendMode: "screen",
-        }}
-        animate={{
-          x: [parallaxX * 0.5, parallaxX * 0.5 + 25, parallaxX * 0.5 - 20, parallaxX * 0.5],
-          y: [parallaxY * 0.5, parallaxY * 0.5 - 22, parallaxY * 0.5 + 18, parallaxY * 0.5],
-          opacity: [0.4, 0.6, 0.35, 0.4],
-        }}
-        transition={{
-          duration: 80,
-          ease: "easeInOut",
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
-      />
-
-      {/* Layer 6: Monochrome film grain noise overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          opacity: 0.035,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundSize: "128px 128px",
-          mixBlendMode: "overlay",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Layer 7: Dark radial vignette */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 40%, rgba(5,6,10,0.7) 80%, rgba(5,6,10,0.95) 100%)",
-          pointerEvents: "none",
-        }}
-      />
-    </motion.div>
+      <div className="absolute top-0 left-0 w-full h-[60vh] bg-gradient-to-b from-[#020202] via-[#020202]/80 to-transparent" />
+    </div>
   );
 }

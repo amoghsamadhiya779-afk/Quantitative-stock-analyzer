@@ -219,12 +219,9 @@ export default function TerminalPage() {
           <div className="max-w-[1200px] mx-auto flex justify-between items-center">
             {/* Logo & Wordmark */}
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/5 rounded-xl border border-cyan-500/20 backdrop-blur-md shadow-xl hover:scale-105 transition-transform">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-                <Activity className="w-5 h-5 text-black" />
-              </div>
-              <span className="font-display font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400">
-                NEXUS
+            <Link href="/" className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md shadow-xl hover:scale-105 transition-transform pointer-events-auto z-50 relative">
+              <span className="font-display font-bold text-xl tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                COSMOQ
               </span>
             </Link>
             {/* Navigation Links */}

@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { ParticleNetwork } from '@/components/ui/ParticleNetwork';
+import CosmoqBackground from '@/components/ui/CosmoqBackground';
 import { Activity } from 'lucide-react';
 
 // Live Components
@@ -35,13 +35,13 @@ export default function LandingPage() {
   useEffect(() => {
     setMounted(true);
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      // Map scroll progress (0.1 to 0.9) into 6 segments
-      if (latest < 0.2) setActiveFeature(0);
-      else if (latest >= 0.2 && latest < 0.35) setActiveFeature(1);
-      else if (latest >= 0.35 && latest < 0.5) setActiveFeature(2);
-      else if (latest >= 0.5 && latest < 0.65) setActiveFeature(3);
-      else if (latest >= 0.65 && latest < 0.8) setActiveFeature(4);
-      else if (latest >= 0.8) setActiveFeature(5);
+      // Map scroll progress evenly across 6 segments (approx 0.166 each) for perfect sync
+      if (latest < 0.166) setActiveFeature(0);
+      else if (latest >= 0.166 && latest < 0.333) setActiveFeature(1);
+      else if (latest >= 0.333 && latest < 0.5) setActiveFeature(2);
+      else if (latest >= 0.5 && latest < 0.666) setActiveFeature(3);
+      else if (latest >= 0.666 && latest < 0.833) setActiveFeature(4);
+      else if (latest >= 0.833) setActiveFeature(5);
     });
     return () => unsubscribe();
   }, [scrollYProgress]);
@@ -57,19 +57,32 @@ export default function LandingPage() {
 
   return (
     <div ref={containerRef} className="relative bg-[#0a0a0a] text-white min-h-[600vh] selection:bg-cyan-500/30 font-sans">
-      <ParticleNetwork />
+      <CosmoqBackground />
 
       {/* Nav & Upgraded Logo */}
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center w-full px-6 pointer-events-none">
         <div className="flex items-center justify-between w-full max-w-7xl">
           {/* Unifying Logo */}
-          <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/5 rounded-xl border border-cyan-500/20 backdrop-blur-md shadow-xl pointer-events-auto">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-              <Activity className="w-5 h-5 text-black" />
-            </div>
-            <span className="font-display font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400">
-              NEXUS
+          <div className="flex items-center gap-3 pointer-events-auto">
+            <span className="font-display font-bold text-3xl tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+              COSMOQ
             </span>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-8 px-8 py-3 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl pointer-events-auto">
+            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">AI Solutions</Link>
+            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">About</Link>
+            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">Pricing</Link>
+            <Link href="#" className="text-sm font-medium text-white/80 hover:text-white transition-colors">Contact</Link>
+          </div>
+
+          <div className="pointer-events-auto">
+            <button onClick={() => {
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }} className="px-6 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-white font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:bg-white hover:text-black transition-all">
+              Get Started
+            </button>
           </div>
         </div>
       </nav>
@@ -83,29 +96,41 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md mb-8"
+          className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8"
         >
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-          <span className="text-xs font-mono tracking-wider text-cyan-50">QUANTITATIVE INTELLIGENCE V2.0</span>
+          <span className="text-sm tracking-wide text-neutral-200">Beta Version is launching on 12th September</span>
         </motion.div>
         
         <motion.h1 
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="text-6xl md:text-8xl lg:text-[100px] font-extrabold tracking-tighter max-w-6xl text-center leading-[0.9] drop-shadow-2xl text-white"
+          className="text-6xl md:text-8xl lg:text-[100px] font-extrabold tracking-tight max-w-5xl text-center leading-[1.05] drop-shadow-2xl text-white"
         >
-          Outsmart the Market with <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">AI Agents.</span>
+          Next-gen enterprise<br />with AI Agents
         </motion.h1>
         
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.8 }}
-          className="text-lg md:text-2xl text-neutral-300 max-w-2xl text-center mt-8 font-light"
+          className="text-lg md:text-xl text-neutral-300 max-w-2xl text-center mt-6 font-medium leading-relaxed"
         >
-          An institutional-grade terminal built on predictive neural networks and systemic risk engines. Scroll to explore.
+          Accelerate the speed of business with the COSMOC Platform<br />and our AI solutions for work, service, and process.
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1.0 }}
+          className="mt-10 pointer-events-auto"
+        >
+          <button onClick={() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }} className="px-8 py-4 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-semibold text-lg shadow-[0_0_30px_rgba(56,189,248,0.3)] hover:bg-white hover:text-black transition-all">
+            Get Started
+          </button>
+        </motion.div>
       </motion.div>
 
       {/* 2. Scroll-Linked Feature Walkthrough */}
