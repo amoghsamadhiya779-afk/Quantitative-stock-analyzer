@@ -4,15 +4,17 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { ParticleNetwork } from '@/components/ui/ParticleNetwork';
-import { useTheme } from 'next-themes';
+import { Activity } from 'lucide-react';
 
 // Live Components
 import Backtesting from '@/components/workflows/Backtesting';
 import RiskAnalytics from '@/components/workflows/RiskAnalytics';
 import PortfolioOptimization from '@/components/workflows/PortfolioOptimization';
+import MLPrediction from '@/components/workflows/MLPrediction';
+import TechnicalIndicators from '@/components/workflows/TechnicalIndicators';
+import NewsDrivenMarket from '@/components/workflows/NewsDrivenMarket';
 
 export default function LandingPage() {
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -22,21 +24,22 @@ export default function LandingPage() {
   });
 
   // Fade out hero on scroll
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.9]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.08], [1, 0.95]);
 
-  // Feature Section Snap points
-  // 0.2 to 0.4: Backtesting
-  // 0.4 to 0.6: Risk
-  // 0.6 to 0.8: Portfolio
+  // Feature Section Snap points for 6 components
   const [activeFeature, setActiveFeature] = useState(0);
 
   useEffect(() => {
     setMounted(true);
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      if (latest < 0.3) setActiveFeature(0);
-      else if (latest >= 0.3 && latest < 0.6) setActiveFeature(1);
-      else if (latest >= 0.6) setActiveFeature(2);
+      // Map scroll progress (0.1 to 0.9) into 6 segments
+      if (latest < 0.2) setActiveFeature(0);
+      else if (latest >= 0.2 && latest < 0.35) setActiveFeature(1);
+      else if (latest >= 0.35 && latest < 0.5) setActiveFeature(2);
+      else if (latest >= 0.5 && latest < 0.65) setActiveFeature(3);
+      else if (latest >= 0.65 && latest < 0.8) setActiveFeature(4);
+      else if (latest >= 0.8) setActiveFeature(5);
     });
     return () => unsubscribe();
   }, [scrollYProgress]);
@@ -47,34 +50,23 @@ export default function LandingPage() {
   const dummyTickers = ["AAPL", "MSFT", "NVDA", "AMZN", "META"];
   const dummyMarket = "United States (S&P 500)";
 
-  if (!mounted) return null; // Avoid hydration mismatch
+  if (!mounted) return null;
 
   return (
-    <div ref={containerRef} className="relative bg-background text-foreground min-h-[400vh] selection:bg-cyan-500/30 font-sans">
+    <div ref={containerRef} className="relative bg-[#0a0a0a] text-white min-h-[600vh] selection:bg-cyan-500/30 font-sans">
       <ParticleNetwork />
 
-      {/* Modern Theme Switcher & Nav */}
+      {/* Nav & Upgraded Logo */}
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center w-full px-6 pointer-events-none">
         <div className="flex items-center justify-between w-full max-w-7xl">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
-            <span className="font-display font-bold text-xl tracking-tight text-white drop-shadow-md">NEXUS</span>
-          </div>
-
-          <div className="pointer-events-auto flex items-center gap-2 p-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-xl">
-            {['dark', 'light', 'cyber'].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTheme(t)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-                  theme === t 
-                    ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
-                    : 'text-neutral-400 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          {/* Unifying Logo */}
+          <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/5 rounded-xl border border-cyan-500/20 backdrop-blur-md shadow-xl pointer-events-auto">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+              <Activity className="w-5 h-5 text-black" />
+            </div>
+            <span className="font-display font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400">
+              NEXUS
+            </span>
           </div>
         </div>
       </nav>
@@ -120,17 +112,32 @@ export default function LandingPage() {
         <div className="hidden lg:flex flex-col sticky top-[30vh] w-[40%] gap-32 pointer-events-none">
           <div className={`transition-opacity duration-500 ${activeFeature === 0 ? 'opacity-100' : 'opacity-20'}`}>
             <h2 className="text-4xl font-display font-bold text-white mb-4">Institutional Backtesting</h2>
-            <p className="text-lg text-neutral-400">Don't guess. Know. Test your algorithms against decades of historical data with zero look-ahead bias. Our engine simulates slippage, commissions, and extreme volatility instantly.</p>
+            <p className="text-lg text-neutral-400">Test your algorithms against decades of historical data with zero look-ahead bias. Our engine simulates slippage, commissions, and extreme volatility instantly.</p>
           </div>
           
           <div className={`transition-opacity duration-500 ${activeFeature === 1 ? 'opacity-100' : 'opacity-20'}`}>
             <h2 className="text-4xl font-display font-bold text-white mb-4">Systemic Risk Analytics</h2>
-            <p className="text-lg text-neutral-400">See the invisible. Dynamically calculate your Value at Risk (VaR) and systemic exposure across global markets in real-time. Identify dangerous correlations before they break your portfolio.</p>
+            <p className="text-lg text-neutral-400">Dynamically calculate your Value at Risk (VaR) and systemic exposure across global markets in real-time. Identify dangerous correlations before they break your portfolio.</p>
           </div>
           
           <div className={`transition-opacity duration-500 ${activeFeature === 2 ? 'opacity-100' : 'opacity-20'}`}>
-            <h2 className="text-4xl font-display font-bold text-white mb-4">Autonomous Portfolio Optimization</h2>
-            <p className="text-lg text-neutral-400">Let AI find the Efficient Frontier. Optimize asset allocation for maximum Sharpe ratio mathematically. The engine runs thousands of Monte Carlo simulations to find the perfect risk/reward balance.</p>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Portfolio Optimization</h2>
+            <p className="text-lg text-neutral-400">Optimize asset allocation for maximum Sharpe ratio mathematically. The engine runs thousands of Monte Carlo simulations to find the perfect risk/reward balance.</p>
+          </div>
+
+          <div className={`transition-opacity duration-500 ${activeFeature === 3 ? 'opacity-100' : 'opacity-20'}`}>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">ML Predictions</h2>
+            <p className="text-lg text-neutral-400">Leverage custom-trained CNN-BiLSTM-Attention networks utilizing Huber loss and Spatial Dropout to forecast short-term price vectors with statistical confidence bounds.</p>
+          </div>
+
+          <div className={`transition-opacity duration-500 ${activeFeature === 4 ? 'opacity-100' : 'opacity-20'}`}>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Technical Indicators</h2>
+            <p className="text-lg text-neutral-400">Visualize complex momentum oscillators, volatility bands, and moving average cross-overs in real-time to augment algorithmic strategies.</p>
+          </div>
+
+          <div className={`transition-opacity duration-500 ${activeFeature === 5 ? 'opacity-100' : 'opacity-20'}`}>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Live Macro & Sentiment</h2>
+            <p className="text-lg text-neutral-400">Track real-time NLP sentiment analysis from financial news. Gauge fear, greed, and macroeconomic shifts the second they hit the wire.</p>
           </div>
         </div>
 
@@ -150,17 +157,17 @@ export default function LandingPage() {
           </div>
 
           {/* Live Component Container */}
-          <div className="relative flex-1 w-full overflow-hidden bg-background p-6">
+          <div className="relative flex-1 w-full overflow-hidden bg-[#0a0a0a] p-6">
             <AnimatePresence mode="wait">
               {activeFeature === 0 && (
                 <motion.div 
                   key="backtest"
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 1.05, y: -20 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0, scale: 1.05, y: -30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="w-full h-full transform-gpu origin-top"
-                  style={{ transform: "scale(0.85)" }} // Scale down to fit the preview window
+                  style={{ transform: "scale(0.85)" }} 
                 >
                   <Backtesting selectedMarket={dummyMarket} selectedTicker="AAPL" selectedAlgo="MACD" />
                 </motion.div>
@@ -168,10 +175,10 @@ export default function LandingPage() {
               {activeFeature === 1 && (
                 <motion.div 
                   key="risk"
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 1.05, y: -20 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0, scale: 1.05, y: -30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="w-full h-full transform-gpu origin-top"
                   style={{ transform: "scale(0.85)" }}
                 >
@@ -181,14 +188,53 @@ export default function LandingPage() {
               {activeFeature === 2 && (
                 <motion.div 
                   key="portfolio"
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 1.05, y: -20 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0, scale: 1.05, y: -30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="w-full h-full transform-gpu origin-top"
                   style={{ transform: "scale(0.85)" }}
                 >
                   <PortfolioOptimization tickers={dummyTickers} />
+                </motion.div>
+              )}
+              {activeFeature === 3 && (
+                <motion.div 
+                  key="ml"
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.05, y: -30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="w-full h-full transform-gpu origin-top"
+                  style={{ transform: "scale(0.85)" }}
+                >
+                  <MLPrediction />
+                </motion.div>
+              )}
+              {activeFeature === 4 && (
+                <motion.div 
+                  key="tech"
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.05, y: -30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="w-full h-full transform-gpu origin-top"
+                  style={{ transform: "scale(0.85)" }}
+                >
+                  <TechnicalIndicators />
+                </motion.div>
+              )}
+              {activeFeature === 5 && (
+                <motion.div 
+                  key="news"
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.05, y: -30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="w-full h-full transform-gpu origin-top"
+                  style={{ transform: "scale(0.85)" }}
+                >
+                  <NewsDrivenMarket selectedMarket={dummyMarket} selectedTicker="AAPL" />
                 </motion.div>
               )}
             </AnimatePresence>

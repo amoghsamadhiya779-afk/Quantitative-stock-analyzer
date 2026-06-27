@@ -216,10 +216,15 @@ export default function TerminalPage() {
         <header className="sticky top-0 z-50 w-full px-4 md:px-8 pt-4 pb-2 transform-gpu bg-black/20 backdrop-blur-md border-b border-white/5">
           <div className="max-w-[1200px] mx-auto flex justify-between items-center">
             {/* Logo & Wordmark */}
-            <div className="flex items-center gap-3">
-              <img src="/quantum_yield_logo.png" alt="Nexus Quant" className="w-8 h-8 rounded-full border border-white/10" />
-              <h1 className="font-display text-sm font-bold tracking-[0.12em] text-white uppercase">Nexus Quant</h1>
-            </div>
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/5 rounded-xl border border-cyan-500/20 backdrop-blur-md shadow-xl hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                <Activity className="w-5 h-5 text-black" />
+              </div>
+              <span className="font-display font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400">
+                NEXUS
+              </span>
+            </Link>
             {/* Navigation Links */}
             <nav className="flex items-center gap-6">
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
