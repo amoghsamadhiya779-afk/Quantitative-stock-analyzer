@@ -13,7 +13,7 @@ import RiskAnalytics from '@/components/workflows/RiskAnalytics';
 import PortfolioOptimization from '@/components/workflows/PortfolioOptimization';
 import MLPrediction from '@/components/workflows/MLPrediction';
 import TechnicalIndicators from '@/components/workflows/TechnicalIndicators';
-import NewsDrivenMarket from '@/components/workflows/NewsDrivenMarket';
+import MarketDataIngestion from '@/components/workflows/MarketDataIngestion';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -237,7 +237,7 @@ export default function LandingPage() {
                   className="w-full h-full transform-gpu origin-top"
                   style={{ transform: "scale(0.85)" }}
                 >
-                  <NewsDrivenMarket selectedMarket={dummyMarket} selectedTicker="AAPL" />
+                  <MarketDataIngestion selectedMarket={dummyMarket} />
                 </motion.div>
               )}
             </AnimatePresence>
