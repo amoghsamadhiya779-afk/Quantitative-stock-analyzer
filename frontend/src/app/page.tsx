@@ -237,7 +237,7 @@ export default function LandingPage() {
                   className="w-full h-full transform-gpu origin-top"
                   style={{ transform: "scale(0.85)" }}
                 >
-                  <MarketDataIngestion selectedMarket={dummyMarket} />
+                  <MarketDataIngestion />
                 </motion.div>
               )}
             </AnimatePresence>
