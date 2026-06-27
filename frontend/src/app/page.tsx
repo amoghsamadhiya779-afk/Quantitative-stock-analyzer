@@ -178,24 +178,7 @@ export default function Home() {
               <h1 className="font-display text-sm font-bold tracking-tighter text-white">NEXUS QUANT</h1>
             </div>
           </div>
-          {/* Navigation Links */}
-          <nav className="flex items-center gap-4 md:gap-8">
-            {["Platform", "Research", "Technology", "Documentation", "GitHub"].map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                className="text-[10px] md:text-xs uppercase tracking-widest text-neutral-400 hover:text-white transition-colors duration-200"
-              >
-                {link}
-              </a>
-            ))}
-            <a
-              href="#launch-terminal"
-              className="px-3.5 py-1.5 rounded-full bg-white text-black text-[10px] md:text-xs font-semibold uppercase tracking-wider hover:bg-neutral-200 transition-all duration-200"
-            >
-              Launch Terminal
-            </a>
-          </nav>
+          {/* Navigation Links Removed per user request */}
         </div>
       </header>
 
@@ -217,21 +200,39 @@ export default function Home() {
         </motion.div>
 
         {/* Integration Marquee */}
-        <motion.div variants={itemVariants} className="w-full overflow-hidden py-6 border-y border-white/10 bg-black/40 backdrop-blur-md rounded-[24px] transform-gpu">
+        <motion.div variants={itemVariants} className="w-full overflow-hidden py-6 border-y border-white/10 bg-black/40 backdrop-blur-md rounded-[24px] transform-gpu mt-4">
           <div className="flex w-max animate-marquee">
             <div className="flex gap-16 px-8 text-xs font-mono tracking-widest text-neutral-400 uppercase">
-              {["Yahoo Finance", "Polygon", "Finnhub", "Alpha Vantage", "NASDAQ", "NSE", "TradingView"].map((item) => (
-                <span key={item} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 inline-block"></span>
-                  {item}
+              {[
+                { name: "AAPL", price: "184.20", change: "+1.2%", pos: true },
+                { name: "TSLA", price: "192.15", change: "-0.4%", pos: false },
+                { name: "NVDA", price: "450.00", change: "+2.1%", pos: true },
+                { name: "MSFT", price: "330.10", change: "+0.8%", pos: true },
+                { name: "AMZN", price: "140.50", change: "-0.1%", pos: false },
+                { name: "BTC", price: "64,200", change: "+3.4%", pos: true },
+              ].map((item) => (
+                <span key={item.name} className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.pos ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'} inline-block`}></span>
+                  <span className="text-white font-bold">{item.name}</span>
+                  <span>${item.price}</span>
+                  <span className={item.pos ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}>{item.change}</span>
                 </span>
               ))}
             </div>
             <div className="flex gap-16 px-8 text-xs font-mono tracking-widest text-neutral-400 uppercase">
-              {["Yahoo Finance", "Polygon", "Finnhub", "Alpha Vantage", "NASDAQ", "NSE", "TradingView"].map((item) => (
-                <span key={item} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 inline-block"></span>
-                  {item}
+              {[
+                { name: "AAPL", price: "184.20", change: "+1.2%", pos: true },
+                { name: "TSLA", price: "192.15", change: "-0.4%", pos: false },
+                { name: "NVDA", price: "450.00", change: "+2.1%", pos: true },
+                { name: "MSFT", price: "330.10", change: "+0.8%", pos: true },
+                { name: "AMZN", price: "140.50", change: "-0.1%", pos: false },
+                { name: "BTC", price: "64,200", change: "+3.4%", pos: true },
+              ].map((item) => (
+                <span key={item.name} className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.pos ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'} inline-block`}></span>
+                  <span className="text-white font-bold">{item.name}</span>
+                  <span>${item.price}</span>
+                  <span className={item.pos ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}>{item.change}</span>
                 </span>
               ))}
             </div>
