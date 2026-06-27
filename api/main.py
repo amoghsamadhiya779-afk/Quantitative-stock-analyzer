@@ -245,6 +245,25 @@ def get_market_data(market_name: str, ticker: str):
 def health_check():
     return {"status": "Operational", "engine": "SQL-Backed Institutional Quant Engine v6.0"}
 
+@app.get("/api/v1/debug")
+def debug_info():
+    import tensorflow as tf
+    import traceback
+    info = {"tf_version": tf.__version__, "files": {}, "errors": {}}
+    for f in os.listdir(MODEL_DIR):
+        if f.endswith(".keras"):
+            path = os.path.join(MODEL_DIR, f)
+            info["files"][f] = os.path.getsize(path)
+            # Try to load one to get the error
+            if "SP500_AdvancedBiLSTM.keras" in f:
+                try:
+                    from tensorflow.keras.models import load_model
+                    load_model(path, compile=False)
+                    info["errors"][f] = "Loaded successfully"
+                except Exception as e:
+                    info["errors"][f] = str(e) + "\n" + traceback.format_exc()
+    return info
+
 @app.post("/api/v1/predict", response_model=InferenceResponse)
 def execute_prediction(req: InferenceRequest):
     try:
