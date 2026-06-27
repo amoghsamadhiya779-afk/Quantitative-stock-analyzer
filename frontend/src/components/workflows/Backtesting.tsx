@@ -103,7 +103,7 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
     
     switch(type) {
       case 'return':
-        return ((backtestData.total_return - 100) * ratio).toFixed(1) + "%";
+        return (backtestData.total_return * ratio).toFixed(1) + "%";
       case 'sharpe':
         return (backtestData.sharpe_ratio * ratio).toFixed(2);
       case 'drawdown':
@@ -274,8 +274,8 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
               <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Total Return</span>
-              <div className="text-xl font-bold font-mono text-white flex items-center gap-1">
-                {getMetric('return')}
+              <div className={`text-xl font-bold font-mono flex items-center gap-1 ${backtestData && backtestData.total_return >= 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+                {backtestData && backtestData.total_return > 0 ? "+" : ""}{getMetric('return')}
               </div>
             </div>
 
