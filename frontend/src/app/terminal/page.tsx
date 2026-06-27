@@ -95,19 +95,12 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
 };
 
-const TICKER_DATA = [
-  { name: "AAPL", price: "184.20", change: "+1.2%", pos: true },
-  { name: "TSLA", price: "192.15", change: "-0.4%", pos: false },
-  { name: "NVDA", price: "450.00", change: "+2.1%", pos: true },
-  { name: "MSFT", price: "330.10", change: "+0.8%", pos: true },
-  { name: "AMZN", price: "140.50", change: "-0.1%", pos: false },
-  { name: "GOOGL", price: "138.20", change: "+0.6%", pos: true },
-  { name: "META", price: "312.40", change: "+1.8%", pos: true },
-  { name: "BTC", price: "64,200", change: "+3.4%", pos: true },
-];
+import { useAllPrices } from "@/lib/priceStore";
 
 export default function TerminalPage() {
   const [activePage, setActivePage] = useState("overview");
+  const allPrices = useAllPrices();
+  const tickerKeys = Object.keys(allPrices);
 
   // Backend-driven state
   const [markets, setMarkets] = useState<Record<string, MarketInfo>>({});
@@ -200,8 +193,9 @@ export default function TerminalPage() {
   const market = markets[selectedMarket];
   const currency = market?.currency || "USD";
   const region = market?.region || "Global";
-  const pctChange = (stockData && typeof stockData.pct_change === "number" && !isNaN(stockData.pct_change)) ? stockData.pct_change : 0;
-  const latestClose = (stockData && typeof stockData.latest_close === "number" && !isNaN(stockData.latest_close)) ? stockData.latest_close : 0;
+  const globalPrice = allPrices[selectedTicker];
+  const pctChange = globalPrice ? globalPrice.pct_change : (stockData && typeof stockData.pct_change === "number" && !isNaN(stockData.pct_change)) ? stockData.pct_change : 0;
+  const latestClose = globalPrice ? globalPrice.price : (stockData && typeof stockData.latest_close === "number" && !isNaN(stockData.latest_close)) ? stockData.latest_close : 0;
   const volatility = (stockData && typeof stockData.volatility === "number" && !isNaN(stockData.volatility)) ? stockData.volatility : 0;
   const vwap = (stockData && typeof stockData.vwap === "number" && !isNaN(stockData.vwap)) ? stockData.vwap : 0;
   const imbalance = stockData ? Math.min(85, Math.max(30, 50 + (pctChange * 10))) : 50;
@@ -213,9 +207,9 @@ export default function TerminalPage() {
 
       <Sidebar activeTab={activePage} onTabSelect={setActivePage} />
 
-      <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden relative z-10 flex flex-col hide-scrollbar">
+      <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full flex flex-col relative z-10 hide-scrollbar bg-black">
         {/* Top Header */}
-        <header className="sticky top-0 z-50 w-full px-4 md:px-8 pt-4 pb-2 transform-gpu bg-black/20 backdrop-blur-md border-b border-white/5">
+        <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-black/20 backdrop-blur-md border-b border-white/5 z-50">
           <div className="max-w-[1200px] mx-auto flex justify-between items-center">
             {/* Logo & Wordmark */}
             {/* Logo */}
@@ -242,33 +236,40 @@ export default function TerminalPage() {
           variants={tickerVariants}
           initial="hidden"
           animate="visible"
-          className="w-full overflow-hidden py-3 border-b border-white/5 bg-black/30 backdrop-blur-sm z-30 relative shrink-0"
+          className="w-full overflow-hidden py-3 border-b border-white/5 bg-black/30 backdrop-blur-sm z-40 relative shrink-0"
         >
           <div className="flex w-max animate-marquee">
             {[0, 1].map((copy) => (
               <div key={copy} className="flex gap-12 px-6 text-xs font-mono tracking-widest text-neutral-400 uppercase">
-                {TICKER_DATA.map((item, i) => (
-                  <motion.span
-                    key={`${copy}-${item.name}`}
-                    className="flex items-center gap-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 + i * 0.03, duration: 0.3 }}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${item.pos ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'} inline-block`} />
-                    <span className="text-white font-bold">{item.name}</span>
-                    <span className="text-neutral-500">${item.price}</span>
-                    <span className={item.pos ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}>{item.change}</span>
-                  </motion.span>
-                ))}
+                {tickerKeys.map((ticker, i) => {
+                  const item = allPrices[ticker];
+                  return (
+                    <motion.span
+                      key={`${copy}-${ticker}`}
+                      className="flex items-center gap-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 + i * 0.03, duration: 0.3 }}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${item.pct_change >= 0 ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'} inline-block`} />
+                      <span className="text-white font-bold">{ticker}</span>
+                      <span className="text-neutral-500">{item.price.toFixed(2)}</span>
+                      <span className={item.pct_change >= 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}>
+                        {item.pct_change > 0 ? "+" : ""}{item.pct_change.toFixed(2)}%
+                      </span>
+                    </motion.span>
+                  );
+                })}
               </div>
             ))}
           </div>
         </motion.div>
 
-        <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-12 py-8 flex flex-col gap-[20px]">
-          
-          {/* Always Visible Sections */}
+        {/* Scrollable Main Content */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar relative">
+          <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-12 py-8 flex flex-col gap-[20px]">
+            
+            {/* Always Visible Sections */}
           {activePage === "overview" && (
             <div className="max-w-4xl pt-4">
               <h2 className="font-display text-5xl md:text-[66px] font-semibold text-white leading-[0.95] mb-6 tracking-tight">
@@ -345,6 +346,7 @@ export default function TerminalPage() {
               )}
             </motion.div>
           </AnimatePresence>
+          </div>
         </div>
       </main>
 

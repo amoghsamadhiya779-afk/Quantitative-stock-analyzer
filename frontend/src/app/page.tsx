@@ -38,16 +38,7 @@ import {
   type PredictionResult,
 } from "@/lib/api";
 
-const TICKER_DATA = [
-  { name: "AAPL", price: "184.20", change: "+1.2%", pos: true },
-  { name: "TSLA", price: "192.15", change: "-0.4%", pos: false },
-  { name: "NVDA", price: "450.00", change: "+2.1%", pos: true },
-  { name: "MSFT", price: "330.10", change: "+0.8%", pos: true },
-  { name: "AMZN", price: "140.50", change: "-0.1%", pos: false },
-  { name: "GOOGL", price: "138.20", change: "+0.6%", pos: true },
-  { name: "META", price: "312.40", change: "+1.8%", pos: true },
-  { name: "BTC", price: "64,200", change: "+3.4%", pos: true },
-];
+import { useAllPrices } from "@/lib/priceStore";
 
 const ALGO_MAP: Record<string, string> = {
   "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
@@ -60,6 +51,8 @@ const algos = Object.keys(ALGO_MAP);
 export default function LandingPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const allPrices = useAllPrices();
+  const tickerKeys = Object.keys(allPrices);
 
   // Walkthrough State
   const [activeFeature, setActiveFeature] = useState(0);
@@ -317,66 +310,7 @@ export default function LandingPage() {
               </span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
-              <a
-                href="#platform"
-                onClick={(e) => {
-                  e.preventDefault();
-                  ScrollManager.scrollToElement("platform");
-                }}
-                className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
-              >
-                Platform
-              </a>
-              <a
-                href="#research"
-                onClick={(e) => {
-                  e.preventDefault();
-                  ScrollManager.scrollToElement("research");
-                }}
-                className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
-              >
-                Research
-              </a>
-              <a
-                href="#technology"
-                onClick={(e) => {
-                  e.preventDefault();
-                  ScrollManager.scrollToElement("technology");
-                }}
-                className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
-              >
-                Technology
-              </a>
-              <a
-                href="#documentation"
-                onClick={(e) => {
-                  e.preventDefault();
-                  ScrollManager.scrollToElement("documentation");
-                }}
-                className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
-              >
-                Documentation
-              </a>
-              <a
-                href="#github"
-                onClick={(e) => {
-                  e.preventDefault();
-                  ScrollManager.scrollToElement("github");
-                }}
-                className="text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href="#launch-terminal"
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push("/terminal");
-                }}
-                className="text-xs font-semibold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                Launch Terminal
-              </a>
+              {/* Top nav links removed to clear dead ends per QA */}
             </nav>
             <div>
               <button
@@ -455,9 +389,7 @@ export default function LandingPage() {
 
                 <div className="relative z-10 flex flex-col justify-between h-full pointer-events-none">
                   <div>
-                    <span className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase bg-black/50 p-2 rounded">
-                      ACTIVE NODE PIPELINE
-                    </span>
+                    {/* Active feature content starts below */}
                   </div>
                   <div>
                     <h3 className="text-2xl font-display font-bold text-white mb-2 drop-shadow-lg">
@@ -597,7 +529,7 @@ export default function LandingPage() {
                   Built for Microsecond Calculations
                 </h2>
                 <p className="text-neutral-400">
-                  Highly optimized tech stack leveraging Next.js React-14 for layouts, WebGL
+                  Highly optimized tech stack leveraging Next.js 14, React 18 for layouts, WebGL
                   (Three.js) for 3D model visualization, and GSAP for fluid scroll timing.
                 </p>
               </div>
@@ -713,27 +645,30 @@ export default function LandingPage() {
                         key={copy}
                         className="flex gap-12 px-6 text-xs font-mono tracking-widest text-neutral-400 uppercase"
                       >
-                        {TICKER_DATA.map((item) => (
-                          <span
-                            key={`${copy}-${item.name}`}
-                            className="flex items-center gap-2"
-                          >
+                        {tickerKeys.map((ticker) => {
+                          const item = allPrices[ticker];
+                          return (
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                item.pos ? "bg-[var(--profit)]" : "bg-[var(--loss)]"
-                              } inline-block`}
-                            />
-                            <span className="text-white font-bold">{item.name}</span>
-                            <span className="text-neutral-500">${item.price}</span>
-                            <span
-                              className={
-                                item.pos ? "text-[var(--profit)]" : "text-[var(--loss)]"
-                              }
+                              key={`${copy}-${ticker}`}
+                              className="flex items-center gap-2"
                             >
-                              {item.change}
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  item.pct_change >= 0 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"
+                                } inline-block`}
+                              />
+                              <span className="text-white font-bold">{ticker}</span>
+                              <span className="text-neutral-500">${item.price.toFixed(2)}</span>
+                              <span
+                                className={
+                                  item.pct_change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"
+                                }
+                              >
+                                {item.pct_change > 0 ? "+" : ""}{item.pct_change.toFixed(2)}%
+                              </span>
                             </span>
-                          </span>
-                        ))}
+                          );
+                        })}
                       </div>
                     ))}
                   </div>

@@ -3,10 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 import { fetchWatchlist, WatchlistItem, getLogoUrl, getFallbackLogo } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAllPrices } from "@/lib/priceStore";
 
 export default function WatchlistPanel({ marketName }: { marketName: string }) {
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const allPrices = useAllPrices();
 
   useEffect(() => {
     if (!marketName) return;
@@ -55,34 +57,46 @@ export default function WatchlistPanel({ marketName }: { marketName: string }) {
               ))}
             </motion.div>
           ) : (
-            items.map((item, i) => (
-              <motion.div
-                key={item.ticker}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.4 }}
-                className="flex items-center justify-between p-3 rounded-2xl hover:bg-[var(--color-fog)] transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={getLogoUrl(item.ticker)}
-                    onError={(e) => { e.currentTarget.src = getFallbackLogo(item.ticker); }}
-                    alt={item.ticker}
-                    className="w-8 h-8 rounded-full border border-[var(--border)] p-1 object-contain bg-white"
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-display font-bold text-[var(--color-carbon)] text-sm">{item.ticker}</span>
-                    <span className="text-[10px] text-[var(--color-slate)] font-mono">VOL {Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(item.volume)}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <PriceTick price={item.price} />
-                  <span className={`text-[10px] font-bold sentiment-crossfade ${item.pct_change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}`}>
-                    {item.pct_change > 0 ? "+" : ""}{item.pct_change.toFixed(2)}%
-                  </span>
-                </div>
-              </motion.div>
-            ))
+            items.map((item, i) => {
+                const priceData = allPrices[item.ticker] || { price: item.price, pct_change: item.pct_change };
+                
+                return (
+                  <motion.div 
+                    key={item.ticker}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/10"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#111] border border-white/10 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-cyan-500/50 transition-colors">
+                        <img 
+                          src={getLogoUrl(item.ticker)} 
+                          alt={item.ticker}
+                          className="w-5 h-5 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.src = getFallbackLogo(item.ticker);
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold font-display text-white text-sm">{item.ticker}</span>
+                        <span className="text-[10px] text-neutral-500 font-mono">
+                          VOL {Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(item.volume)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono font-bold text-white text-sm">
+                        {priceData.price.toFixed(2)}
+                      </span>
+                      <span className={`text-[10px] font-bold font-mono ${priceData.pct_change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}`}>
+                        {priceData.pct_change > 0 ? "+" : ""}{priceData.pct_change.toFixed(2)}%
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+            })
           )}
         </AnimatePresence>
       </div>
