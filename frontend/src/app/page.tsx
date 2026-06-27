@@ -12,6 +12,7 @@ import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
 import AnalystDashboardView from "@/components/features/AnalystDashboardView";
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 import CustomSelect from "@/components/ui/CustomSelect";
+import WatchlistPanel from "@/components/ui/WatchlistPanel";
 
 import {
   fetchMarkets,
@@ -323,24 +324,29 @@ export default function Home() {
         </motion.div>
 
         {/* Content Area */}
-        <motion.div variants={itemVariants} className="w-full relative z-20 min-h-[800px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activePage + selectedTicker}
-              initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {activePage === "Analyst Dashboard" && <AnalystDashboardView stockData={stockData} prediction={prediction} allPredictions={allPredictions} currency={currency} />}
-              {activePage === "Macro & Risk Engine" && <MacroRiskEngine stockData={stockData} prediction={prediction} currency={currency} selectedAlgo={selectedAlgo} selectedMarket={selectedMarket} selectedTicker={selectedTicker} />}
-              {activePage === "Deep Technical Suite" && <DeepTechnicalSuite stockData={stockData} />}
-              {activePage === "SOTA Benchmarking" && <SotaBenchmarking stockData={stockData} prediction={prediction} currency={currency} selectedAlgo={selectedAlgo} />}
-              {activePage === "Backtesting Engine" && <BacktestingEngine selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
-              {activePage === "Trading Desk" && <TradingDesk stockData={stockData} currency={currency} selectedTicker={selectedTicker} />}
-              {activePage === "News-Driven Market" && <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />}
-            </motion.div>
-          </AnimatePresence>
+        <motion.div variants={itemVariants} className="w-full relative z-20 min-h-[800px] flex flex-col lg:flex-row gap-8">
+          <div className="flex-1 min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activePage + selectedTicker}
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {activePage === "Analyst Dashboard" && <AnalystDashboardView stockData={stockData} prediction={prediction} allPredictions={allPredictions} currency={currency} />}
+                {activePage === "Macro & Risk Engine" && <MacroRiskEngine stockData={stockData} prediction={prediction} currency={currency} selectedAlgo={selectedAlgo} selectedMarket={selectedMarket} selectedTicker={selectedTicker} />}
+                {activePage === "Deep Technical Suite" && <DeepTechnicalSuite stockData={stockData} />}
+                {activePage === "SOTA Benchmarking" && <SotaBenchmarking stockData={stockData} prediction={prediction} currency={currency} selectedAlgo={selectedAlgo} />}
+                {activePage === "Backtesting Engine" && <BacktestingEngine selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
+                {activePage === "Trading Desk" && <TradingDesk stockData={stockData} currency={currency} selectedTicker={selectedTicker} />}
+                {activePage === "News-Driven Market" && <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          <div className="w-full lg:w-[320px] shrink-0">
+            <WatchlistPanel marketName={selectedMarket} />
+          </div>
         </motion.div>
       </motion.div>
     </main>

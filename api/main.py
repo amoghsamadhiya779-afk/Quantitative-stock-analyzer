@@ -694,5 +694,70 @@ def debug_environment():
     }
 # ----------------------
 
+# --- NEW: WATCHLIST & CORRELATION ENDPOINTS ---
+@app.get("/api/v1/watchlist/{market_name}")
+def get_watchlist(market_name: str):
+    try:
+        tickers = FALLBACK_TICKERS.get(market_name, [])[:10]
+        results = []
+        for t in tickers:
+            try:
+                df = get_market_data(market_name, t)
+                if len(df) > 1:
+                    latest = float(df['Close'].iloc[-1])
+                    prev = float(df['Close'].iloc[-2])
+                    pct = ((latest / prev) - 1) * 100 if prev != 0 else 0.0
+                    vol = float(df['Volume'].iloc[-1]) if 'Volume' in df.columns else 0.0
+                    
+                    # Defend against NaNs
+                    if np.isnan(pct) or np.isinf(pct): pct = 0.0
+                    
+                    results.append({
+                        "ticker": t,
+                        "price": latest,
+                        "pct_change": pct,
+                        "volume": vol
+                    })
+            except Exception as e:
+                logger.warning(f"Skipping {t} for watchlist: {e}")
+                continue
+        return {"watchlist": results}
+    except Exception as e:
+        logger.error(f"Watchlist failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate watchlist")
+
+@app.get("/api/v1/correlation/{market_name}")
+def get_correlation(market_name: str):
+    try:
+        tickers = FALLBACK_TICKERS.get(market_name, [])[:10]
+        series_dict = {}
+        for t in tickers:
+            try:
+                df = get_market_data(market_name, t)
+                df_recent = df.tail(90) # Use 90 days for stable correlation
+                if len(df_recent) >= 30:
+                    series_dict[t] = df_recent.set_index('Date')['Close']
+            except Exception:
+                continue
+                
+        if not series_dict:
+            return {"tickers": [], "matrix": []}
+            
+        # Combine into single DataFrame and compute Pearson correlation
+        combined = pd.DataFrame(series_dict).ffill().bfill().fillna(0)
+        corr = combined.corr().round(2)
+        
+        matrix = corr.values.tolist()
+        labels = corr.columns.tolist()
+        
+        # Replace any remaining NaNs in the matrix with 0
+        matrix = [[0.0 if np.isnan(val) else val for val in row] for row in matrix]
+        
+        return {"tickers": labels, "matrix": matrix}
+    except Exception as e:
+        logger.error(f"Correlation heatmap failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate correlation matrix")
+# ----------------------
+
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=7860, reload=False)

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
+import CorrelationHeatmap from "./CorrelationHeatmap";
 import type { StockData, PredictionResult } from "@/lib/api";
 
 interface Props {
@@ -96,6 +97,11 @@ export default function MacroRiskEngine({ stockData, prediction, currency, selec
             <Line type="monotone" dataKey="aiTarget" stroke="var(--profit)" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 6, fill: "var(--profit)", stroke: 'var(--surface)', strokeWidth: 2 }} isAnimationActive={true} name="AI Target" />
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      
+      {/* Correlation Matrix Integration */}
+      <div className="w-full h-[500px]">
+        <CorrelationHeatmap marketName={selectedMarket} />
       </div>
     </motion.div>
   );

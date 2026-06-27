@@ -68,6 +68,56 @@ export interface BacktestResult {
   strategy_equity: number[];
   buy_hold_equity: number[];
   total_return: number;
+
+export interface MarketInfo {
+  index_key: string;
+  stock_file: string;
+  region: string;
+  currency: string;
+}
+
+export interface StockData {
+  ticker: string;
+  market: string;
+  currency: string;
+  region: string;
+  latest_close: number;
+  prev_close: number;
+  price_delta: number;
+  pct_change: number;
+  rsi: number;
+  volatility: number;
+  vwap: number;
+  ma_20: number;
+  ma_50: number;
+  dates: string[];
+  closes: number[];
+  opens: number[];
+  highs: number[];
+  lows: number[];
+  volumes: number[];
+  bb_upper: number[];
+  bb_lower: number[];
+  macd: number[];
+  signal_line: number[];
+  rsi_series: number[];
+}
+
+export interface PredictionResult {
+  ticker: string;
+  latest_close: number;
+  predicted_price: number;
+  delta: number;
+  pct_change: number;
+  model_type: string;
+  confidence: number;
+}
+
+export interface BacktestResult {
+  dates: string[];
+  strategy_equity: number[];
+  buy_hold_equity: number[];
+  total_return: number;
   bh_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
@@ -80,6 +130,18 @@ export interface NewsItem {
   link: string;
   tag: string;
   color: string;
+}
+
+export interface WatchlistItem {
+  ticker: string;
+  price: number;
+  pct_change: number;
+  volume: number;
+}
+
+export interface CorrelationMatrix {
+  tickers: string[];
+  matrix: number[][];
 }
 
 export async function fetchMarkets(): Promise<Record<string, MarketInfo>> {
@@ -126,6 +188,28 @@ export async function fetchNews(ticker: string, market?: string): Promise<NewsIt
   if (!res.ok) return [];
   const data = await res.json();
   return data.news || [];
+}
+
+export async function fetchWatchlist(marketName: string): Promise<WatchlistItem[]> {
+  try {
+    const res = await apiFetch(`/api/v1/watchlist/${encodeURIComponent(marketName)}`);
+    const data = await res.json();
+    return data.watchlist || [];
+  } catch (e) {
+    console.error("Failed to fetch watchlist", e);
+    return [];
+  }
+}
+
+export async function fetchCorrelationMatrix(marketName: string): Promise<CorrelationMatrix | null> {
+  try {
+    const res = await apiFetch(`/api/v1/correlation/${encodeURIComponent(marketName)}`);
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.error("Failed to fetch correlation matrix", e);
+    return null;
+  }
 }
 
 export function getLogoUrl(ticker: string): string {
