@@ -189,7 +189,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Globe */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col items-center justify-between overflow-hidden relative shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
+        <div className="lg:col-span-5 p-6 rounded-card bg-surface border border-[var(--border)] flex flex-col items-center justify-between overflow-hidden relative shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
           <div className="absolute top-5 left-5 z-10">
             <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-1 font-bold">Interactive Macro Globe</h3>
             <div className="flex items-center gap-2 text-[9px] font-mono text-[var(--profit)] font-bold">
@@ -216,7 +216,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
         </div>
 
         {/* News Feed */}
-        <div className="lg:col-span-7 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] flex flex-col justify-between shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow min-h-[480px]">
+        <div className="lg:col-span-7 p-6 rounded-card bg-surface border border-[var(--border)] flex flex-col justify-between shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow min-h-[480px]">
           <div className="flex items-center justify-between mb-5 shrink-0">
             <div className="flex items-center gap-2">
               <Rss className="text-[var(--accent)] w-4 h-4 animate-pulse" />
@@ -229,7 +229,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
             {newsLoading ? (
-              <div className="w-full h-full rounded-xl border border-[var(--border)] bg-[var(--surface)] flex items-center justify-center overflow-hidden relative">
+              <div className="w-full h-full rounded-card border border-[var(--border)] bg-surface flex items-center justify-center overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
                 <div className="font-mono text-[var(--foreground)]/30 uppercase tracking-widest text-xs z-10">Extracting Google News RSS...</div>
               </div>
@@ -272,7 +272,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
         </div>
       </div>
 
-      <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
+      <div className="p-6 rounded-card bg-surface border border-[var(--border)] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-[var(--border)]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
 
         <div className="w-full relative h-[320px] md:h-[360px]">
           {stockLoading && chartData.length === 0 ? (
-            <div className="absolute inset-0 w-full h-full rounded-xl border border-[var(--border)] bg-[var(--surface)] flex items-center justify-center overflow-hidden relative">
+            <div className="absolute inset-0 w-full h-full rounded-card border border-[var(--border)] bg-surface flex items-center justify-center overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
               <div className="font-mono text-[var(--foreground)]/30 uppercase tracking-widest text-xs z-10">Splicing macro time series data...</div>
             </div>

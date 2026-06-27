@@ -30,7 +30,7 @@ export default function CustomSelect({ label, value, options, onChange }: Props)
   return (
     <div 
       ref={ref} 
-      className={`relative p-3 rounded-xl glass-card flex flex-col justify-center group transition-all select-none ${open ? "z-50" : "z-10"}`} 
+      className={`relative p-3 rounded-card glass-card flex flex-col justify-center group transition-all select-none ${open ? "z-50" : "z-10"}`} 
       onClick={() => setOpen(!open)}
       onMouseEnter={() => setCursorType("hover-button")}
       onMouseLeave={() => setCursorType("default")}

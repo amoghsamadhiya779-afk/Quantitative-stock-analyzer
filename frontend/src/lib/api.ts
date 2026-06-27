@@ -130,10 +130,25 @@ export async function fetchNews(ticker: string, market?: string): Promise<NewsIt
 
 export function getLogoUrl(ticker: string): string {
   const clean = ticker.split('.')[0].replace('^', '').toLowerCase();
+  if (clean === 'aapl') return '/assets/aapl_logo.png';
+  if (clean === 'msft') return '/assets/msft_logo.png';
+  if (clean === 'amzn') return '/assets/amzn_logo.png';
+  if (clean === 'nvda') return '/assets/nvda_logo.png';
+  if (clean === 'meta') return '/assets/meta_logo.png';
+  if (clean === 'reliance') return '/assets/reliance_logo.png';
+  
+  // Indian Market Leaders
+  if (clean === 'tcs') return '/assets/tcs_logo.png';
+  if (clean === 'hdfcbank') return '/assets/hdfc_logo.png';
+  if (clean === 'infy') return '/assets/infy_logo.png';
+  if (clean === 'sbin') return '/assets/sbin_logo.png';
+  if (clean === 'bhartiartl') return '/assets/airtel_logo.png';
+  
+  // Try Clearbit, but if it 404s, the frontend onError will catch it and call getFallbackLogo
   return `https://logo.clearbit.com/${clean}.com`;
 }
 
 export function getFallbackLogo(ticker: string): string {
-  const clean = ticker.split('.')[0].replace('^', '');
-  return `https://ui-avatars.com/api/?name=${clean}&background=0F172A&color=60A5FA&font-size=0.33&bold=true`;
+  // Return the highly premium Ventriloc generic asset logo instead of cheap ui-avatars
+  return '/assets/generic_logo.png';
 }

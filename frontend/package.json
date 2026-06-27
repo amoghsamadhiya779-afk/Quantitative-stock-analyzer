@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.0",
@@ -17,6 +19,7 @@
     "cobe": "^2.0.1",
     "framer-motion": "^11.11.9",
     "gsap": "^3.12.5",
+    "lightweight-charts": "^5.2.0",
     "lucide-react": "^0.453.0",
     "next": "14.2.15",
     "react": "^18.2.0",
@@ -26,6 +29,7 @@
     "three": "^0.169.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.45.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -6,120 +6,128 @@ import MarketPulseWidget from "../ui/MarketPulseWidget";
 import QuantResearchScore from "../ui/QuantResearchScore";
 import PortfolioHealthWidget from "../ui/PortfolioHealthWidget";
 import ResearchSnapshotCard from "../ui/ResearchSnapshotCard";
-import { useCursor } from "../providers/CursorProvider";
 import { PredictionResult } from "@/lib/api";
 
-export default function AnalystDashboardView({ stockData, prediction, allPredictions = [], currency }: any) {
-  const { setCursorType } = useCursor();
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    }
+  }
+};
 
+const staggerItem = {
+  hidden: { opacity: 0, y: 30, filter: "blur(4px)" },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    filter: "blur(0px)",
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+  }
+};
+
+export default function AnalystDashboardView({ stockData, prediction, allPredictions = [], currency }: any) {
   if (!stockData) return (
-    <div className="w-full h-64 glass-card flex items-center justify-center overflow-hidden relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+    <div className="w-full h-[600px] ventriloc-card flex items-center justify-center">
+      <div className="text-[var(--color-slate)] text-sm font-semibold tracking-widest uppercase animate-pulse">Loading data...</div>
     </div>
   );
 
-  // Derive composite score
   const rsiScore = stockData.rsi > 70 ? 20 : (stockData.rsi < 30 ? 80 : 50);
   const vwapScore = stockData.latest_close > stockData.vwap ? 80 : 30;
   const compositeScore = Math.round((rsiScore + vwapScore + (prediction?.confidence || 50)) / 3);
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4"
+      variants={staggerContainer}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+      className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8"
     >
       {/* Left Column */}
-      <div className="flex flex-col gap-4">
+      <motion.div variants={staggerItem} className="flex flex-col gap-6 md:gap-8">
         <ResearchSnapshotCard data={stockData} currency={currency} />
-        <div 
-          className="p-5 glass-card group relative overflow-hidden"
-          onMouseEnter={() => setCursorType("hover-card")}
-          onMouseLeave={() => setCursorType("default")}
-        >
-          <div className="flex justify-between items-center mb-6 relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Market State</span>
+        <div className="p-8 ventriloc-card group relative overflow-hidden transition-all duration-500 hover:-translate-y-1">
+          <div className="flex justify-between items-center mb-8 relative z-10">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-slate)]">Market State</span>
             <MarketRegimeBadge pctChange={stockData.pct_change} volatility={stockData.volatility} />
           </div>
           <div className="relative z-10">
             <InstitutionalRiskMeter volatility={stockData.volatility} />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Middle Column */}
-      <div className="flex flex-col gap-4">
+      <motion.div variants={staggerItem} className="flex flex-col gap-6 md:gap-8">
         <QuantResearchScore score={compositeScore} />
         <MarketPulseWidget rsi={stockData.rsi} macd={stockData.macd} />
         <PortfolioHealthWidget ticker={stockData.ticker} pctChange={stockData.pct_change} />
-      </div>
+      </motion.div>
 
       {/* Right Column (AI Insights) */}
-      <div 
-        className="p-5 glass-card relative overflow-hidden group"
-        onMouseEnter={() => setCursorType("hover-card")}
-        onMouseLeave={() => setCursorType("default")}
-      >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
-        <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b border-[var(--border)] pb-2 relative z-10 flex items-center justify-between">
-          <span>AI Multi-Model Consensus Engine</span>
+      <motion.div variants={staggerItem} className="p-8 lg:p-10 ventriloc-card relative overflow-hidden group transition-all duration-500 hover:-translate-y-1">
+        <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-8 border-b border-[var(--border)] pb-4 relative z-10 flex items-center justify-between text-[var(--color-carbon)]">
+          <span>AI Consensus Engine</span>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--profit)] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--profit)]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]"></span>
             </span>
-            <span className="text-[9px] text-[var(--profit)]">LIVE</span>
+            <span className="text-[9px] text-[var(--accent)] font-semibold tracking-widest">LIVE</span>
           </div>
         </h3>
         
         {allPredictions && allPredictions.length > 0 ? (
-          <div className="flex flex-col gap-6 relative z-10">
-            {/* Aggregate Confidence */}
+          <div className="flex flex-col gap-8 relative z-10">
             <ConfidenceMeter confidence={
               allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length
             } />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
               {allPredictions.map((p: PredictionResult, idx: number) => {
                 const isUp = p.delta > 0;
                 const direction = isUp ? "UP" : "DOWN";
-                const displayModel = p.model_type.split('_').join(' ').replace('CNN BiLSTM Attention', 'CNN-Attn Engine').replace('TimeSeriesTransformer', 'Temporal Transf.').replace('AdvancedBiLSTM', 'BiLSTM Layer');
+                const displayModel = p.model_type.split('_').join(' ').replace('CNN BiLSTM Attention', 'CNN-Attn').replace('TimeSeriesTransformer', 'Transf.').replace('AdvancedBiLSTM', 'BiLSTM');
                 return (
-                  <div key={idx} className="p-3 bg-black/20 rounded-lg border border-[var(--border)] flex flex-col items-center text-center justify-center relative overflow-hidden group/model">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover/model:opacity-100 transition-opacity" />
-                    <div className="text-[9px] uppercase tracking-widest text-[var(--foreground)]/50 mb-1 w-full truncate px-1" title={p.model_type}>{displayModel}</div>
-                    <div className={`text-xl font-bold font-mono ${isUp ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+                  <div key={idx} className="p-4 bg-[var(--color-fog)] rounded-card border border-[var(--border)] flex flex-col items-center text-center justify-center relative overflow-hidden group/model hover:shadow-card-hover hover:bg-white transition-all duration-500">
+                    <div className="text-[9px] uppercase tracking-widest text-[var(--color-slate)] mb-2 w-full truncate px-1 font-semibold" title={p.model_type}>{displayModel}</div>
+                    <div className={`text-2xl font-bold font-mono ${isUp ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
                       {direction}
                     </div>
-                    <div className="text-[10px] text-[var(--foreground)]/60 mt-1">{Math.round(p.confidence)}% Conf.</div>
+                    <div className="text-[10px] text-[var(--color-graphite)] mt-2 font-medium">{Math.round(p.confidence)}% Conf.</div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="p-4 rounded-xl bg-black/10 border border-[var(--border)] text-xs text-[var(--foreground)]/80 font-mono leading-relaxed backdrop-blur-md">
-              Real-time multi-model consensus indicates a {Math.round(allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length)}% aggregated probability of {allPredictions.filter((p: PredictionResult) => p.delta > 0).length > allPredictions.length / 2 ? "UP" : "DOWN"} movement over the next 5 periods across {allPredictions.length} models, conditioned on {Number(stockData.volatility).toFixed(1)}% volatility regime.
+            <div className="p-6 rounded-card bg-[var(--color-fog)] border border-[var(--border)] text-[11px] text-[var(--color-graphite)] font-mono leading-loose mt-4">
+              Real-time multi-model consensus indicates a <strong className="text-[var(--color-carbon)]">{Math.round(allPredictions.reduce((acc: number, p: PredictionResult) => acc + p.confidence, 0) / allPredictions.length)}%</strong> aggregated probability of <strong className={allPredictions.filter((p: PredictionResult) => p.delta > 0).length > allPredictions.length / 2 ? "text-[var(--profit)]" : "text-[var(--loss)]"}>{allPredictions.filter((p: PredictionResult) => p.delta > 0).length > allPredictions.length / 2 ? "UP" : "DOWN"}</strong> movement over the next 5 periods across {allPredictions.length} models, conditioned on {Number(stockData.volatility).toFixed(1)}% volatility regime.
             </div>
           </div>
         ) : prediction ? (
-          <div className="flex flex-col gap-6 relative z-10">
+          <div className="flex flex-col gap-8 relative z-10">
             <ConfidenceMeter confidence={prediction.confidence} />
             
-            <div onMouseEnter={(e) => { e.stopPropagation(); setCursorType("hover-data"); }} onMouseLeave={(e) => { e.stopPropagation(); setCursorType("hover-card"); }}>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--foreground)]/50 mb-1">Directional Bias</div>
-              <div className={`text-2xl font-bold font-mono ${prediction.delta > 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+            <div className="mt-4">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-slate)] mb-2">Directional Bias</div>
+              <div className={`text-4xl font-bold font-mono ${prediction.delta > 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
                 {prediction.delta > 0 ? "UP" : "DOWN"}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-black/10 border border-[var(--border)] text-xs text-[var(--foreground)]/80 font-mono leading-relaxed backdrop-blur-md">
-              Model outputs indicate a {Math.round(prediction.confidence)}% probability of {prediction.delta > 0 ? "UP" : "DOWN"} movement over the next 5 periods, conditioned on recent {Number(stockData.volatility).toFixed(1)}% volatility regime.
+            <div className="p-6 rounded-card bg-[var(--color-fog)] border border-[var(--border)] text-[11px] text-[var(--color-graphite)] font-mono leading-loose mt-4">
+              Model outputs indicate a <strong className="text-[var(--color-carbon)]">{Math.round(prediction.confidence)}%</strong> probability of <strong className={prediction.delta > 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}>{prediction.delta > 0 ? "UP" : "DOWN"}</strong> movement over the next 5 periods, conditioned on recent {Number(stockData.volatility).toFixed(1)}% volatility regime.
             </div>
           </div>
         ) : (
-          <div className="text-xs text-[var(--foreground)]/40 font-mono relative z-10">Forecasting engine offline.</div>
+          <div className="text-xs text-[var(--color-slate)] font-mono relative z-10">Forecasting engine offline.</div>
         )}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

@@ -14,8 +14,8 @@ interface Props {
 
 export default function SotaBenchmarking({ stockData, prediction, currency, selectedAlgo }: Props) {
   if (!stockData) return (
-    <div className="w-full h-[600px] rounded-2xl border border-[var(--border)] bg-[var(--surface)] flex items-center justify-center overflow-hidden relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+    <div className="w-full h-[600px] ventriloc-card flex items-center justify-center">
+      <div className="text-[var(--color-slate)] text-sm font-semibold tracking-widest uppercase animate-pulse">Loading model validation...</div>
     </div>
   );
 
@@ -34,7 +34,6 @@ export default function SotaBenchmarking({ stockData, prediction, currency, sele
     smaTarget: null as number | null,
   }));
 
-  // Add projection points
   if (prediction) {
     chartData.push({
       day: "T+1",
@@ -42,45 +41,61 @@ export default function SotaBenchmarking({ stockData, prediction, currency, sele
       aiTarget: prediction.predicted_price,
       smaTarget: smaBase,
     });
-    // Connect from last historical point
     chartData[chartData.length - 2].aiTarget = lastPrice;
     chartData[chartData.length - 2].smaTarget = lastPrice;
   }
+  
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-surface border border-[var(--border)] p-4 rounded-card shadow-card">
+          <p className="text-[10px] uppercase text-[var(--color-slate)] mb-2 font-semibold tracking-widest border-b border-[var(--border)] pb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-4 text-xs font-mono my-1.5">
+              <span style={{ color: entry.color }} className="font-bold flex-1">{entry.name}:</span>
+              <span className="text-[var(--foreground)] text-right">{Number(entry.value).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="w-full space-y-5">
-      <div className="flex items-center gap-2">
-        <Cpu className="text-accent w-4 h-4" />
-        <h2 className="text-[10px] tracking-[0.2em] text-foreground/50 font-bold uppercase">Model Architecture Validation</h2>
+    <motion.div initial={{ opacity: 0, y: 30, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="w-full space-y-8">
+      <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4">
+        <Cpu className="text-[var(--accent)] w-5 h-5" />
+        <h2 className="text-xs tracking-[0.2em] text-[var(--color-carbon)] font-bold uppercase">Model Architecture Validation</h2>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 p-5 rounded-xl bg-surface border border-border">
-          <span className="text-[9px] tracking-widest text-foreground/40 uppercase">Algorithm Selection</span>
-          <div className="font-bold text-lg mt-2">{selectedAlgo}</div>
-          <div className="mt-3 flex flex-wrap gap-4 text-xs font-mono text-foreground/60">
-            <span>Loss: <strong className="text-accent">0.0142 MSE</strong></span>
-            <span>Epochs: <strong>250</strong></span>
-            <span>Arch: <strong>BiLSTM x2</strong></span>
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-[2] p-8 ventriloc-card transition-all duration-500 hover:-translate-y-1">
+          <span className="text-[10px] tracking-widest text-[var(--color-slate)] uppercase font-semibold">Algorithm Selection</span>
+          <div className="font-display font-bold text-2xl mt-4 text-[var(--color-carbon)]">{selectedAlgo}</div>
+          <div className="mt-6 flex flex-wrap gap-6 text-[11px] font-mono text-[var(--color-graphite)] bg-[var(--color-fog)] p-4 rounded-card">
+            <span>Loss: <strong className="text-[var(--accent)]">0.0142 MSE</strong></span>
+            <span>Epochs: <strong className="text-[var(--color-carbon)]">250</strong></span>
+            <span>Arch: <strong className="text-[var(--color-carbon)]">BiLSTM x2</strong></span>
           </div>
         </div>
-        <div className="flex-1 p-5 rounded-xl bg-surface border border-border">
-          <span className="text-[9px] tracking-widest text-foreground/40 uppercase">Target RMSE Error Est.</span>
-          <div className="font-mono text-2xl font-bold mt-2 text-accent">±{Number(nnErr * 0.3).toFixed(2)} {currency}</div>
-          <div className="mt-2 text-xs text-foreground/40">Beats SMA Baseline by {Number((smaErr * 0.8) - (nnErr * 0.3)).toFixed(2)} pts</div>
+        <div className="flex-1 p-8 ventriloc-card transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-white to-[var(--color-mist)]">
+          <span className="text-[10px] tracking-widest text-[var(--color-slate)] uppercase font-semibold">Target RMSE Error Est.</span>
+          <div className="font-mono text-4xl font-bold mt-4 text-[var(--accent)]">±{Number(nnErr * 0.3).toFixed(2)} <span className="text-sm text-[var(--color-slate)]">{currency}</span></div>
+          <div className="mt-4 text-xs font-semibold text-[var(--profit)] bg-[var(--profit)]/10 p-3 rounded-tag inline-block">Beats SMA Baseline by {Number((smaErr * 0.8) - (nnErr * 0.3)).toFixed(2)} pts</div>
         </div>
       </div>
 
-      <div className="p-5 rounded-xl bg-surface border border-border" style={{ height: 380 }}>
-        <h3 className="text-[10px] tracking-widest text-foreground/40 uppercase mb-3">Historical vs AI Target vs SMA Baseline</h3>
+      <div className="p-8 ventriloc-card" style={{ height: 480 }}>
+        <h3 className="text-[10px] tracking-widest text-[var(--color-slate)] uppercase font-semibold mb-6">Historical vs AI Target vs SMA Baseline</h3>
         <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0}>
           <LineChart data={chartData}>
-            <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} interval={Math.floor(chartData.length / 10)} />
-            <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.4, fontSize: 10 }} tickFormatter={(v) => v.toLocaleString()} />
-            <Tooltip contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v: any) => v?.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
-            <Line type="monotone" dataKey="historical" stroke="var(--foreground)" strokeWidth={2} dot={false} name="Historical" connectNulls={false} />
-            <Line type="monotone" dataKey="aiTarget" stroke="var(--accent)" strokeWidth={3} dot={{ r: 4, fill: "var(--accent)" }} name="AI Target" connectNulls />
-            <Line type="monotone" dataKey="smaTarget" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="SMA Base" connectNulls />
+            <XAxis dataKey="day" stroke="var(--border)" tick={{ fill: "var(--color-slate)", fontSize: 10, fontFamily: 'monospace' }} interval={Math.floor(chartData.length / 10)} axisLine={false} tickMargin={12} />
+            <YAxis domain={["auto", "auto"]} stroke="var(--border)" tick={{ fill: "var(--color-slate)", fontSize: 10, fontFamily: 'monospace' }} tickFormatter={(v) => v.toLocaleString()} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--color-chalk)', strokeWidth: 1, strokeDasharray: '4 4' }} />
+            <Line type="monotone" dataKey="historical" stroke="var(--color-carbon)" strokeWidth={2.5} dot={false} name="Historical" connectNulls={false} isAnimationActive={true} />
+            <Line type="monotone" dataKey="aiTarget" stroke="var(--accent)" strokeWidth={3.5} dot={{ r: 5, fill: "var(--accent)", stroke: 'white', strokeWidth: 2 }} name="AI Target" connectNulls isAnimationActive={true} />
+            <Line type="monotone" dataKey="smaTarget" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="SMA Base" connectNulls isAnimationActive={true} opacity={0.6} />
           </LineChart>
         </ResponsiveContainer>
       </div>

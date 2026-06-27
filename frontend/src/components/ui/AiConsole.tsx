@@ -23,7 +23,7 @@ export default function AiConsole() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-      className="relative z-10 w-full max-w-2xl mx-auto mt-24 p-6 rounded-2xl bg-surface border border-border backdrop-blur-xl shadow-2xl"
+      className="relative z-10 w-full max-w-2xl mx-auto mt-24 p-6 rounded-card bg-surface border border-border backdrop-blur-xl shadow-2xl"
     >
       <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
         <Terminal className="text-accent w-5 h-5" />
@@ -42,7 +42,7 @@ export default function AiConsole() {
           <button 
             onClick={handlePredict}
             disabled={loading}
-            className="px-6 py-3 bg-accent text-background font-medium rounded-lg hover:bg-opacity-90 transition-all duration-300 disabled:opacity-50"
+            className="px-6 py-3 bg-accent text-background font-medium rounded-button hover:bg-opacity-90 transition-all duration-300 disabled:opacity-50"
           >
             {loading ? "PROCESSING..." : "EXECUTE"}
           </button>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { AnimatePresence, motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 
 import MacroRiskEngine from "@/components/features/MacroRiskEngine";
 import DeepTechnicalSuite from "@/components/features/DeepTechnicalSuite";
@@ -10,8 +10,8 @@ import BacktestingEngine from "@/components/features/BacktestingEngine";
 import TradingDesk from "@/components/features/TradingDesk";
 import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
 import AnalystDashboardView from "@/components/features/AnalystDashboardView";
-import ThemeSelector from "@/components/ui/ThemeSelector";
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 import {
   fetchMarkets,
@@ -48,27 +48,24 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 40 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] }, // Ultra-smooth easeOutExpo
   },
 };
 
-import { useCursor } from "@/components/providers/CursorProvider";
-
 export default function Home() {
   const [activePage, setActivePage] = useState(pages[0]);
-  const [theme, setThemeState] = useState("nexus-terminal");
-  const { setCursorType } = useCursor();
+  const [navVisible, setNavVisible] = useState(false);
 
   // Backend-driven state
   const [markets, setMarkets] = useState<Record<string, MarketInfo>>({});
@@ -83,7 +80,35 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
 
-  // 1. Load markets on mount
+  // Detect sudden mouse movement to top
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientY < 120) {
+        setNavVisible(true);
+        clearTimeout(timeout);
+      } else {
+        timeout = setTimeout(() => {
+          setNavVisible(false);
+        }, 300); // Small delay to avoid jitter
+      }
+    };
+    
+    // Also show nav when scrolled to very top
+    const handleScroll = () => {
+      if (window.scrollY < 50) setNavVisible(true);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  // API Loaders
   useEffect(() => {
     fetchMarkets()
       .then((m) => {
@@ -93,31 +118,20 @@ export default function Home() {
         if (names.length > 0) setSelectedMarket(names[0]);
       })
       .catch(() => {
-        // Fallback if API is down
         const fallback: Record<string, MarketInfo> = {
           "United States (S&P 500)": { index_key: "SP500", stock_file: "SP500_DATASET.csv", region: "North America", currency: "USD" },
-          "India (NIFTY 50)": { index_key: "NIFTY50", stock_file: "NIFTY50_India.csv", region: "Asia", currency: "INR" },
-          "Japan (Nikkei 225)": { index_key: "Nikkei225", stock_file: "Nikkei225_Japan.csv", region: "Asia", currency: "JPY" },
-          "United Kingdom (FTSE 100)": { index_key: "FTSE100", stock_file: "FTSE100_UK.csv", region: "Europe", currency: "GBP" },
-          "Germany (DAX 40)": { index_key: "DAX40", stock_file: "DAX40_Germany.csv", region: "Europe", currency: "EUR" },
-          "Turkey (BIST 100)": { index_key: "BIST100", stock_file: "BIST100_Turkey.csv", region: "Europe/Asia", currency: "TRY" },
-          "Brazil (Bovespa)": { index_key: "Bovespa", stock_file: "Bovespa_Brazil.csv", region: "South America", currency: "BRL" },
-          "Indonesia (IDX)": { index_key: "IDX", stock_file: "IDX_Indonesia.csv", region: "Asia", currency: "IDR" },
         };
         setMarkets(fallback);
-        const names = Object.keys(fallback);
-        setMarketNames(names);
-        setSelectedMarket(names[0]);
+        setMarketNames(Object.keys(fallback));
+        setSelectedMarket("United States (S&P 500)");
       });
   }, []);
 
-  // 2. Load tickers when market changes
   useEffect(() => {
     if (!selectedMarket) return;
     setLoading(true);
     setSelectedTicker("");
     setStockData(null);
-    setPrediction(null);
     fetchTickers(selectedMarket)
       .then((t) => {
         setTickers(t);
@@ -127,7 +141,6 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [selectedMarket]);
 
-  // 3. Load stock data + predictions with real-time polling
   useEffect(() => {
     if (!selectedMarket || !selectedTicker) return;
     setLoading(true);
@@ -142,7 +155,6 @@ export default function Home() {
       ]).then(([sd, primaryPr, ...allPrs]) => {
         if (sd) setStockData(sd as any);
         if (primaryPr) setPrediction(primaryPr as any);
-        
         const validPrs = allPrs.filter(Boolean) as PredictionResult[];
         if (validPrs.length > 0) setAllPredictions(validPrs);
         setLoading(false);
@@ -150,132 +162,126 @@ export default function Home() {
     };
 
     fetchData();
-    // Real-time polling every 15 seconds
     const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
   }, [selectedMarket, selectedTicker, selectedAlgo]);
 
-  const setTheme = (t: string) => {
-    setThemeState(t);
-    document.documentElement.setAttribute("data-theme", t);
-  };
-
   const market = markets[selectedMarket];
   const currency = market?.currency || "USD";
   const region = market?.region || "Global";
-
   const imbalance = stockData ? Math.min(85, Math.max(30, 50 + (stockData.pct_change * 10))) : 50;
 
   return (
-    <main className="min-h-screen relative w-full flex flex-col font-sans bg-[var(--background)] text-[var(--foreground)] transition-colors duration-700 overflow-hidden">
+    <main className="min-h-screen relative w-full flex flex-col font-sans bg-[var(--background)] text-[var(--foreground)] transition-colors duration-500 overflow-x-hidden">
       
-      {/* Cinematic Digital Grid Background */}
-      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_10%,transparent_100%)]" />
-
-      {/* Ticker Ribbon */}
-      <motion.div 
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full bg-[var(--surface)] border-b border-[var(--border)] py-2 overflow-hidden whitespace-nowrap text-xs font-mono text-[var(--foreground)]/60 backdrop-blur-xl z-50 relative"
-      >
-        <div className="animate-marquee inline-block flex w-max">
-          <div className="flex shrink-0">
-            S&P 500: 5,088.21 <span className="text-[var(--profit)] mx-1">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)] mx-1">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; DAX: 17,419.33 <span className="text-[var(--profit)] mx-1">▲ 0.28%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)] mx-1">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)] mx-1">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp; US10Y: 4.28% <span className="text-[var(--loss)] mx-1">▼ -0.02</span> &nbsp;&nbsp;&nbsp;&nbsp; BTC: 64,210.00 <span className="text-[var(--profit)] mx-1">▲ 3.42%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIFTY 50: 22,147.90 <span className="text-[var(--profit)] mx-1">▲ 0.68%</span> &nbsp;&nbsp;&nbsp;&nbsp; FTSE 100: 8,275.38 <span className="text-[var(--loss)] mx-1">▼ -0.31%</span> &nbsp;&nbsp;&nbsp;&nbsp;
-          </div>
-          <div className="flex shrink-0">
-            S&P 500: 5,088.21 <span className="text-[var(--profit)] mx-1">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)] mx-1">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; DAX: 17,419.33 <span className="text-[var(--profit)] mx-1">▲ 0.28%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)] mx-1">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)] mx-1">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp; US10Y: 4.28% <span className="text-[var(--loss)] mx-1">▼ -0.02</span> &nbsp;&nbsp;&nbsp;&nbsp; BTC: 64,210.00 <span className="text-[var(--profit)] mx-1">▲ 3.42%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIFTY 50: 22,147.90 <span className="text-[var(--profit)] mx-1">▲ 0.68%</span> &nbsp;&nbsp;&nbsp;&nbsp; FTSE 100: 8,275.38 <span className="text-[var(--loss)] mx-1">▼ -0.31%</span> &nbsp;&nbsp;&nbsp;&nbsp;
-          </div>
-        </div>
-      </motion.div>
+      {/* Auto-Hide Top Navigation */}
+      <AnimatePresence>
+        {navVisible && (
+          <motion.div
+            initial={{ y: "-100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "-100%", opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed top-0 left-0 w-full z-50 flex flex-col pointer-events-auto"
+          >
+            {/* Ticker Ribbon */}
+            <div className="w-full bg-[var(--color-carbon)] py-1.5 overflow-hidden whitespace-nowrap text-[10px] font-mono text-[var(--color-paper)]">
+              <div className="animate-marquee inline-block flex w-max">
+                <div className="flex shrink-0">
+                  S&P 500: 5,088.21 <span className="text-[var(--profit)] mx-2">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)] mx-2">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)] mx-2">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)] mx-2">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                </div>
+                <div className="flex shrink-0">
+                  S&P 500: 5,088.21 <span className="text-[var(--profit)] mx-2">▲ 1.12%</span> &nbsp;&nbsp;&nbsp;&nbsp; NIKKEI 225: 39,098.68 <span className="text-[var(--profit)] mx-2">▲ 2.19%</span> &nbsp;&nbsp;&nbsp;&nbsp; VIX: 13.45 <span className="text-[var(--loss)] mx-2">▼ -4.21%</span> &nbsp;&nbsp;&nbsp;&nbsp; GOLD: 2,045.10 <span className="text-[var(--profit)] mx-2">▲ 0.15%</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                </div>
+              </div>
+            </div>
+            
+            {/* Header / Logo */}
+            <div className="w-full bg-[var(--surface)]/90 backdrop-blur-xl border-b border-[var(--border)] px-8 lg:px-16 py-4 flex justify-between items-center shadow-card">
+              <div className="flex items-center gap-4 group cursor-pointer">
+                <img src="/quantum_yield_logo.png" alt="Quantum Yield Logo" className="w-10 h-10 rounded-full border border-[var(--border)] group-hover:rotate-12 transition-transform duration-700" />
+                <div>
+                  <h1 className="font-display text-xl font-bold tracking-tighter text-[var(--color-carbon)]">QUANTUM YIELD</h1>
+                  <div className="text-[9px] uppercase tracking-widest text-[var(--color-slate)] font-medium">Algorithmic Capital Allocation</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--color-slate)]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
+                <span className="font-bold">System Live</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div 
         variants={containerVariants}
         initial="hidden"
-        animate="visible"
-        className="flex-1 w-full max-w-[1440px] mx-auto px-6 py-4 z-10 flex flex-col gap-5 relative"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        className="w-full max-w-[1200px] mx-auto px-6 md:px-12 lg:px-24 py-32 md:py-48 z-10 flex flex-col gap-16 md:gap-24 relative"
       >
-        {/* Header */}
-        <motion.div variants={itemVariants} className="flex justify-between items-end">
-          <div className="flex items-center gap-4 group p-2 pr-6 rounded-2xl border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface)] transition-all duration-500 cursor-pointer">
-            <img src="/quantum_yield_logo.png" alt="Quantum Yield Logo" className="w-16 h-16 rounded-2xl object-cover border border-[var(--border)] shadow-[0_0_20px_var(--glow)] group-hover:scale-105 transition-transform duration-500" />
-            <div>
-              <h1 className="text-4xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[var(--foreground)] to-[var(--foreground)]/50 group-hover:to-[var(--accent)] transition-all duration-500 py-1">QUANTUM YIELD</h1>
-              <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--foreground)]/50 font-bold group-hover:text-[var(--accent)] transition-colors duration-500">Algorithmic Capital Allocation</div>
-            </div>
-          </div>
-          <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
+        {/* Massive Hero Section */}
+        <motion.div variants={itemVariants} className="max-w-4xl">
+          <h2 className="font-display text-display-lg font-semibold text-[var(--color-carbon)] mb-6">
+            Institutional Intelligence.<br/>
+            <span className="text-[var(--color-slate)] font-medium">Fluid Execution.</span>
+          </h2>
+          <p className="text-body-lg text-[var(--color-graphite)] max-w-2xl leading-relaxed">
+            Quantum Yield synthesizes global macroeconomic data, real-time liquidity flow, and state-of-the-art neural networks into a singular, highly responsive interface.
+          </p>
         </motion.div>
 
         {/* Global Market Commodities */}
         <motion.div variants={itemVariants}>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-slate)] font-semibold mb-6">Global Liquidity Nodes</div>
           <CommoditiesBar />
         </motion.div>
 
-        {/* Control Bar — LIVE DROPDOWNS */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-5 gap-3 relative z-40">
-          <CustomSelect
-            label="Global Node"
-            value={selectedMarket}
-            options={marketNames}
-            onChange={(v) => setSelectedMarket(v)}
-          />
-          <CustomSelect
-            label="Target Asset"
-            value={selectedTicker}
-            options={tickers}
-            onChange={(v) => setSelectedTicker(v)}
-          />
-          <CustomSelect
-            label="AI Architecture"
-            value={selectedAlgo}
-            options={algos}
-            onChange={(v) => setSelectedAlgo(v)}
-          />
-          <CustomSelect
-            label="Execution Routing"
-            value="Dark Pool Aggregator"
-            options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine", "VWAP Engine"]}
-            onChange={() => {}}
-          />
-          <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] flex flex-col justify-center backdrop-blur-xl hover:shadow-[0_0_20px_var(--glow)] transition-all">
-            <div className="flex items-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-[var(--profit)]"} animate-pulse shadow-[0_0_8px_currentColor]`} />
-              <span className="text-[10px] font-bold tracking-wider uppercase">{loading ? "Syncing..." : "System Live"}</span>
+        {/* Large Control Bar */}
+        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-5 gap-4 relative z-40">
+          <CustomSelect label="Global Node" value={selectedMarket} options={marketNames} onChange={(v) => setSelectedMarket(v)} />
+          <CustomSelect label="Target Asset" value={selectedTicker} options={tickers} onChange={(v) => setSelectedTicker(v)} />
+          <CustomSelect label="AI Architecture" value={selectedAlgo} options={algos} onChange={(v) => setSelectedAlgo(v)} />
+          <CustomSelect label="Execution Routing" value="Dark Pool Aggregator" options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]} onChange={() => {}} />
+          <div className="p-4 rounded-card ventriloc-card flex flex-col justify-center transition-all hover:-translate-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-[var(--profit)]"} animate-pulse`} />
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-[var(--color-graphite)]">{loading ? "Syncing Network..." : "Compute Online"}</span>
             </div>
-            <div className="flex justify-between text-[9px] font-mono text-[var(--foreground)]/40">
-              <span>LAT: {loading ? "..." : "14ms"}</span>
-              <span>GPU: Online</span>
+            <div className="flex justify-between text-[10px] font-mono text-[var(--color-slate)]">
+              <span>LAT: {loading ? "..." : "12ms"}</span>
+              <span>GPU: A100</span>
             </div>
           </div>
         </motion.div>
 
-        {/* Live Valuation Header */}
-        <motion.div variants={itemVariants} className="flex flex-col md:flex-row bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md group hover:border-[var(--border)] transition-all">
+        {/* Live Valuation Giant Header */}
+        <motion.div variants={itemVariants} className="flex flex-col xl:flex-row gap-8 items-center bg-white border border-[var(--border)] rounded-[32px] p-8 md:p-12 shadow-card hover:shadow-card-hover transition-all duration-700">
           {/* Logo + Name */}
-          <div className="flex-1 p-5 md:border-r border-[var(--border)] flex items-center gap-5">
+          <div className="flex-1 flex flex-col items-start gap-6 w-full">
             <img
               src={logoError ? getFallbackLogo(selectedTicker) : getLogoUrl(selectedTicker)}
               onError={() => setLogoError(true)}
               alt={selectedTicker}
-              className="w-14 h-14 rounded-xl border border-[var(--border)] shadow-lg object-contain bg-[var(--background)] p-1 group-hover:scale-105 transition-transform duration-500"
+              className="w-24 h-24 rounded-[24px] border border-[var(--border)] object-contain bg-[var(--background)] p-3"
             />
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">{selectedTicker || "—"}</h2>
-              <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-widest bg-[var(--foreground)]/10 px-3 py-0.5 rounded-md text-[var(--foreground)]/60">{region}</span>
+              <h2 className="font-display text-5xl md:text-7xl font-bold tracking-tighter text-[var(--color-carbon)]">{selectedTicker || "—"}</h2>
+              <span className="inline-block mt-3 text-xs font-semibold uppercase tracking-widest bg-[var(--color-chalk)] px-4 py-1.5 rounded-tag text-[var(--color-graphite)]">{region}</span>
             </div>
           </div>
-          {/* Stats */}
-          <div className="flex-[2] flex flex-wrap">
+          {/* Stats Grid */}
+          <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
             <StatBlock
-              label="Live Valuation"
+              label="Valuation"
               value={stockData ? stockData.latest_close.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
               sub={currency}
               delta={stockData ? `${stockData.pct_change >= 0 ? "+" : ""}${Number(stockData.pct_change).toFixed(2)}%` : undefined}
               deltaColor={stockData && stockData.pct_change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}
             />
             <StatBlock
-              label="Annual Volatility"
+              label="Volatility"
               value={stockData ? `${Number(stockData.volatility).toFixed(1)}%` : "—"}
               sub={stockData ? `Beta: ${Number(stockData.volatility / 15).toFixed(2)}` : ""}
             />
@@ -284,12 +290,12 @@ export default function Home() {
               value={stockData ? stockData.vwap.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
               sub={stockData ? `Dev: ${Number(((stockData.latest_close / stockData.vwap) - 1) * 100).toFixed(2)}%` : ""}
             />
-            <div className="flex-1 min-w-[140px] p-5 flex flex-col justify-center">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/40 mb-2">Order Imbalance</span>
-              <div className="w-full h-1.5 bg-[var(--foreground)]/10 rounded-full overflow-hidden mb-1 relative">
-                <div className={`h-full rounded-full transition-all duration-700 ${imbalance > 50 ? "bg-[var(--profit)] shadow-[0_0_8px_currentColor]" : "bg-[var(--loss)] shadow-[0_0_8px_currentColor]"}`} style={{ width: `${imbalance}%` }} />
+            <div className="p-5 bg-[var(--color-fog)] rounded-2xl flex flex-col justify-center">
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-[var(--color-slate)] mb-3">Imbalance</span>
+              <div className="w-full h-1.5 bg-[var(--color-chalk)] rounded-full overflow-hidden mb-2 relative">
+                <div className={`h-full rounded-full transition-all duration-700 ${imbalance > 50 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"}`} style={{ width: `${imbalance}%` }} />
               </div>
-              <div className="flex justify-between text-[9px] font-mono font-bold text-[var(--foreground)]/40 mt-1">
+              <div className="flex justify-between text-[10px] font-mono font-medium text-[var(--color-slate)]">
                 <span>BID {Math.round(imbalance)}%</span>
                 <span>ASK {Math.round(100 - imbalance)}%</span>
               </div>
@@ -297,81 +303,42 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Navigation Pills */}
-        <motion.div variants={itemVariants} className="flex flex-wrap gap-1.5 glass-card p-1.5 relative z-30">
-          {pages.map((page) => (
-            <button
-              key={page}
-              onClick={() => setActivePage(page)}
-              onMouseEnter={() => setCursorType("hover-button")}
-              onMouseLeave={() => setCursorType("default")}
-              className={`flex-1 min-w-[130px] px-3 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-                activePage === page
-                  ? "bg-[var(--foreground)] text-[var(--background)] shadow-[0_4px_20px_var(--glow)] scale-[1.02]"
-                  : "text-[var(--foreground)]/70 hover:bg-[var(--foreground)]/5 hover:text-[var(--foreground)] hover:-translate-y-0.5"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
+        {/* Navigation Pills — Giant Fluid Segment */}
+        <motion.div variants={itemVariants} className="w-full overflow-x-auto pb-4 hide-scrollbar">
+          <div className="flex w-max gap-2 rounded-[200px] bg-white border border-[var(--border)] shadow-sm p-2">
+            {pages.map((page) => (
+              <button
+                key={page}
+                onClick={() => setActivePage(page)}
+                className={`px-6 py-4 rounded-[200px] text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-500 whitespace-nowrap ${
+                  activePage === page
+                    ? "bg-[var(--color-carbon)] text-white shadow-card scale-100"
+                    : "text-[var(--color-slate)] hover:bg-[var(--color-fog)] hover:text-[var(--color-carbon)] scale-95 hover:scale-100"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {/* Content Area */}
-        <motion.div variants={itemVariants} className="w-full relative z-20">
+        <motion.div variants={itemVariants} className="w-full relative z-20 min-h-[800px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePage + selectedTicker}
-              initial={{ opacity: 0, y: 8, filter: "blur(8px)" }}
+              initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              {activePage === "Analyst Dashboard" && (
-                <AnalystDashboardView
-                  stockData={stockData}
-                  prediction={prediction}
-                  allPredictions={allPredictions}
-                  currency={currency}
-                />
-              )}
-              {activePage === "Macro & Risk Engine" && (
-                <MacroRiskEngine
-                  stockData={stockData}
-                  prediction={prediction}
-                  currency={currency}
-                  selectedAlgo={selectedAlgo}
-                  selectedMarket={selectedMarket}
-                  selectedTicker={selectedTicker}
-                />
-              )}
-              {activePage === "Deep Technical Suite" && (
-                <DeepTechnicalSuite stockData={stockData} />
-              )}
-              {activePage === "SOTA Benchmarking" && (
-                <SotaBenchmarking
-                  stockData={stockData}
-                  prediction={prediction}
-                  currency={currency}
-                  selectedAlgo={selectedAlgo}
-                />
-              )}
-              {activePage === "Backtesting Engine" && (
-                <BacktestingEngine
-                  selectedMarket={selectedMarket}
-                  selectedTicker={selectedTicker}
-                  selectedAlgo={selectedAlgo}
-                />
-              )}
-              {activePage === "Trading Desk" && (
-                <TradingDesk
-                  stockData={stockData}
-                  currency={currency}
-                  selectedTicker={selectedTicker}
-                />
-              )}
-              {activePage === "News-Driven Market" && (
-                <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />
-              )}
+              {activePage === "Analyst Dashboard" && <AnalystDashboardView stockData={stockData} prediction={prediction} allPredictions={allPredictions} currency={currency} />}
+              {activePage === "Macro & Risk Engine" && <MacroRiskEngine stockData={stockData} prediction={prediction} currency={currency} selectedAlgo={selectedAlgo} selectedMarket={selectedMarket} selectedTicker={selectedTicker} />}
+              {activePage === "Deep Technical Suite" && <DeepTechnicalSuite stockData={stockData} />}
+              {activePage === "SOTA Benchmarking" && <SotaBenchmarking stockData={stockData} prediction={prediction} currency={currency} selectedAlgo={selectedAlgo} />}
+              {activePage === "Backtesting Engine" && <BacktestingEngine selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
+              {activePage === "Trading Desk" && <TradingDesk stockData={stockData} currency={currency} selectedTicker={selectedTicker} />}
+              {activePage === "News-Driven Market" && <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />}
             </motion.div>
           </AnimatePresence>
         </motion.div>
@@ -380,16 +347,14 @@ export default function Home() {
   );
 }
 
-import CustomSelect from "@/components/ui/CustomSelect";
-
 function StatBlock({ label, value, sub, delta, deltaColor }: any) {
   return (
-    <div className="flex-1 min-w-[140px] p-5 border-r border-[var(--border)] last:border-r-0 flex flex-col justify-center">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/40 mb-1">{label}</span>
-      <div className="font-mono text-lg font-bold">
-        {value} <span className="text-[10px] text-[var(--foreground)]/40">{sub}</span>
+    <div className="p-5 bg-[var(--color-fog)] rounded-2xl flex flex-col justify-center">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-slate)] mb-2">{label}</span>
+      <div className="font-mono text-2xl font-bold text-[var(--color-carbon)]">
+        {value} <span className="text-xs text-[var(--color-slate)] ml-1">{sub}</span>
       </div>
-      {delta && <div className={`text-xs font-bold mt-0.5 ${deltaColor}`}>{delta}</div>}
+      {delta && <div className={`text-sm font-bold mt-1 ${deltaColor}`}>{delta}</div>}
     </div>
   );
 }

@@ -46,3 +46,7 @@ data/
 node_env/
 frontend/node_modules/
 frontend/.next/
+
+# Agent Workspaces
+.agents/
+...agents/

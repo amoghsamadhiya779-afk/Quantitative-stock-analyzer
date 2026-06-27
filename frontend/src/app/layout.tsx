@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import IntroReveal from "@/components/ui/IntroReveal";
-
 import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
-import { CursorProvider } from "@/components/providers/CursorProvider";
-import DatamorphicBackground from "@/components/ui/DatamorphicBackground";
 
 export const metadata: Metadata = {
-  title: "Nexus Quant Platform | Multi-Theme Intelligence",
-  description: "Next-generation institutional quantitative trading and market intelligence.",
+  title: "Quantum Yield | Institutional Quantitative Intelligence",
+  description: "Next-generation institutional quantitative trading and market intelligence platform.",
 };
 
 export default function RootLayout({
@@ -18,13 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="relative min-h-screen">
+      <body className="relative min-h-screen bg-background text-foreground font-sans antialiased selection:bg-[var(--accent)] selection:text-white">
         <SmoothScrollProvider>
-          <CursorProvider>
-            <DatamorphicBackground />
-            <IntroReveal />
-            {children}
-          </CursorProvider>
+          {children}
         </SmoothScrollProvider>
       </body>
     </html>
