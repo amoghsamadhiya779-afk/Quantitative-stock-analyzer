@@ -10,7 +10,6 @@ import PortfolioOptimization from "@/components/workflows/PortfolioOptimization"
 import RiskAnalytics from "@/components/workflows/RiskAnalytics";
 import Backtesting from "@/components/workflows/Backtesting";
 import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
-import SettingsPanel from "@/components/ui/SettingsPanel";
 
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -332,12 +331,11 @@ export default function TerminalPage() {
               className="transform-gpu flex flex-col gap-[20px]"
             >
               {activePage === "overview" && <MarketDataIngestion />}
-              {activePage === "settings" && <SettingsPanel />}
               {activePage === "technical" && <TechnicalIndicators />}
               {activePage === "ml-prediction" && <MLPrediction />}
               {activePage === "portfolio" && <PortfolioOptimization />}
               {activePage === "risk" && <RiskAnalytics />}
-              {activePage === "backtesting" && <Backtesting />}
+              {activePage === "backtesting" && <Backtesting selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
               {(activePage === "news-macro" || activePage === "macro-globe" || activePage === "live-news" || activePage === "sentiment") && (
                 <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />
               )}

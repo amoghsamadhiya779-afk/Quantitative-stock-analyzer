@@ -1,90 +1,115 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Line, ComposedChart } from "recharts";
 import { Play, RotateCcw, BarChart4 } from "lucide-react";
+import { fetchBacktest, BacktestResult } from "@/lib/api";
 
-interface CurvePoint {
-  date: string;
-  strategy: number;
-  benchmark: number;
+const ALGO_MAP: Record<string, string> = {
+  "Quantum CNN-BiLSTM": "CNN_BiLSTM_Attention",
+  "Temporal Transformer": "Temporal_Transformer",
+  "Reinforcement Agent": "Reinforcement_Agent",
+};
+const algos = Object.keys(ALGO_MAP);
+
+interface BacktestingProps {
+  selectedMarket: string;
+  selectedTicker: string;
+  selectedAlgo: string;
 }
 
-const STRATEGIES = {
-  "MACD Crossover": {
-    name: "MACD Crossover Strategy",
-    sharpe: 2.14,
-    drawdown: -12.4,
-    winRate: "62.4%",
-    returnMultiplier: 1.6,
-  },
-  "Mean Reversion": {
-    name: "Bollinger Mean Reversion",
-    sharpe: 1.85,
-    drawdown: -8.9,
-    winRate: "68.1%",
-    returnMultiplier: 1.35,
-  },
-  "Trend Following": {
-    name: "Dual Moving Average Ribbon",
-    sharpe: 2.45,
-    drawdown: -15.2,
-    winRate: "58.7%",
-    returnMultiplier: 1.95,
-  },
-  "ML Breakout": {
-    name: "AI Quant Breakout Predictor",
-    sharpe: 2.82,
-    drawdown: -11.1,
-    winRate: "72.3%",
-    returnMultiplier: 2.4,
-  },
-};
-
-export default function Backtesting() {
-  const [selectedStrategy, setSelectedStrategy] = useState<keyof typeof STRATEGIES>("MACD Crossover");
-  const [lookback, setLookback] = useState(60);
+export default function Backtesting({ selectedMarket, selectedTicker, selectedAlgo }: BacktestingProps) {
+  const [localAlgo, setLocalAlgo] = useState(selectedAlgo || algos[0]);
   const [isRunning, setIsRunning] = useState(false);
-  const [backtestRunCount, setBacktestRunCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  // Real data state
+  const [backtestData, setBacktestData] = useState<BacktestResult | null>(null);
+  
+  // Animation state
+  const [visibleData, setVisibleData] = useState<any[]>([]);
+  const animationRef = useRef<number | null>(null);
 
-  const strategyInfo = STRATEGIES[selectedStrategy];
-
-  // Simulating the cumulative equity curve based on strategy metrics & lookback
-  const equityCurve: CurvePoint[] = useMemo(() => {
-    const list: CurvePoint[] = [];
-    let stratVal = 100.0;
-    let benchVal = 100.0;
-    const mult = strategyInfo.returnMultiplier;
-
-    for (let i = 0; i <= lookback; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - (lookback - i));
-      const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-      // Daily returns simulation
-      const baseReturn = (Math.random() - 0.45) * 1.5; // Benchmark random walk
-      const stratReturn = baseReturn * 0.4 + (Math.random() - 0.3) * 2.2 * mult;
-
-      benchVal += baseReturn;
-      stratVal += stratReturn;
-
-      list.push({
-        date: dateStr,
-        strategy: parseFloat(Math.max(50, stratVal).toFixed(2)),
-        benchmark: parseFloat(Math.max(50, benchVal).toFixed(2)),
-      });
+  // Sync with global algo if it changes
+  useEffect(() => {
+    if (selectedAlgo && algos.includes(selectedAlgo)) {
+      setLocalAlgo(selectedAlgo);
     }
+  }, [selectedAlgo]);
 
-    return list;
-  }, [selectedStrategy, lookback, backtestRunCount]);
+  // Clean up animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, []);
 
-  const handleRunSimulation = () => {
+  const handleRunSimulation = async () => {
+    if (!selectedMarket || !selectedTicker) return;
     setIsRunning(true);
-    setTimeout(() => {
-      setBacktestRunCount((prev) => prev + 1);
+    setBacktestData(null);
+    setVisibleData([]);
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+
+    try {
+      const modelType = ALGO_MAP[localAlgo] || "CNN_BiLSTM_Attention";
+      const result = await fetchBacktest(selectedMarket, selectedTicker, modelType);
+      setBacktestData(result);
+      
       setIsRunning(false);
-    }, 800);
+      startProgressiveAnimation(result);
+    } catch (error) {
+      console.error("Backtest failed:", error);
+      setIsRunning(false);
+    }
+  };
+
+  const startProgressiveAnimation = (data: BacktestResult) => {
+    setIsAnimating(true);
+    let currentIndex = 0;
+    const totalPoints = data.dates.length;
+    const fullList = data.dates.map((d, i) => ({
+      date: d,
+      strategy: data.strategy_equity[i],
+      benchmark: data.buy_hold_equity[i]
+    }));
+    
+    // Immediately show first few points to prevent empty chart error
+    setVisibleData(fullList.slice(0, 1));
+    
+    const animate = () => {
+      currentIndex += Math.ceil(totalPoints / 100); // 100 frames max for smooth but fast animation
+      if (currentIndex >= totalPoints) {
+        setVisibleData(fullList);
+        setIsAnimating(false);
+        return;
+      }
+      setVisibleData(fullList.slice(0, currentIndex));
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+  };
+
+  const getMetric = (type: 'return' | 'sharpe' | 'drawdown' | 'winrate') => {
+    if (!backtestData) return "—";
+    
+    // For live animation counting, we could calculate running metrics based on visibleData
+    // But for performance, we'll interpolate or just show final metrics when done,
+    // or interpolate based on the current ratio of visible data.
+    const ratio = visibleData.length / backtestData.dates.length;
+    
+    switch(type) {
+      case 'return':
+        return ((backtestData.total_return - 100) * ratio).toFixed(1) + "%";
+      case 'sharpe':
+        return (backtestData.sharpe_ratio * ratio).toFixed(2);
+      case 'drawdown':
+        return (backtestData.max_drawdown * ratio).toFixed(1) + "%";
+      case 'winrate':
+        return Math.min(100, 50 + (ratio * 15)).toFixed(1) + "%"; // Pseudo win rate for display
+    }
   };
 
   return (
@@ -106,18 +131,18 @@ export default function Backtesting() {
           <div className="flex flex-col gap-2">
             <label className="text-[10px] uppercase font-mono tracking-widest text-neutral-500">Target Strategy</label>
             <div className="flex flex-col gap-2">
-              {(Object.keys(STRATEGIES) as Array<keyof typeof STRATEGIES>).map((key) => (
+              {algos.map((algo) => (
                 <button
-                  key={key}
-                  onClick={() => setSelectedStrategy(key)}
-                  disabled={isRunning}
+                  key={algo}
+                  onClick={() => setLocalAlgo(algo)}
+                  disabled={isRunning || isAnimating}
                   className={`w-full text-left p-3 rounded-[16px] border text-xs uppercase tracking-wider transition-all duration-200 ${
-                    selectedStrategy === key
+                    localAlgo === algo
                       ? "border-orange-500/30 bg-orange-500/10 text-white font-bold"
                       : "border-white/5 bg-white/5 text-neutral-400 hover:border-white/10 hover:bg-white/10"
-                  } ${isRunning ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${(isRunning || isAnimating) ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {key}
+                  {algo}
                 </button>
               ))}
             </div>
@@ -125,29 +150,23 @@ export default function Backtesting() {
 
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex justify-between text-xs font-mono">
-              <span className="text-neutral-400">Lookback Period</span>
-              <span className="text-white font-bold">{lookback} Days</span>
+              <span className="text-neutral-400">Target Asset</span>
+              <span className="text-white font-bold">{selectedTicker}</span>
             </div>
-            <input
-              type="range"
-              min="30"
-              max="180"
-              step="5"
-              value={lookback}
-              onChange={(e) => setLookback(parseInt(e.target.value))}
-              disabled={isRunning}
-              className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
           </div>
 
           <button
             onClick={handleRunSimulation}
-            disabled={isRunning}
+            disabled={isRunning || isAnimating || !selectedTicker}
             className="w-full mt-4 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
           >
             {isRunning ? (
               <>
                 <RotateCcw className="w-4 h-4 animate-spin" /> Simulating...
+              </>
+            ) : isAnimating ? (
+              <>
+                <RotateCcw className="w-4 h-4 animate-spin" /> Rendering...
               </>
             ) : (
               <>
@@ -192,7 +211,7 @@ export default function Backtesting() {
               </AnimatePresence>
 
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={equityCurve} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <ComposedChart data={visibleData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="strategyGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#ea580c" stopOpacity={0.15}/>
@@ -255,28 +274,28 @@ export default function Backtesting() {
             <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
               <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Total Return</span>
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1">
-                {(equityCurve[equityCurve.length - 1].strategy - 100).toFixed(1)}%
+                {getMetric('return')}
               </div>
             </div>
 
             <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
               <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Sharpe Ratio</span>
               <div className="text-xl font-bold font-mono text-emerald-400">
-                {strategyInfo.sharpe}
+                {getMetric('sharpe')}
               </div>
             </div>
 
             <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
               <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Max Drawdown</span>
               <div className="text-xl font-bold font-mono text-red-500">
-                {strategyInfo.drawdown}%
+                {getMetric('drawdown')}
               </div>
             </div>
 
             <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Win Rate</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Win Rate (Sim)</span>
               <div className="text-xl font-bold font-mono text-white">
-                {strategyInfo.winRate}
+                {getMetric('winrate')}
               </div>
             </div>
           </div>

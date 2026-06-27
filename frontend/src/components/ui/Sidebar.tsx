@@ -8,7 +8,6 @@ import {
   ShieldAlert, 
   History, 
   Globe, 
-  Settings,
   ChevronRight,
   Newspaper,
   TrendingUp,
@@ -39,7 +38,6 @@ const navItems = [
       { id: 'sentiment', label: 'Sentiment History', icon: TrendingUp },
     ]
   },
-  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabSelect }) => {
