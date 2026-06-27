@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Sliders, Award, Percent, DollarSign } from "lucide-react";
@@ -11,61 +11,110 @@ interface Asset {
   volatility: number;
 }
 
-const ASSETS: Record<string, Asset> = {
-  AAPL: { name: "Apple Inc.", expectedReturn: 16, volatility: 20 },
-  MSFT: { name: "Microsoft Corp.", expectedReturn: 14, volatility: 18 },
-  NVDA: { name: "NVIDIA Corp.", expectedReturn: 28, volatility: 34 },
-};
-
-const CORRELATIONS = {
-  AAPL_MSFT: 0.45,
-  AAPL_NVDA: 0.35,
-  MSFT_NVDA: 0.40,
-};
+interface PortfolioProps {
+  tickers?: string[];
+}
 
 const RISK_FREE_RATE = 4.0; // 4% risk-free rate
 
-export default function PortfolioOptimization() {
-  const [weights, setWeights] = useState<Record<string, number>>({
-    AAPL: 35,
-    MSFT: 35,
-    NVDA: 30,
-  });
+// Helper to generate a deterministic pseudo-random number from a string
+const pseudoRandom = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = Math.imul(31, hash) + seed.charCodeAt(i) | 0;
+  }
+  return (Math.abs(hash) % 1000) / 1000;
+};
+
+export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) {
+  // Use top 5 tickers, fallback if none provided
+  const activeTickers = useMemo(() => {
+    const list = tickers.length > 0 ? tickers : ["AAPL", "MSFT", "NVDA", "AMZN", "META"];
+    return list.slice(0, 5);
+  }, [tickers]);
+
+  // Dynamically generate ASSETS based on activeTickers
+  const ASSETS = useMemo(() => {
+    const assets: Record<string, Asset> = {};
+    activeTickers.forEach(ticker => {
+      // Return between 8% and 35%
+      const expRet = 8 + pseudoRandom(ticker + "ret") * 27;
+      // Volatility between 10% and 45%
+      const vol = 10 + pseudoRandom(ticker + "vol") * 35;
+      assets[ticker] = {
+        name: ticker,
+        expectedReturn: parseFloat(expRet.toFixed(1)),
+        volatility: parseFloat(vol.toFixed(1))
+      };
+    });
+    return assets;
+  }, [activeTickers]);
+
+  // Dynamically generate correlation matrix
+  const CORRELATIONS = useMemo(() => {
+    const corrs: Record<string, number> = {};
+    for (let i = 0; i < activeTickers.length; i++) {
+      for (let j = i + 1; j < activeTickers.length; j++) {
+        const t1 = activeTickers[i];
+        const t2 = activeTickers[j];
+        // Correlation between 0.1 and 0.7
+        const corr = 0.1 + pseudoRandom(t1 + t2 + "corr") * 0.6;
+        corrs[`${t1}_${t2}`] = corr;
+        corrs[`${t2}_${t1}`] = corr;
+      }
+    }
+    return corrs;
+  }, [activeTickers]);
+
+  const [weights, setWeights] = useState<Record<string, number>>({});
+
+  // Initialize even weights when activeTickers change
+  useEffect(() => {
+    const initial: Record<string, number> = {};
+    const evenWeight = 100 / activeTickers.length;
+    activeTickers.forEach(t => initial[t] = parseFloat(evenWeight.toFixed(1)));
+    
+    // Fix slight rounding errors so it sums to exactly 100
+    const sum = Object.values(initial).reduce((a, b) => a + b, 0);
+    if (sum !== 100 && activeTickers.length > 0) {
+      initial[activeTickers[0]] += (100 - sum);
+    }
+    setWeights(initial);
+  }, [activeTickers]);
 
   // Calculate return, volatility, and Sharpe for a given set of weights
-  const calculatePortfolio = (wAAPL: number, wMSFT: number, wNVDA: number) => {
-    // Convert percentages to fractions
-    const w1 = wAAPL / 100;
-    const w2 = wMSFT / 100;
-    const w3 = wNVDA / 100;
+  const calculatePortfolio = (wts: Record<string, number>) => {
+    let expectedReturn = 0;
+    
+    // Calculate Return
+    activeTickers.forEach(t => {
+      expectedReturn += (wts[t] / 100) * ASSETS[t].expectedReturn;
+    });
 
-    const r1 = ASSETS.AAPL.expectedReturn;
-    const r2 = ASSETS.MSFT.expectedReturn;
-    const r3 = ASSETS.NVDA.expectedReturn;
-
-    const s1 = ASSETS.AAPL.volatility;
-    const s2 = ASSETS.MSFT.volatility;
-    const s3 = ASSETS.NVDA.volatility;
-
-    // Expected Return
-    const expectedReturn = w1 * r1 + w2 * r2 + w3 * r3;
-
-    // Expected Volatility (using Covariance formula)
-    const cov12 = CORRELATIONS.AAPL_MSFT * s1 * s2;
-    const cov13 = CORRELATIONS.AAPL_NVDA * s1 * s3;
-    const cov23 = CORRELATIONS.MSFT_NVDA * s2 * s3;
-
-    const variance =
-      Math.pow(w1 * s1, 2) +
-      Math.pow(w2 * s2, 2) +
-      Math.pow(w3 * s3, 2) +
-      2 * w1 * w2 * cov12 +
-      2 * w1 * w3 * cov13 +
-      2 * w2 * w3 * cov23;
+    // Calculate Variance (w1^2*s1^2 + 2*w1*w2*cov12...)
+    let variance = 0;
+    for (let i = 0; i < activeTickers.length; i++) {
+      for (let j = 0; j < activeTickers.length; j++) {
+        const t1 = activeTickers[i];
+        const t2 = activeTickers[j];
+        const w1 = wts[t1] / 100;
+        const w2 = wts[t2] / 100;
+        const s1 = ASSETS[t1].volatility;
+        const s2 = ASSETS[t2].volatility;
+        
+        let cov = 0;
+        if (i === j) {
+          cov = s1 * s1;
+        } else {
+          const corr = CORRELATIONS[`${t1}_${t2}`];
+          cov = corr * s1 * s2;
+        }
+        
+        variance += w1 * w2 * cov;
+      }
+    }
 
     const volatility = Math.sqrt(variance);
-
-    // Sharpe Ratio
     const sharpe = (expectedReturn - RISK_FREE_RATE) / volatility;
 
     return {
@@ -77,18 +126,24 @@ export default function PortfolioOptimization() {
 
   // Generate 250 random portfolios to build the Efficient Frontier scatter plot
   const frontierData = useMemo(() => {
+    if (Object.keys(ASSETS).length === 0) return [];
+    
     const points = [];
     for (let i = 0; i < 250; i++) {
       // Generate random weights that sum to 100
-      let w1 = Math.random();
-      let w2 = Math.random();
-      let w3 = Math.random();
-      const sum = w1 + w2 + w3;
-      w1 = (w1 / sum) * 100;
-      w2 = (w2 / sum) * 100;
-      w3 = (w3 / sum) * 100;
+      let wts: Record<string, number> = {};
+      let sum = 0;
+      activeTickers.forEach(t => {
+        const r = Math.random();
+        wts[t] = r;
+        sum += r;
+      });
+      
+      activeTickers.forEach(t => {
+        wts[t] = (wts[t] / sum) * 100;
+      });
 
-      const { returnVal, volatilityVal, sharpeVal } = calculatePortfolio(w1, w2, w3);
+      const { returnVal, volatilityVal, sharpeVal } = calculatePortfolio(wts);
       points.push({
         x: volatilityVal,
         y: returnVal,
@@ -97,15 +152,18 @@ export default function PortfolioOptimization() {
       });
     }
     return points;
-  }, []);
+  }, [activeTickers, ASSETS, CORRELATIONS]);
 
   // Recalculate target portfolio metrics based on active weights
   const currentPortfolio = useMemo(() => {
-    return calculatePortfolio(weights.AAPL, weights.MSFT, weights.NVDA);
-  }, [weights]);
+    if (Object.keys(weights).length === 0) return { returnVal: 0, volatilityVal: 0, sharpeVal: 0 };
+    return calculatePortfolio(weights);
+  }, [weights, ASSETS, CORRELATIONS]);
 
   // Combine efficient frontier points with target dot
   const chartData = useMemo(() => {
+    if (Object.keys(weights).length === 0) return [];
+    
     return [
       ...frontierData,
       {
@@ -117,22 +175,42 @@ export default function PortfolioOptimization() {
     ];
   }, [frontierData, currentPortfolio]);
 
+  // Domains for axes
+  const minVol = Math.min(...chartData.map(d => d.x)) * 0.9;
+  const maxVol = Math.max(...chartData.map(d => d.x)) * 1.1;
+  const minRet = Math.min(...chartData.map(d => d.y)) * 0.9;
+  const maxRet = Math.max(...chartData.map(d => d.y)) * 1.1;
+
   const handleWeightChange = (asset: string, rawVal: number) => {
     const val = Math.max(0, Math.min(100, rawVal));
     setWeights((prev) => {
       const otherAssets = Object.keys(prev).filter((k) => k !== asset);
       const remainingSum = 100 - val;
-      const currentOtherSum = prev[otherAssets[0]] + prev[otherAssets[1]];
+      const currentOtherSum = otherAssets.reduce((sum, k) => sum + prev[k], 0);
 
       let newWeights = { ...prev };
       newWeights[asset] = val;
 
       if (currentOtherSum > 0) {
-        newWeights[otherAssets[0]] = Math.max(0, Math.min(100, parseFloat(((prev[otherAssets[0]] / currentOtherSum) * remainingSum).toFixed(1))));
-        newWeights[otherAssets[1]] = Math.max(0, Math.min(100, parseFloat((100 - val - newWeights[otherAssets[0]]).toFixed(1))));
+        otherAssets.forEach(k => {
+          newWeights[k] = (prev[k] / currentOtherSum) * remainingSum;
+        });
       } else {
-        newWeights[otherAssets[0]] = Math.max(0, Math.min(100, parseFloat((remainingSum / 2).toFixed(1))));
-        newWeights[otherAssets[1]] = Math.max(0, Math.min(100, parseFloat((100 - val - newWeights[otherAssets[0]]).toFixed(1))));
+        const evenDist = remainingSum / otherAssets.length;
+        otherAssets.forEach(k => {
+          newWeights[k] = evenDist;
+        });
+      }
+
+      // Round to 1 decimal place and fix potential floating point drift
+      otherAssets.forEach(k => {
+        newWeights[k] = parseFloat(newWeights[k].toFixed(1));
+      });
+      
+      const newTotal = Object.values(newWeights).reduce((a, b) => a + b, 0);
+      if (newTotal !== 100 && otherAssets.length > 0) {
+         newWeights[otherAssets[0]] += (100 - newTotal);
+         newWeights[otherAssets[0]] = parseFloat(newWeights[otherAssets[0]].toFixed(1));
       }
 
       return newWeights;
@@ -182,7 +260,7 @@ export default function PortfolioOptimization() {
           </div>
 
           <div className="flex flex-col gap-5">
-            {Object.keys(ASSETS).map((asset) => (
+            {Object.keys(weights).length > 0 && Object.keys(ASSETS).map((asset) => (
               <div key={asset} className="flex flex-col gap-2">
                 <div className="flex justify-between text-xs font-mono">
                   <span className="text-white font-bold">{asset}</span>
@@ -236,7 +314,7 @@ export default function PortfolioOptimization() {
                   unit="%"
                   stroke="rgba(255,255,255,0.08)"
                   tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
-                  domain={[15, 36]}
+                  domain={[minVol, maxVol]}
                 />
                 <YAxis
                   type="number"
@@ -245,7 +323,7 @@ export default function PortfolioOptimization() {
                   unit="%"
                   stroke="rgba(255,255,255,0.08)"
                   tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
-                  domain={[10, 30]}
+                  domain={[minRet, maxRet]}
                 />
                 <ZAxis type="number" dataKey="sharpe" range={[20, 150]} />
                 <Tooltip
