@@ -214,44 +214,52 @@ export default function TechnicalIndicators() {
     >
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Controls checklist */}
-        <div className="lg:w-[220px] shrink-0 transition-all duration-300 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
+        <div className="lg:w-[260px] shrink-0 transition-all duration-300 rounded-[24px] border border-outline-variant/30 bg-[#08080a] p-6 flex flex-col gap-6">
           <h3 className="font-label-sm text-[11px] uppercase font-mono font-bold tracking-widest text-outline">Indicators</h3>
           
           <div className="flex flex-col gap-3">
             {[
-              { id: "ema" as const, name: "EMA (20)", desc: "Exponential Moving Avg", color: "border-orange-500 bg-orange-500/20 text-orange-500" },
-              { id: "bb" as const, name: "Bollinger Bands", desc: "Volatility Envelope", color: "border-blue-500 bg-blue-500/20 text-blue-500" },
-              { id: "macd" as const, name: "MACD", desc: "Moving Avg Convergence", color: "border-emerald-500 bg-emerald-500/20 text-emerald-500" },
+              { id: "ema" as const, name: "EMA (20)", desc: "Exponential Moving Avg" },
+              { id: "bb" as const, name: "Bollinger Bands", desc: "Volatility Envelope" },
+              { id: "macd" as const, name: "MACD", desc: "Moving Avg Convergence" },
             ].map((overlay) => (
-              <button
+              <motion.button
                 key={overlay.id}
                 onClick={() => toggleOverlay(overlay.id)}
-                className="flex items-center gap-3 p-3 rounded border border-outline-variant/30 hover:border-outline-variant bg-surface-variant hover:bg-surface-container-highest text-left transition-all duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-4 p-3 rounded-2xl border border-outline-variant/30 hover:border-outline-variant bg-[#13141a] hover:bg-[#1a1b23] text-left transition-colors duration-200"
               >
                 <div
-                  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors duration-200 ${
-                    overlays[overlay.id] ? "bg-secondary border-secondary text-on-surface" : "border-outline-variant bg-transparent text-transparent"
+                  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors duration-300 ${
+                    overlays[overlay.id] ? "bg-[#f97316] border-[#f97316] text-white shadow-[0_0_10px_rgba(249,115,22,0.3)]" : "border-outline-variant/50 bg-transparent text-transparent"
                   }`}
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  <motion.div
+                    initial={false}
+                    animate={{ scale: overlays[overlay.id] ? 1 : 0.5, opacity: overlays[overlay.id] ? 1 : 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  >
+                    <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                  </motion.div>
                 </div>
                 <div>
                   <div className="font-label-sm text-[11px] font-bold text-on-surface uppercase tracking-wider">{overlay.name}</div>
-                  <div className="font-label-sm text-[9px] text-outline uppercase tracking-widest">{overlay.desc}</div>
+                  <div className="font-label-sm text-[9px] text-outline uppercase tracking-widest mt-0.5">{overlay.desc}</div>
                 </div>
-              </button>
+              </motion.button>
             ))}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-outline-variant/30 font-label-sm text-[9px] uppercase font-mono tracking-widest text-outline space-y-2">
-            <div>Symbol: AAPL (Sim)</div>
-            <div>Period: Daily (40D)</div>
-            <div>Interval: 1D</div>
+          <div className="mt-4 pt-4 border-t border-outline-variant/30 font-label-sm text-[9px] uppercase font-mono tracking-[0.15em] text-outline space-y-3">
+            <div>SYMBOL: AAPL (SIM)</div>
+            <div>PERIOD: DAILY (40D)</div>
+            <div>INTERVAL: 1D</div>
           </div>
         </div>
 
         {/* Chart View */}
-        <div className="flex-1 transition-all duration-300 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm overflow-hidden">
+        <div className="flex-1 transition-all duration-300 rounded border border-outline-variant/30 bg-[#08080a] p-6 flex flex-col gap-6 overflow-hidden">
           <div className="flex items-center justify-between">
             <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Dynamic Candlestick Chart & Overlays</h2>
             <div className="flex items-center gap-stack-sm font-label-sm text-[10px] font-mono uppercase tracking-wider text-outline">
