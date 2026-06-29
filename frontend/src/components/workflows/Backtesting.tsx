@@ -122,24 +122,24 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Parameters & Strategy selection */}
-        <div className="lg:col-span-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-6 flex flex-col gap-5">
+        <div className="lg:col-span-4 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
           <div className="flex items-center gap-2">
-            <BarChart4 className="w-4 h-4 text-orange-500" />
-            <h3 className="text-xs uppercase font-mono font-bold tracking-widest text-neutral-400">Simulation Settings</h3>
+            <BarChart4 className="w-4 h-4 text-secondary" />
+            <h3 className="font-label-sm text-[11px] uppercase font-mono font-bold tracking-widest text-outline">Simulation Settings</h3>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] uppercase font-mono tracking-widest text-neutral-500">Target Strategy</label>
+            <label className="font-label-sm text-[10px] uppercase font-mono tracking-widest text-outline">Target Strategy</label>
             <div className="flex flex-col gap-2">
               {algos.map((algo) => (
                 <button
                   key={algo}
                   onClick={() => setLocalAlgo(algo)}
                   disabled={isRunning || isAnimating}
-                  className={`w-full text-left p-3 rounded-[16px] border text-xs uppercase tracking-wider transition-all duration-200 ${
+                  className={`w-full text-left p-3 rounded border font-label-sm text-[11px] uppercase tracking-wider transition-all duration-200 ${
                     localAlgo === algo
-                      ? "border-orange-500/30 bg-orange-500/10 text-white font-bold"
-                      : "border-white/5 bg-white/5 text-neutral-400 hover:border-white/10 hover:bg-white/10"
+                      ? "border-secondary/30 bg-secondary/10 text-on-surface font-bold"
+                      : "border-outline-variant/30 bg-surface-variant text-on-surface-variant hover:border-outline-variant hover:bg-surface-container-highest"
                   } ${(isRunning || isAnimating) ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {algo}
@@ -149,16 +149,16 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
           </div>
 
           <div className="flex flex-col gap-2 mt-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-neutral-400">Target Asset</span>
-              <span className="text-white font-bold">{selectedTicker}</span>
+            <div className="flex justify-between font-label-sm text-[11px] font-mono">
+              <span className="text-outline">Target Asset</span>
+              <span className="text-on-surface font-bold">{selectedTicker}</span>
             </div>
           </div>
 
           <button
             onClick={handleRunSimulation}
             disabled={isRunning || isAnimating || !selectedTicker}
-            className="w-full mt-4 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
+            className="w-full mt-4 py-3 rounded bg-secondary hover:bg-secondary/80 text-on-surface font-label-sm text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
           >
             {isRunning ? (
               <>
@@ -180,15 +180,15 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
         <div className="lg:col-span-8 flex flex-col gap-4">
           
           {/* Main Chart */}
-          <div className="ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-6 flex flex-col gap-4 relative overflow-hidden">
+          <div className="rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm relative overflow-hidden">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-sm font-bold font-display uppercase tracking-widest text-white">Cumulative Return Equity Curve</h2>
-                <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Comparing strategy equity simulation against baseline buy-and-hold index.</p>
+                <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Cumulative Return Equity Curve</h2>
+                <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Comparing strategy equity simulation against baseline buy-and-hold index.</p>
               </div>
 
-              <div className="flex items-center gap-3 text-[10px] font-mono">
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500"></span>Strategy</span>
+              <div className="flex items-center gap-3 font-label-sm text-[10px] font-mono">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-secondary"></span>Strategy</span>
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-neutral-600"></span>Benchmark</span>
               </div>
             </div>
@@ -203,8 +203,8 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
                     className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-orange-500 animate-spin" />
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">Processing backtest simulation...</span>
+                      <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-secondary animate-spin" />
+                      <span className="font-label-sm text-[10px] font-mono uppercase tracking-widest text-outline">Processing backtest simulation...</span>
                     </div>
                   </motion.div>
                 )}
@@ -270,31 +270,31 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
           </div>
 
           {/* Quick Metrics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Total Return</span>
-              <div className={`text-xl font-bold font-mono flex items-center gap-1 ${backtestData && backtestData.total_return >= 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-stack-sm">
+            <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
+              <span className="font-label-sm text-[9px] uppercase tracking-widest text-outline mb-1">Total Return</span>
+              <div className={`font-headline-sm text-[20px] font-bold font-mono flex items-center gap-1 ${backtestData && backtestData.total_return >= 0 ? 'text-[var(--profit)]' : 'text-[var(--loss)]'}`}>
                 {backtestData && backtestData.total_return > 0 ? "+" : ""}{getMetric('return')}
               </div>
             </div>
 
-            <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Sharpe Ratio</span>
-              <div className="text-xl font-bold font-mono text-emerald-400">
+            <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
+              <span className="font-label-sm text-[9px] uppercase tracking-widest text-outline mb-1">Sharpe Ratio</span>
+              <div className="font-headline-sm text-[20px] font-bold font-mono text-emerald-400">
                 {getMetric('sharpe')}
               </div>
             </div>
 
-            <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Max Drawdown</span>
-              <div className="text-xl font-bold font-mono text-red-500">
+            <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
+              <span className="font-label-sm text-[9px] uppercase tracking-widest text-outline mb-1">Max Drawdown</span>
+              <div className="font-headline-sm text-[20px] font-bold font-mono text-red-500">
                 {getMetric('drawdown')}
               </div>
             </div>
 
-            <div className="p-4 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass flex flex-col justify-center">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Win Rate (Sim)</span>
-              <div className="text-xl font-bold font-mono text-white">
+            <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
+              <span className="font-label-sm text-[9px] uppercase tracking-widest text-outline mb-1">Win Rate (Sim)</span>
+              <div className="font-headline-sm text-[20px] font-bold font-mono text-on-surface">
                 {getMetric('winrate')}
               </div>
             </div>

@@ -93,52 +93,52 @@ export default function MarketDataIngestion() {
       className="w-full flex flex-col gap-6"
     >
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 ventriloc-card transition-all duration-300 rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-stack-sm">
+        <div className="p-stack-sm transition-all duration-300 rounded bg-[#08080a] border border-outline-variant/30 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Ingestion Rate</span>
-            <div className="text-2xl font-bold font-mono text-white mt-1">{msgRate} <span className="text-xs text-neutral-500">msg/sec</span></div>
+            <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Ingestion Rate</span>
+            <div className="font-headline-lg font-mono text-on-surface mt-1">{msgRate} <span className="font-label-sm text-[11px] text-outline">msg/sec</span></div>
           </div>
-          <Activity className="w-8 h-8 text-orange-500 opacity-80" />
+          <Activity className="w-8 h-8 text-secondary opacity-80" />
         </div>
 
-        <div className="p-5 ventriloc-card transition-all duration-300 rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
+        <div className="p-stack-sm transition-all duration-300 rounded bg-[#08080a] border border-outline-variant/30 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Ingress Latency</span>
-            <div className="text-2xl font-bold font-mono text-white mt-1">{latency.toFixed(2)} <span className="text-xs text-neutral-500">ms</span></div>
+            <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Ingress Latency</span>
+            <div className="font-headline-lg font-mono text-on-surface mt-1">{latency.toFixed(2)} <span className="font-label-sm text-[11px] text-outline">ms</span></div>
           </div>
-          <Cpu className="w-8 h-8 text-orange-500 opacity-80" />
+          <Cpu className="w-8 h-8 text-secondary opacity-80" />
         </div>
 
-        <div className="p-5 ventriloc-card transition-all duration-300 rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
+        <div className="p-stack-sm transition-all duration-300 rounded bg-[#08080a] border border-outline-variant/30 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Database Status</span>
-            <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">CONNECTED</div>
+            <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Database Status</span>
+            <div className="font-headline-lg font-mono text-emerald-400 mt-1">CONNECTED</div>
           </div>
           <Database className="w-8 h-8 text-emerald-500 opacity-80" />
         </div>
       </div>
 
       {/* Terminal Log Console */}
-      <div className="ventriloc-card transition-all duration-300 rounded-[24px] bg-[#050505] border border-luxury-glass backdrop-blur-md p-6 flex flex-col h-[520px] shadow-2xl relative overflow-hidden">
+      <div className="transition-all duration-300 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col h-[520px] shadow-2xl relative overflow-hidden">
         {/* Console Header */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+        <div className="flex items-center justify-between border-b border-outline-variant/30 pb-4 mb-4">
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full bg-red-500/80"></span>
             <span className="w-3 h-3 rounded-full bg-yellow-500/80"></span>
             <span className="w-3 h-3 rounded-full bg-emerald-500/80"></span>
-            <span className="text-xs font-mono text-neutral-400 ml-2 uppercase tracking-widest">Real-time Stream Ingestion Feed</span>
+            <span className="font-label-sm text-[11px] font-mono text-outline ml-2 uppercase tracking-widest">Real-time Stream Ingestion Feed</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all duration-200"
+              className="p-2 rounded bg-surface-variant hover:bg-surface-container-highest text-on-surface transition-all duration-200"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setLogs([])}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all duration-200"
+              className="p-2 rounded bg-surface-variant hover:bg-surface-container-highest text-on-surface transition-all duration-200"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -148,26 +148,26 @@ export default function MarketDataIngestion() {
         {/* Console Logs */}
         <div
           ref={logContainerRef}
-          className="flex-1 overflow-y-auto font-mono text-xs text-neutral-300 space-y-2 pr-2 scrollbar-thin scrollbar-thumb-white/10"
+          className="flex-1 overflow-y-auto font-mono text-xs text-on-surface-variant space-y-2 pr-2 scrollbar-thin scrollbar-thumb-outline-variant/30"
         >
           {logs.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-neutral-500 text-[10px] uppercase tracking-widest gap-2">
-              <RefreshCw className="w-4 h-4 animate-spin text-orange-500" /> Waiting for data streams...
+            <div className="h-full flex items-center justify-center text-outline font-label-sm text-[10px] uppercase tracking-widest gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-secondary" /> Waiting for data streams...
             </div>
           ) : (
             logs.map((log, index) => (
-              <div key={index} className="flex items-start gap-4 hover:bg-white/5 py-1 px-2 rounded transition-colors duration-150 transform-gpu">
-                <span className="text-orange-500/70 select-none">{log.timestamp}</span>
+              <div key={index} className="flex items-start gap-4 hover:bg-surface-variant py-1 px-2 rounded transition-colors duration-150 transform-gpu">
+                <span className="text-secondary/70 select-none">{log.timestamp}</span>
                 <span className={`font-semibold shrink-0 select-none ${getLevelColor(log.level)}`}>[{log.level}]</span>
-                <span className="text-neutral-500 shrink-0 select-none">{log.source}:</span>
-                <span className="text-neutral-100 break-all">{log.message}</span>
+                <span className="text-outline shrink-0 select-none">{log.source}:</span>
+                <span className="text-on-surface break-all">{log.message}</span>
               </div>
             ))
           )}
         </div>
 
         {/* Console Footer */}
-        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[9px] uppercase font-mono tracking-widest text-neutral-500">
+        <div className="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between font-label-sm text-[9px] uppercase font-mono tracking-widest text-outline">
           <span>Active Feed: WS://live.nexus-quant.com/v1</span>
           <span>Buffer: {logs.length}/100 packets</span>
         </div>

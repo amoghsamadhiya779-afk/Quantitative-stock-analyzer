@@ -251,10 +251,10 @@ export default function TechnicalIndicators() {
         </div>
 
         {/* Chart View */}
-        <div className="flex-1 ventriloc-card transition-all duration-300 rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-6 flex flex-col gap-4 overflow-hidden">
+        <div className="flex-1 transition-all duration-300 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm overflow-hidden">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold font-display uppercase tracking-widest text-white">Dynamic Candlestick Chart & Overlays</h2>
-            <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+            <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Dynamic Candlestick Chart & Overlays</h2>
+            <div className="flex items-center gap-stack-sm font-label-sm text-[10px] font-mono uppercase tracking-wider text-outline">
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400"></span>O: {data[data.length - 1].open.toFixed(2)}</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-400"></span>H: {data[data.length - 1].high.toFixed(2)}</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400"></span>L: {data[data.length - 1].low.toFixed(2)}</span>
@@ -263,7 +263,7 @@ export default function TechnicalIndicators() {
           </div>
 
           {/* SVG Price Chart */}
-          <div className="relative w-full overflow-x-auto select-none bg-[#0a0a0a]">
+          <div className="relative w-full overflow-x-auto select-none bg-[#08080a]">
             <svg viewBox={`0 0 ${width} ${priceHeight}`} className="w-full h-auto overflow-visible transform-gpu">
               {/* Grid Lines */}
               {Array.from({ length: 5 }).map((_, idx) => {
@@ -324,8 +324,8 @@ export default function TechnicalIndicators() {
 
           {/* MACD Chart Sub-Panel */}
           {overlays.macd && (
-            <div className="border-t border-white/5 pt-4 mt-2">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-2">MACD Oscillator (12, 26, 9)</div>
+            <div className="border-t border-outline-variant/30 pt-4 mt-2">
+              <div className="font-label-sm text-[10px] font-mono uppercase tracking-widest text-outline mb-2">MACD Oscillator (12, 26, 9)</div>
               <div className="relative w-full">
                 <svg viewBox={`0 0 ${width} ${macdHeight}`} className="w-full h-auto overflow-visible transform-gpu">
                   {/* Zero Line */}

@@ -253,18 +253,18 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sliders Panel */}
-        <div className="lg:w-[320px] shrink-0 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-6 flex flex-col gap-6">
+        <div className="lg:w-[320px] shrink-0 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
           <div className="flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-orange-500" />
-            <h3 className="text-xs uppercase font-mono font-bold tracking-widest text-neutral-400">Asset Weights</h3>
+            <Sliders className="w-4 h-4 text-secondary" />
+            <h3 className="font-label-sm text-[11px] uppercase font-mono font-bold tracking-widest text-outline">Asset Weights</h3>
           </div>
 
           <div className="flex flex-col gap-5">
             {Object.keys(weights).length > 0 && Object.keys(ASSETS).map((asset) => (
               <div key={asset} className="flex flex-col gap-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-white font-bold">{asset}</span>
-                  <span className="text-neutral-400">{weights[asset]}%</span>
+                  <span className="text-on-surface font-bold">{asset}</span>
+                  <span className="text-on-surface-variant">{weights[asset]}%</span>
                 </div>
                 <input
                   type="range"
@@ -273,9 +273,9 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
                   step="0.5"
                   value={weights[asset]}
                   onChange={(e) => handleWeightChange(asset, parseFloat(e.target.value))}
-                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                  className="w-full h-1 bg-outline-variant/30 rounded appearance-none cursor-pointer accent-secondary"
                 />
-                <div className="flex justify-between text-[9px] text-neutral-500 uppercase tracking-widest">
+                <div className="flex justify-between font-label-sm text-[9px] text-outline uppercase tracking-widest">
                   <span>Ret: {ASSETS[asset].expectedReturn}%</span>
                   <span>Vol: {ASSETS[asset].volatility}%</span>
                 </div>
@@ -283,12 +283,12 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
             ))}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-white/5 space-y-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest">
+          <div className="mt-4 pt-4 border-t border-outline-variant/30 space-y-2 font-label-sm text-[10px] font-mono text-outline uppercase tracking-widest">
             <div className="flex justify-between">
               <span>Risk-Free Rate:</span>
               <span>4.0%</span>
             </div>
-            <div className="flex justify-between font-bold text-white">
+            <div className="flex justify-between font-bold text-on-surface">
               <span>Total Weight:</span>
               <span>
                 {Math.round(Object.values(weights).reduce((a, b) => a + b, 0))}%
@@ -298,10 +298,10 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
         </div>
 
         {/* Efficient Frontier Scatter Plot */}
-        <div className="flex-1 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-6 flex flex-col gap-4">
+        <div className="flex-1 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
           <div>
-            <h2 className="text-sm font-bold font-display uppercase tracking-widest text-white">Efficient Frontier Frontier Model</h2>
-            <p className="text-xs text-neutral-500 uppercase tracking-widest mt-1">Plotting volatility against returns to discover the optimal capital allocation strategy.</p>
+            <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Efficient Frontier Frontier Model</h2>
+            <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Plotting volatility against returns to discover the optimal capital allocation strategy.</p>
           </div>
 
           <div className="w-full h-[350px]">

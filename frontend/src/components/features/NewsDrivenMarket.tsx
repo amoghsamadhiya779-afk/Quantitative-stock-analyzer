@@ -184,16 +184,16 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="w-full space-y-6">
       <div className="flex items-center gap-2">
-        <Globe2 className="text-[var(--accent)] w-4 h-4 animate-pulse" />
-        <h2 className="text-[10px] tracking-[0.2em] text-[var(--foreground)]/50 font-bold uppercase">News-Driven Macro Center</h2>
+        <Globe2 className="text-secondary w-4 h-4 animate-pulse" />
+        <h2 className="font-label-sm text-[10px] tracking-[0.2em] text-outline font-bold uppercase">News-Driven Macro Center</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Globe */}
-        <div className="lg:col-span-5 p-6 rounded-card bg-surface border border-[var(--border)] flex flex-col items-center justify-between overflow-hidden relative shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
+        <div className="lg:col-span-5 p-stack-md rounded border border-outline-variant/30 bg-[#08080a] flex flex-col items-center justify-between overflow-hidden relative shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
           <div className="absolute top-5 left-5 z-10">
-            <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase mb-1 font-bold">Interactive Macro Globe</h3>
-            <div className="flex items-center gap-2 text-[9px] font-mono text-[var(--profit)] font-bold">
+            <h3 className="font-label-sm text-[10px] tracking-widest text-outline uppercase mb-1 font-bold">Interactive Macro Globe</h3>
+            <div className="flex items-center gap-2 font-label-sm text-[9px] font-mono text-[var(--profit)] font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--profit)] animate-ping" />
               ACTIVE: {activeMarket.toUpperCase()}
             </div>
@@ -209,35 +209,35 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
               }} 
             />
           </div>
-          <div className="w-full border-t border-[var(--border)] pt-4 mt-2 flex items-center justify-between text-[9px] font-mono text-[var(--foreground)]/40">
-            <div><span className="text-[var(--foreground)]/20 uppercase mr-1">REGION:</span> <span className="text-[var(--foreground)]/80 font-bold">{details.region}</span></div>
-            <div><span className="text-[var(--foreground)]/20 uppercase mr-1">LATENCY:</span> <span className="text-[var(--profit)] font-bold">14ms</span></div>
-            <div><span className="text-[var(--foreground)]/20 uppercase mr-1">CURRENCY:</span> <span className="text-[var(--foreground)]/80 font-bold">{details.currency}</span></div>
+          <div className="w-full border-t border-outline-variant/30 pt-4 mt-2 flex items-center justify-between font-label-sm text-[9px] font-mono text-outline">
+            <div><span className="text-outline uppercase mr-1">REGION:</span> <span className="text-on-surface font-bold">{details.region}</span></div>
+            <div><span className="text-outline uppercase mr-1">LATENCY:</span> <span className="text-[var(--profit)] font-bold">14ms</span></div>
+            <div><span className="text-outline uppercase mr-1">CURRENCY:</span> <span className="text-on-surface font-bold">{details.currency}</span></div>
           </div>
         </div>
 
         {/* News Feed */}
-        <div className="lg:col-span-7 p-6 rounded-card bg-surface border border-[var(--border)] flex flex-col justify-between shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow min-h-[480px]">
+        <div className="lg:col-span-7 p-stack-md rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-between shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow min-h-[480px]">
           <div className="flex items-center justify-between mb-5 shrink-0">
             <div className="flex items-center gap-2">
-              <Rss className="text-[var(--accent)] w-4 h-4 animate-pulse" />
-              <h3 className="text-[10px] tracking-widest text-[var(--foreground)]/40 uppercase font-bold">Live Google News Feed: {activeMarket}</h3>
+              <Rss className="text-secondary w-4 h-4 animate-pulse" />
+              <h3 className="font-label-sm text-[10px] tracking-widest text-outline uppercase font-bold">Live Google News Feed: {activeMarket}</h3>
             </div>
-            <div className="flex items-center gap-1.5 text-[9px] font-mono bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2 py-0.5 rounded text-[var(--foreground)]/50">
-              <Cpu className="w-3 h-3 text-[var(--accent)]" /> NLP SENTIMENT ENGINE
+            <div className="flex items-center gap-1.5 font-label-sm text-[9px] font-mono bg-secondary/10 border border-secondary/20 px-2 py-0.5 rounded text-outline">
+              <Cpu className="w-3 h-3 text-secondary" /> NLP SENTIMENT ENGINE
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {newsLoading ? (
-              <div className="w-full h-full rounded-card border border-[var(--border)] bg-surface flex items-center justify-center overflow-hidden relative">
+              <div className="w-full h-full rounded border border-outline-variant/30 bg-surface-container flex items-center justify-center overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
-                <div className="font-mono text-[var(--foreground)]/30 uppercase tracking-widest text-xs z-10">Extracting Google News RSS...</div>
+                <div className="font-label-sm font-mono text-outline uppercase tracking-widest text-[11px] z-10">Extracting Google News RSS...</div>
               </div>
             ) : news.length > 0 ? (
               <ExpandableNewsCards news={news} />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-[var(--foreground)]/30 font-mono text-sm text-center px-4 border border-[var(--border)] border-dashed rounded-xl">
+              <div className="flex flex-col items-center justify-center h-full text-outline font-mono text-sm text-center px-4 border border-outline-variant/30 border-dashed rounded">
                 No significant geopolitical or economic events extracted.
               </div>
             )}
@@ -245,44 +245,44 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
         </div>
       </div>
 
-      <div className="p-6 rounded-card bg-surface border border-[var(--border)] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
+      <div className="p-stack-md rounded border border-outline-variant/30 bg-[#08080a] shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-[var(--border)]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Layers className="text-[var(--accent)] w-4 h-4" />
-              <h3 className="text-[10px] tracking-[0.15em] text-[var(--foreground)]/40 uppercase font-bold">Unified Global Macro Graph</h3>
+              <Layers className="text-secondary w-4 h-4" />
+              <h3 className="font-label-sm text-[10px] tracking-[0.15em] text-outline uppercase font-bold">Unified Global Macro Graph</h3>
             </div>
-            <p className="text-[10px] text-[var(--foreground)]/30 font-mono">Normalized comparative performance of commodities against active index ({details.indexName})</p>
+            <p className="font-label-sm text-[10px] text-outline font-mono">Normalized comparative performance of commodities against active index ({details.indexName})</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 font-mono text-[10px]">
-            <div className="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border)] flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-              <span className="text-[var(--foreground)]/40">{details.tickerSymbol}:</span>
-              <span className="font-bold text-[var(--foreground)]">{marketStockData ? marketStockData.latest_close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "---"}</span>
+            <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+              <span className="text-outline">{details.tickerSymbol}:</span>
+              <span className="font-bold text-on-surface">{marketStockData ? marketStockData.latest_close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "---"}</span>
             </div>
-            <div className="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border)] flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              <span className="text-[var(--foreground)]/40">GOLD:</span>
-              <span className="font-bold text-[var(--foreground)]">$2,345.80</span>
+              <span className="text-outline">GOLD:</span>
+              <span className="font-bold text-on-surface">$2,345.80</span>
             </div>
-            <div className="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border)] flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-              <span className="text-[var(--foreground)]/40">SILVER:</span>
-              <span className="font-bold text-[var(--foreground)]">$29.50</span>
+              <span className="text-outline">SILVER:</span>
+              <span className="font-bold text-on-surface">$29.50</span>
             </div>
-            <div className="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border)] flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-              <span className="text-[var(--foreground)]/40">OIL (WTI):</span>
-              <span className="font-bold text-[var(--foreground)]">$78.45</span>
+              <span className="text-outline">OIL (WTI):</span>
+              <span className="font-bold text-on-surface">$78.45</span>
             </div>
           </div>
         </div>
 
         <div className="w-full relative h-[320px] md:h-[360px]">
           {stockLoading && chartData.length === 0 ? (
-            <div className="absolute inset-0 w-full h-full rounded-card border border-[var(--border)] bg-surface flex items-center justify-center overflow-hidden relative">
+            <div className="absolute inset-0 w-full h-full rounded border border-outline-variant/30 bg-surface-container flex items-center justify-center overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
-              <div className="font-mono text-[var(--foreground)]/30 uppercase tracking-widest text-xs z-10">Splicing macro time series data...</div>
+              <div className="font-label-sm font-mono text-outline uppercase tracking-widest text-[11px] z-10">Splicing macro time series data...</div>
             </div>
           ) : chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
@@ -297,7 +297,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-[var(--foreground)]/30 font-mono text-xs border border-dashed border-[var(--border)] rounded-xl">
+            <div className="absolute inset-0 flex items-center justify-center text-outline font-mono text-xs border border-dashed border-outline-variant/30 rounded">
               No historical data available for comparative chart.
             </div>
           )}

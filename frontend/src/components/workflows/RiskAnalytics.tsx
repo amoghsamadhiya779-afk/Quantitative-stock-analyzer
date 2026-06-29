@@ -256,17 +256,17 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
-                    className="p-4 rounded-xl bg-black border border-white/10 w-full max-w-[400px]"
+                    className="p-stack-sm rounded bg-surface-container-highest border border-outline-variant/30 w-full max-w-[400px]"
                   >
                     <div className="flex items-center justify-between font-mono text-xs mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-bold px-2 py-1 bg-white/10 rounded">{activeTickers[hoveredCell.i]}</span>
-                        <span className="text-neutral-500">and</span>
-                        <span className="text-white font-bold px-2 py-1 bg-white/10 rounded">{activeTickers[hoveredCell.j]}</span>
+                        <span className="text-on-surface font-bold px-2 py-1 bg-surface-variant rounded">{activeTickers[hoveredCell.i]}</span>
+                        <span className="text-outline">and</span>
+                        <span className="text-on-surface font-bold px-2 py-1 bg-surface-variant rounded">{activeTickers[hoveredCell.j]}</span>
                       </div>
-                      <span className="text-orange-500 font-bold">r = {correlationMatrix[hoveredCell.i][hoveredCell.j].toFixed(2)}</span>
+                      <span className="text-secondary font-bold">r = {correlationMatrix[hoveredCell.i][hoveredCell.j].toFixed(2)}</span>
                     </div>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
+                    <p className="font-body-md text-[12px] text-on-surface-variant leading-relaxed">
                       {getPlainEnglishCorrelation(correlationMatrix[hoveredCell.i][hoveredCell.j])}
                     </p>
                   </motion.div>
@@ -276,7 +276,7 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-xs text-neutral-600 font-mono italic"
+                    className="font-label-sm text-[11px] text-outline font-mono italic"
                   >
                     Hover over a block to view relationship analysis
                   </motion.div>
@@ -287,10 +287,10 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
         </div>
 
         {/* 3. Visual VaR Sector Heatmap */}
-        <div className="lg:col-span-6 ventriloc-card rounded-[24px] bg-[#0a0a0a]/60 border border-luxury-glass backdrop-blur-md p-6 flex flex-col gap-4">
+        <div className="lg:col-span-6 rounded border border-outline-variant/30 bg-[#08080a]/60 backdrop-blur-md p-stack-md flex flex-col gap-stack-sm">
           <div>
-            <h3 className="text-sm font-bold font-display uppercase tracking-widest text-white">Sector Capital Exposure</h3>
-            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Visual breakdown of where your capital is at risk.</p>
+            <h3 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Sector Capital Exposure</h3>
+            <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Visual breakdown of where your capital is at risk.</p>
           </div>
 
           <div className="flex flex-col gap-3 mt-2 overflow-y-auto pr-2 custom-scrollbar max-h-[500px]">
@@ -301,8 +301,8 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
               return (
                 <div
                   key={sector.name}
-                  className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-                    isExpanded ? "bg-white/5 border-white/10" : "bg-black/20 border-white/5 hover:border-white/10"
+                  className={`rounded border transition-all duration-300 overflow-hidden ${
+                    isExpanded ? "bg-surface-variant border-outline-variant/30" : "bg-[#050505] border-outline-variant/30 hover:bg-surface-container-highest"
                   }`}
                 >
                   {/* Sector Header Trigger */}
@@ -311,9 +311,9 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
                     className="w-full p-4 flex flex-col gap-3 text-left"
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className="text-xs uppercase font-bold tracking-wider text-white">{sector.name}</div>
+                      <div className="font-label-sm text-[11px] uppercase font-bold tracking-wider text-on-surface">{sector.name}</div>
                       <div className="flex items-center gap-3">
-                        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold border uppercase ${getHeatmapColor(sector.beta)}`}>
+                        <span className={`px-2.5 py-1 rounded text-[9px] font-mono font-bold border uppercase ${getHeatmapColor(sector.beta)}`}>
                           Vol: {sector.volatility}%
                         </span>
                         {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
@@ -322,11 +322,11 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
 
                     {/* VaR Progress Bar */}
                     <div className="w-full flex flex-col gap-1.5">
-                      <div className="flex justify-between text-[10px] font-mono text-neutral-400">
+                      <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
                         <span>Capital at Risk</span>
-                        <span className="text-white font-bold">{formatCurrency(sector.varValue)} ({varPercentage.toFixed(1)}%)</span>
+                        <span className="text-on-surface font-bold">{formatCurrency(sector.varValue)} ({varPercentage.toFixed(1)}%)</span>
                       </div>
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-outline-variant/30 rounded overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${varPercentage}%` }}
@@ -345,23 +345,23 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="overflow-hidden border-t border-white/5 bg-black/40"
+                        className="overflow-hidden border-t border-outline-variant/30 bg-[#000000]"
                       >
-                        <div className="p-4 flex flex-col gap-2 font-mono text-[10px]">
-                          <div className="grid grid-cols-3 text-neutral-500 uppercase tracking-wider pb-1.5 border-b border-white/5">
+                        <div className="p-stack-sm flex flex-col gap-2 font-mono text-[10px]">
+                          <div className="grid grid-cols-3 text-outline uppercase tracking-wider pb-1.5 border-b border-outline-variant/30">
                             <span>Asset</span>
                             <span className="text-center">Allocation</span>
                             <span className="text-right">Risk (Beta)</span>
                           </div>
                           {sector.constituents.map((item) => (
-                            <div key={item.name} className="grid grid-cols-3 text-neutral-300 py-1.5 items-center">
-                              <span className="font-bold text-white">{item.name}</span>
+                            <div key={item.name} className="grid grid-cols-3 text-on-surface-variant py-1.5 items-center">
+                              <span className="font-bold text-on-surface">{item.name}</span>
                               
                               {/* Mini allocation bar */}
                               <div className="flex items-center gap-2 justify-center">
                                 <span className="w-8 text-right">{item.weight}%</span>
-                                <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
-                                  <div className="h-full bg-white/40" style={{ width: `${item.weight}%` }} />
+                                <div className="w-12 h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+                                  <div className="h-full bg-outline" style={{ width: `${item.weight}%` }} />
                                 </div>
                               </div>
                               

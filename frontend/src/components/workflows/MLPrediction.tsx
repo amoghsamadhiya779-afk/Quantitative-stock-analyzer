@@ -91,19 +91,19 @@ export default function MLPrediction() {
       className="w-full flex flex-col gap-6"
     >
       {/* Model Selection and Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-stack-sm">
         {/* Model swapper */}
-        <div className="ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-5 flex flex-col gap-3 lg:col-span-1">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">AI Architectures</span>
+        <div className="rounded border border-outline-variant/30 bg-[#08080a] p-stack-sm flex flex-col gap-3 lg:col-span-1">
+          <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">AI Architectures</span>
           <div className="flex flex-col gap-2">
             {(Object.keys(MODELS) as Array<keyof typeof MODELS>).map((key) => (
               <button
                 key={key}
                 onClick={() => setSelectedModel(key)}
-                className={`w-full text-left p-3 rounded-[16px] border text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full text-left p-3 rounded border font-label-sm text-[11px] uppercase tracking-wider transition-all duration-200 ${
                   selectedModel === key
-                    ? "border-orange-500/30 bg-orange-500/10 text-white font-bold"
-                    : "border-white/5 bg-white/5 text-neutral-400 hover:border-white/10 hover:bg-white/10"
+                    ? "border-secondary/30 bg-secondary/10 text-on-surface font-bold"
+                    : "border-outline-variant/30 bg-surface-variant text-on-surface-variant hover:border-outline-variant hover:bg-surface-container-highest"
                 }`}
               >
                 {key}
@@ -113,38 +113,38 @@ export default function MLPrediction() {
         </div>
 
         {/* Stats Grid */}
-        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
+        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-stack-sm">
+          <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Directional Accuracy</span>
-              <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">{modelInfo.direction}</div>
+              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Directional Accuracy</span>
+              <div className="font-headline-lg font-mono text-emerald-400 mt-1">{modelInfo.direction}</div>
             </div>
             <TrendingUp className="w-8 h-8 text-emerald-500 opacity-80" />
           </div>
 
-          <div className="p-5 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
+          <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Prediction RMSE</span>
-              <div className="text-2xl font-bold font-mono text-white mt-1">{modelInfo.rmse} <span className="text-xs text-neutral-500">USD</span></div>
+              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Prediction RMSE</span>
+              <div className="font-headline-lg font-mono text-on-surface mt-1">{modelInfo.rmse} <span className="font-label-sm text-[11px] text-outline">USD</span></div>
             </div>
-            <Server className="w-8 h-8 text-orange-500 opacity-80" />
+            <Server className="w-8 h-8 text-secondary opacity-80" />
           </div>
 
-          <div className="p-5 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
+          <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">inference latency</span>
-              <div className="text-2xl font-bold font-mono text-white mt-1">{modelInfo.latency}</div>
+              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">inference latency</span>
+              <div className="font-headline-lg font-mono text-on-surface mt-1">{modelInfo.latency}</div>
             </div>
-            <Cpu className="w-8 h-8 text-orange-500 opacity-80" />
+            <Cpu className="w-8 h-8 text-secondary opacity-80" />
           </div>
         </div>
       </div>
 
       {/* Main Chart Panel */}
-      <div className="ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass p-6 flex flex-col gap-4">
+      <div className="rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
         <div>
-          <h2 className="text-sm font-bold font-display uppercase tracking-widest text-white">95% Confidence Interval Forecast</h2>
-          <p className="text-xs text-neutral-500 uppercase tracking-widest mt-1">Overlaying historical price data against neural network confidence predictions.</p>
+          <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">95% Confidence Interval Forecast</h2>
+          <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Overlaying historical price data against neural network confidence predictions.</p>
         </div>
 
         <div className="w-full h-[400px]">
@@ -247,7 +247,7 @@ export default function MLPrediction() {
           </ResponsiveContainer>
         </div>
 
-        <div className="flex justify-between text-[10px] font-mono tracking-widest text-neutral-500 mt-2 border-t border-white/5 pt-4">
+        <div className="flex justify-between font-label-sm text-[10px] font-mono tracking-widest text-outline mt-2 border-t border-outline-variant/30 pt-4">
           <span>Active Model: {modelInfo.name}</span>
           <span>Horizon: +10 Trading Days</span>
         </div>
