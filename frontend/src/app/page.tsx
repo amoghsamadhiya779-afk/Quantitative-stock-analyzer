@@ -401,29 +401,12 @@ export default function LandingPage() {
             <div
               id="platform"
               ref={platformRef}
-              className="w-full min-h-screen py-24 flex items-center justify-between gap-8 relative z-20"
+              className="w-full min-h-screen py-24 flex items-center justify-center relative z-20"
             >
-              {/* Left Column: Active Feature text overlay */}
-              <div className="w-[25%] h-[600px] relative rounded-[10px] border border-outline-variant bg-surface-container/80 backdrop-blur-md p-stack-md flex flex-col justify-between overflow-hidden">
-                <div className="relative z-10 flex flex-col justify-between h-full pointer-events-none">
-                  <div>
-                    {/* Active feature content starts below */}
-                  </div>
-                  <div>
-                    <h3 className="font-headline-lg text-headline-lg text-on-surface mb-stack-xs drop-shadow-lg">
-                      {features[activeFeature].title}
-                    </h3>
-                    <p className="font-body-md text-body-md text-on-surface-variant bg-surface-container-highest/60 backdrop-blur-sm p-stack-sm rounded border border-outline-variant">
-                      {features[activeFeature].description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Middle Column: Live Component Preview Window */}
-              <div className="w-[50%] h-[600px] rounded-[10px] border border-outline-variant bg-[#1c1d22] shadow-2xl overflow-hidden flex flex-col pointer-events-none p-stack-sm relative z-10">
+              {/* Unified Terminal Window */}
+              <div className="w-[95%] max-w-[1300px] h-[700px] rounded-[10px] border border-outline-variant bg-[#1c1d22] shadow-2xl overflow-hidden flex flex-col relative z-10 pointer-events-none">
                 {/* Terminal Header */}
-                <div className="flex justify-between items-center px-stack-md py-stack-sm border-b border-outline-variant/50 mb-stack-sm select-none">
+                <div className="flex justify-between items-center px-stack-md py-stack-sm border-b border-outline-variant/50 bg-[#1c1d22] z-20 select-none shrink-0">
                   <div className="flex items-center gap-stack-sm">
                     <span className="w-3 h-3 rounded-full bg-outline-variant"></span>
                     <span className="w-3 h-3 rounded-full bg-outline-variant"></span>
@@ -437,63 +420,54 @@ export default function LandingPage() {
                 </div>
 
                 {/* Live Component Container */}
-                <div className="relative flex-1 w-full overflow-hidden bg-[#08080a] p-stack-md rounded border border-outline-variant/30">
+                <div className="relative flex-1 w-full overflow-hidden bg-[#08080a]">
                   <AnimatePresence mode="wait">
                     <motion.div 
                       key={activeFeature}
-                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 1.05, y: -10 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      className="w-full h-full transform-gpu origin-top"
-                      style={{ transform: "scale(0.9)" }} 
+                      initial={{ filter: "blur(12px)", opacity: 0, scale: 1.05 }}
+                      animate={{ filter: "blur(0px)", opacity: 1, scale: 1 }}
+                      exit={{ filter: "blur(12px)", opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                      className="w-full h-full transform-gpu origin-center p-stack-md pb-[140px]"
                     >
                       {renderActiveWorkflow()}
                     </motion.div>
                   </AnimatePresence>
-                </div>
-              </div>
-
-              {/* Right Column: Interactive Step Buttons */}
-              <div className="w-[25%] flex flex-col gap-stack-sm">
-                <div className="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-stack-xs">
-                  System Pipeline Modules
-                </div>
-                {features.map((feat, i) => (
-                  <div
-                    key={feat.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleFeatureClick(i)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleFeatureClick(i);
-                      }
-                    }}
-                    className={`flex items-center justify-between p-stack-sm rounded border transition-all text-left cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-primary-container ${
-                      activeFeature === i
-                        ? "bg-surface-container-highest text-on-surface border-outline-variant shadow-sm"
-                        : "bg-surface-container text-on-surface-variant border-outline-variant/50 hover:bg-surface-variant hover:border-outline-variant"
-                    }`}
-                  >
-                    <div>
-                      <span className="font-label-sm text-[10px] text-outline block mb-[2px]">
-                        MODULE 0{i + 1}
-                      </span>
-                      <span className="font-body-md font-medium text-[13px]">{feat.name}</span>
-                    </div>
-                    <div
-                      className={`w-6 h-6 rounded flex items-center justify-center border font-mono text-[10px] ${
-                        activeFeature === i
-                          ? "border-outline-variant text-on-surface bg-surface-container"
-                          : "border-outline-variant/30 text-outline bg-surface-container-low"
-                      }`}
-                    >
-                      →
+                  
+                  {/* Gradient Blur Overlay (Lower Half) */}
+                  <div className="absolute bottom-0 left-0 w-full h-[220px] bg-gradient-to-t from-[#08080a] via-[#08080a]/90 to-transparent backdrop-blur-[2px] flex flex-col justify-end p-stack-lg z-10">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`desc-${activeFeature}`}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -15 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                      >
+                        <h3 className="font-display-md text-[24px] font-bold text-on-surface mb-stack-xs drop-shadow-lg tracking-tight">
+                          {features[activeFeature].title}
+                        </h3>
+                        <p className="font-body-md text-[14px] text-on-surface-variant max-w-3xl leading-relaxed">
+                          {features[activeFeature].description}
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+                    
+                    {/* Navigation Dots */}
+                    <div className="flex items-center gap-2 mt-stack-md pointer-events-auto">
+                      {features.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleFeatureClick(i)}
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                            activeFeature === i ? "w-8 bg-secondary" : "w-1.5 bg-outline-variant/50 hover:bg-outline-variant"
+                          }`}
+                          aria-label={`Go to slide ${i + 1}`}
+                        />
+                      ))}
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
             </div>
 
