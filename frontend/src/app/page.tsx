@@ -26,7 +26,7 @@ import Backtesting from "@/components/workflows/Backtesting";
 
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 import CustomSelect from "@/components/ui/CustomSelect";
-import CosmoqBackground from "@/components/ui/CosmoqBackground";
+import ParticlePhysicsBackground from "@/components/ui/ParticlePhysicsBackground";
 
 import {
   fetchMarkets,
@@ -298,56 +298,56 @@ export default function LandingPage() {
 
   return (
     <CursorProvider>
-      <div className="relative bg-[#05060A] text-white overflow-x-hidden min-h-screen">
-        <CosmoqBackground />
+      <div className="relative bg-background text-on-background overflow-x-hidden min-h-screen font-body-md">
+        <ParticlePhysicsBackground />
 
         {/* Header navigation element */}
-        <header className="sticky top-0 z-50 w-full bg-black/40 backdrop-blur-md border-b border-white/5">
-          <div className="max-w-[1200px] mx-auto px-6 py-4 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <span className="font-display font-bold text-2xl tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                NEXUS QUANT
-              </span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6">
+        <header className="sticky top-0 z-50 w-full bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop h-16">
+          <div className="flex items-center gap-gutter">
+            <span className="font-display-md text-display-md font-bold text-on-surface">
+              Nexus Quant
+            </span>
+            <nav className="hidden md:flex gap-gutter ml-stack-lg">
               {/* Top nav links removed to clear dead ends per QA */}
             </nav>
-            <div>
-              <button
-                onClick={() => router.push("/terminal")}
-                className="px-5 py-2 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all"
-              >
-                Terminal
-              </button>
-            </div>
+          </div>
+          <div>
+            <button
+              onClick={() => router.push("/terminal")}
+              className="bg-primary-container text-white px-stack-md py-stack-sm rounded uppercase font-label-sm text-label-sm cursor-pointer active:opacity-80 transition-colors"
+            >
+              Launch Terminal
+            </button>
           </div>
         </header>
 
         {/* Main content wrapper */}
-        <main className="bg-luxury-black min-h-screen text-white relative">
-          <div className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col gap-24">
+        <main className="bg-background min-h-screen text-on-background relative">
+          <div className="max-w-[1200px] mx-auto px-margin-mobile lg:px-margin-desktop py-12 flex flex-col gap-24">
             
             {/* 1. Hero Section */}
             <section className="min-h-[70vh] flex flex-col items-center justify-center text-center py-20 relative z-10">
-              <span className="text-xs uppercase font-mono text-cyan-400 tracking-wider mb-6 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-md">
+              <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-stack-md bg-surface-container/50 border border-outline-variant px-stack-md py-stack-sm rounded-full backdrop-blur-md">
                 Institutional Quantitative Intelligence
               </span>
-              <h2 className="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-[1.1] mb-6 drop-shadow-2xl">
-                Institutional Quantitative Intelligence
-              </h2>
-              <p className="text-lg md:text-xl text-neutral-300 max-w-3xl leading-relaxed mb-10">
+              <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-stack-lg leading-tight tracking-tight max-w-4xl">
+                Institutional Quantitative<br />
+                <span className="text-primary-container italic font-medium">microsecond-synchronized</span><br />
+                Intelligence
+              </h1>
+              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-3xl leading-relaxed mb-stack-xl">
                 Nexus Quant synthesizes raw market ticks, systemic beta variables, and custom directional neural networks into a microsecond-synchronized platform.
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-stack-md">
                 <button
                   onClick={() => router.push("/terminal")}
-                  className="px-8 py-4 rounded-full bg-white text-black font-bold text-sm hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)]"
+                  className="bg-primary-container text-white px-stack-md py-stack-md rounded uppercase font-label-sm text-label-sm cursor-pointer active:opacity-80 transition-colors"
                 >
                   Start Live Sandbox
                 </button>
                 <button
                   onClick={() => router.push("/terminal")}
-                  className="px-8 py-4 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-bold text-sm hover:bg-white hover:text-black transition-all"
+                  className="px-stack-md py-stack-md rounded border border-outline-variant bg-surface-container/50 backdrop-blur-md text-on-surface uppercase font-label-sm text-label-sm hover:bg-surface-variant transition-colors"
                 >
                   Dedicated Console
                 </button>
@@ -355,9 +355,9 @@ export default function LandingPage() {
             </section>
 
             {/* 2. Infinite Partner Marquee */}
-            <div className="rounded-[24px] overflow-hidden border border-white/10 bg-black/40 py-6 relative z-10">
+            <div className="rounded-[10px] overflow-hidden border border-outline-variant bg-surface-container py-stack-md relative z-10">
               <div className="flex w-[200%] animate-marquee">
-                <div className="flex justify-around w-1/2 items-center text-sm font-bold text-neutral-400 font-mono tracking-widest uppercase">
+                <div className="flex justify-around w-1/2 items-center font-body-md font-bold text-on-surface opacity-70 grayscale uppercase">
                   <span>Yahoo Finance</span>
                   <span>Polygon</span>
                   <span>Finnhub</span>
@@ -366,7 +366,7 @@ export default function LandingPage() {
                   <span>NSE</span>
                   <span>TradingView</span>
                 </div>
-                <div className="flex justify-around w-1/2 items-center text-sm font-bold text-neutral-400 font-mono tracking-widest uppercase">
+                <div className="flex justify-around w-1/2 items-center font-body-md font-bold text-on-surface opacity-70 grayscale uppercase">
                   <span>Yahoo Finance</span>
                   <span>Polygon</span>
                   <span>Finnhub</span>
@@ -385,17 +385,16 @@ export default function LandingPage() {
               className="w-full min-h-screen py-24 flex items-center justify-between gap-8 relative z-20"
             >
               {/* Left Column: Active Feature text overlay */}
-              <div className="w-[25%] h-[600px] relative rounded-[32px] border border-white/10 bg-black/40 backdrop-blur-md p-8 flex flex-col justify-between overflow-hidden">
-
+              <div className="w-[25%] h-[600px] relative rounded-[10px] border border-outline-variant bg-surface-container/80 backdrop-blur-md p-stack-md flex flex-col justify-between overflow-hidden">
                 <div className="relative z-10 flex flex-col justify-between h-full pointer-events-none">
                   <div>
                     {/* Active feature content starts below */}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-display font-bold text-white mb-2 drop-shadow-lg">
+                    <h3 className="font-headline-lg text-headline-lg text-on-surface mb-stack-xs drop-shadow-lg">
                       {features[activeFeature].title}
                     </h3>
-                    <p className="text-xs text-neutral-300 leading-relaxed max-w-md bg-black/60 backdrop-blur-sm p-4 rounded-xl border border-white/5">
+                    <p className="font-body-md text-body-md text-on-surface-variant bg-surface-container-highest/60 backdrop-blur-sm p-stack-sm rounded border border-outline-variant">
                       {features[activeFeature].description}
                     </p>
                   </div>
@@ -403,25 +402,23 @@ export default function LandingPage() {
               </div>
 
               {/* Middle Column: Live Component Preview Window */}
-              <div className="w-[50%] h-[600px] rounded-[32px] border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-none">
-                {/* Windows 11 Style Header */}
-                <div className="w-full h-10 bg-black/80 border-b border-white/10 flex items-center justify-between px-4 shrink-0 select-none">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-cyan-400">⚡</span>
-                    <span className="text-xs font-sans text-neutral-300">Nexus Terminal</span>
+              <div className="w-[50%] h-[600px] rounded-[10px] border border-outline-variant bg-[#1c1d22] shadow-2xl overflow-hidden flex flex-col pointer-events-none p-stack-sm relative z-10">
+                {/* Terminal Header */}
+                <div className="flex justify-between items-center px-stack-md py-stack-sm border-b border-outline-variant/50 mb-stack-sm select-none">
+                  <div className="flex items-center gap-stack-sm">
+                    <span className="w-3 h-3 rounded-full bg-outline-variant"></span>
+                    <span className="w-3 h-3 rounded-full bg-outline-variant"></span>
+                    <span className="w-3 h-3 rounded-full bg-outline-variant"></span>
                   </div>
-                  <div className="flex items-center gap-4 text-neutral-400">
-                    <div className="w-3 h-[1px] bg-neutral-400" /> {/* Minimize */}
-                    <div className="w-3 h-3 border border-neutral-400" /> {/* Maximize */}
-                    <div className="relative w-3 h-3 flex items-center justify-center">
-                      <div className="absolute w-[14px] h-[1px] bg-neutral-400 rotate-45" />
-                      <div className="absolute w-[14px] h-[1px] bg-neutral-400 -rotate-45" />
-                    </div> {/* Close */}
+                  <span className="font-label-sm text-label-sm text-outline font-mono">NQ-TERM_v2.4.1 [SECURE]</span>
+                  <div className="flex gap-unit">
+                    <span className="material-symbols-outlined text-outline text-[16px]">signal_cellular_alt</span>
+                    <span className="material-symbols-outlined text-outline text-[16px]">lock</span>
                   </div>
                 </div>
 
                 {/* Live Component Container */}
-                <div className="relative flex-1 w-full overflow-hidden bg-[#0a0a0a] p-6">
+                <div className="relative flex-1 w-full overflow-hidden bg-[#08080a] p-stack-md rounded border border-outline-variant/30">
                   <AnimatePresence mode="wait">
                     <motion.div 
                       key={activeFeature}
@@ -439,8 +436,8 @@ export default function LandingPage() {
               </div>
 
               {/* Right Column: Interactive Step Buttons */}
-              <div className="w-[25%] flex flex-col gap-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-neutral-400 mb-2">
+              <div className="w-[25%] flex flex-col gap-stack-sm">
+                <div className="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-stack-xs">
                   System Pipeline Modules
                 </div>
                 {features.map((feat, i) => (
@@ -455,23 +452,23 @@ export default function LandingPage() {
                         handleFeatureClick(i);
                       }
                     }}
-                    className={`flex items-center justify-between p-4 rounded-[16px] border transition-all text-left cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                    className={`flex items-center justify-between p-stack-sm rounded border transition-all text-left cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-primary-container ${
                       activeFeature === i
-                        ? "bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.15)]"
-                        : "bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20"
+                        ? "bg-surface-container-highest text-on-surface border-outline-variant shadow-sm"
+                        : "bg-surface-container text-on-surface-variant border-outline-variant/50 hover:bg-surface-variant hover:border-outline-variant"
                     }`}
                   >
                     <div>
-                      <span className="text-[10px] font-mono opacity-50 block mb-1">
+                      <span className="font-label-sm text-[10px] text-outline block mb-[2px]">
                         MODULE 0{i + 1}
                       </span>
-                      <span className="text-sm font-bold">{feat.name}</span>
+                      <span className="font-body-md font-medium text-[13px]">{feat.name}</span>
                     </div>
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center border font-mono ${
+                      className={`w-6 h-6 rounded flex items-center justify-center border font-mono text-[10px] ${
                         activeFeature === i
-                          ? "border-black/20 text-black bg-black/5"
-                          : "border-white/20 text-white bg-white/5"
+                          ? "border-outline-variant text-on-surface bg-surface-container"
+                          : "border-outline-variant/30 text-outline bg-surface-container-low"
                       }`}
                     >
                       →
@@ -482,34 +479,34 @@ export default function LandingPage() {
             </div>
 
             {/* 4. Research Section */}
-            <section id="research" className="py-20 border-t border-white/5 z-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <section id="research" className="py-stack-xl border-t border-outline-variant/30 z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-lg items-center">
                 <div>
-                  <span className="text-xs uppercase font-mono text-cyan-400 tracking-wider">
+                  <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                     Research Division
                   </span>
-                  <h2 className="text-4xl font-display font-bold mt-2 mb-6">
+                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-md mt-stack-xs">
                     Neural Predictors & Spatial Attention
                   </h2>
-                  <p className="text-neutral-400 leading-relaxed mb-6">
+                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-stack-md">
                     Our quant researchers utilize spatial attention layers alongside combined
                     CNN-BiLSTM networks. By employing Huber Loss and Spatial Dropout, we protect
                     forecasts against fat-tail events and extreme regime shifts.
                   </p>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="p-4 rounded-xl border border-white/5 bg-white/5 font-mono">
-                      <div className="text-2xl font-bold text-white">Huber Loss</div>
-                      <div className="text-xs text-neutral-500">Robust to outliers</div>
+                  <div className="grid grid-cols-2 gap-stack-sm">
+                    <div className="p-stack-sm rounded border border-outline-variant/50 bg-surface-container">
+                      <div className="font-headline-md text-headline-md text-on-surface">Huber Loss</div>
+                      <div className="font-label-sm text-[11px] text-outline">Robust to outliers</div>
                     </div>
-                    <div className="p-4 rounded-xl border border-white/5 bg-white/5 font-mono">
-                      <div className="text-2xl font-bold text-white">Spatial Dropout</div>
-                      <div className="text-xs text-neutral-500">Regime invariance</div>
+                    <div className="p-stack-sm rounded border border-outline-variant/50 bg-surface-container">
+                      <div className="font-headline-md text-headline-md text-on-surface">Spatial Dropout</div>
+                      <div className="font-label-sm text-[11px] text-outline">Regime invariance</div>
                     </div>
                   </div>
                 </div>
-                <div className="p-8 rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-md">
-                  <h3 className="text-xl font-bold mb-4">Latest Whitepaper Abstract</h3>
-                  <p className="text-sm text-neutral-400 leading-relaxed font-mono">
+                <div className="p-stack-lg rounded-[10px] border border-outline-variant bg-surface-container/80 backdrop-blur-md">
+                  <h3 className="font-headline-lg text-headline-lg text-on-surface mb-stack-sm">Latest Whitepaper Abstract</h3>
+                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed italic border-l-2 border-outline-variant pl-stack-sm">
                     "By decoupling temporal feature learning from directional attention networks, we
                     show a 12% improvement in Sharpe ratio on out-of-sample backtests. The neural
                     framework incorporates real-time liquidity imbalance vectors to form dynamic
@@ -520,41 +517,41 @@ export default function LandingPage() {
             </section>
 
             {/* 5. Technology Section */}
-            <section id="technology" className="py-20 border-t border-white/5 z-10">
-              <div className="text-center max-w-3xl mx-auto mb-16">
-                <span className="text-xs uppercase font-mono text-cyan-400 tracking-wider">
+            <section id="technology" className="py-stack-xl border-t border-outline-variant/30 z-10">
+              <div className="text-center max-w-3xl mx-auto mb-stack-xl">
+                <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                   Infrastructure Stack
                 </span>
-                <h2 className="text-4xl font-display font-bold mt-2 mb-6">
+                <h2 className="font-display-md text-display-md text-on-surface mb-stack-sm mt-stack-xs">
                   Built for Microsecond Calculations
                 </h2>
-                <p className="text-neutral-400">
+                <p className="font-body-md text-body-md text-on-surface-variant">
                   Highly optimized tech stack leveraging Next.js 14, React 18 for layouts, WebGL
                   (Three.js) for 3D model visualization, and GSAP for fluid scroll timing.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="p-6 rounded-[24px] border border-white/5 bg-white/5 hover:border-cyan-500/20 transition-colors">
-                  <div className="text-xl font-bold mb-2">Next.js 14</div>
-                  <p className="text-sm text-neutral-400">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-stack-sm">
+                <div className="p-stack-md rounded-[10px] border border-outline-variant/50 bg-surface-container hover:border-secondary/50 transition-colors">
+                  <div className="font-headline-md text-headline-md text-on-surface mb-stack-xs">Next.js 14</div>
+                  <p className="font-body-md text-[13px] text-on-surface-variant">
                     Server-rendered templates and layout caching.
                   </p>
                 </div>
-                <div className="p-6 rounded-[24px] border border-white/5 bg-white/5 hover:border-cyan-500/20 transition-colors">
-                  <div className="text-xl font-bold mb-2">Three.js</div>
-                  <p className="text-sm text-neutral-400">
+                <div className="p-stack-md rounded-[10px] border border-outline-variant/50 bg-surface-container hover:border-secondary/50 transition-colors">
+                  <div className="font-headline-md text-headline-md text-on-surface mb-stack-xs">Three.js</div>
+                  <p className="font-body-md text-[13px] text-on-surface-variant">
                     GPU-accelerated vector and point-cloud rendering.
                   </p>
                 </div>
-                <div className="p-6 rounded-[24px] border border-white/5 bg-white/5 hover:border-cyan-500/20 transition-colors">
-                  <div className="text-xl font-bold mb-2">GSAP & ScrollTrigger</div>
-                  <p className="text-sm text-neutral-400">
+                <div className="p-stack-md rounded-[10px] border border-outline-variant/50 bg-surface-container hover:border-secondary/50 transition-colors">
+                  <div className="font-headline-md text-headline-md text-on-surface mb-stack-xs">GSAP</div>
+                  <p className="font-body-md text-[13px] text-on-surface-variant">
                     Seamless, lightweight state and animation synchronization.
                   </p>
                 </div>
-                <div className="p-6 rounded-[24px] border border-white/5 bg-white/5 hover:border-cyan-500/20 transition-colors">
-                  <div className="text-xl font-bold mb-2">FastAPI Backend</div>
-                  <p className="text-sm text-neutral-400">
+                <div className="p-stack-md rounded-[10px] border border-outline-variant/50 bg-surface-container hover:border-secondary/50 transition-colors">
+                  <div className="font-headline-md text-headline-md text-on-surface mb-stack-xs">FastAPI</div>
+                  <p className="font-body-md text-[13px] text-on-surface-variant">
                     High-concurrency API layer driving predictions and backtests.
                   </p>
                 </div>
@@ -562,28 +559,28 @@ export default function LandingPage() {
             </section>
 
             {/* 6. Documentation Section */}
-            <section id="documentation" className="py-20 border-t border-white/5 z-10">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <section id="documentation" className="py-stack-xl border-t border-outline-variant/30 z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-stack-lg">
                 <div>
-                  <span className="text-xs uppercase font-mono text-cyan-400 tracking-wider">
+                  <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                     Developer API
                   </span>
-                  <h2 className="text-4xl font-display font-bold mt-2 mb-6">Documentation & SDK</h2>
-                  <p className="text-neutral-400">
+                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-md mt-stack-xs">Documentation & SDK</h2>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
                     Access terminal stats and prediction results programmatically. Import the Nexus
                     SDK or call standard REST endpoints.
                   </p>
                 </div>
-                <div className="p-6 rounded-[24px] border border-white/5 bg-white/5 lg:col-span-2 font-mono text-sm overflow-x-auto">
-                  <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
-                    <span className="text-neutral-500">API Endpoint Reference</span>
-                    <span className="text-green-400">POST</span>
+                <div className="p-stack-md rounded-[10px] border border-outline-variant bg-surface-container lg:col-span-2 font-mono text-[13px] overflow-x-auto text-on-surface-variant">
+                  <div className="flex justify-between items-center pb-unit mb-stack-sm border-b border-outline-variant/30">
+                    <span className="text-outline">API Endpoint Reference</span>
+                    <span className="text-secondary">POST</span>
                   </div>
-                  <div className="text-neutral-300">https://api.nexusquant.app/v1/predict</div>
-                  <div className="mt-4 text-xs text-neutral-500">
+                  <div className="text-on-surface">https://api.nexusquant.app/v1/predict</div>
+                  <div className="mt-stack-sm text-[11px] text-outline">
                     Header: Content-Type: application/json
                   </div>
-                  <pre className="mt-2 text-neutral-400 bg-black/40 p-4 rounded-lg">
+                  <pre className="mt-unit text-on-surface bg-[#08080a] p-stack-sm rounded border border-outline-variant/30">
                     {`{
   "market_name": "United States (S&P 500)",
   "ticker": "AAPL",
@@ -595,16 +592,16 @@ export default function LandingPage() {
             </section>
 
             {/* 7. GitHub Section */}
-            <section id="github" className="py-20 border-t border-white/5 z-10">
-              <div className="p-8 rounded-[32px] border border-white/10 bg-gradient-to-r from-neutral-900 to-black flex flex-col md:flex-row justify-between items-center gap-8">
+            <section id="github" className="py-stack-xl border-t border-outline-variant/30 z-10">
+              <div className="p-stack-lg rounded-[10px] border border-outline-variant bg-surface-container flex flex-col md:flex-row justify-between items-center gap-stack-md">
                 <div>
-                  <span className="text-xs uppercase font-mono text-neutral-500">
+                  <span className="font-label-sm text-[11px] text-outline uppercase tracking-widest">
                     Open Source Collaboration
                   </span>
-                  <h2 className="text-3xl font-display font-bold mt-2 mb-4">
+                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-xs">
                     Contribute to the Nexus SDK
                   </h2>
-                  <p className="text-neutral-400 max-w-xl">
+                  <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
                     The core model structures, indicators, and client libraries are open source.
                     Explore our GitHub repositories, report bugs, or submit pull requests.
                   </p>
@@ -614,7 +611,7 @@ export default function LandingPage() {
                     href="https://github.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-neutral-200 transition-colors"
+                    className="inline-flex items-center gap-unit bg-primary-container text-white px-stack-md py-stack-sm rounded uppercase font-label-sm text-[12px] hover:opacity-90 transition-opacity"
                   >
                     View on GitHub
                   </a>
@@ -623,42 +620,42 @@ export default function LandingPage() {
             </section>
 
             {/* 8. Live Terminal Workspace Section */}
-            <div id="launch-terminal" className="pt-24 border-t border-white/5 z-20">
-              <div className="text-center max-w-3xl mx-auto mb-12">
-                <span className="text-xs uppercase font-mono text-cyan-400 tracking-wider">
+            <div id="launch-terminal" className="pt-stack-xl border-t border-outline-variant/30 z-20">
+              <div className="text-center max-w-3xl mx-auto mb-stack-lg">
+                <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                   Interface Console
                 </span>
-                <h2 className="text-4xl font-display font-bold mt-2 mb-4">Interactive Quant Terminal</h2>
-                <p className="text-neutral-400">
+                <h2 className="font-display-md text-display-md text-on-surface mb-stack-sm mt-stack-xs">Interactive Quant Terminal</h2>
+                <p className="font-body-md text-body-md text-on-surface-variant">
                   Test predictions, analyze technical indicators, and simulate portfolios live.
                   Change inputs below to query our active inference nodes.
                 </p>
               </div>
 
-              <div className="cosmoq-card p-6 md:p-8 flex flex-col gap-6 bg-black/60 border border-white/10 rounded-[32px]">
+              <div className="cosmoq-card p-stack-md flex flex-col gap-stack-md bg-[#1c1d22] border border-outline-variant rounded-[10px]">
                 
                 {/* Terminal Tickers Ribbon */}
-                <div className="w-full overflow-hidden py-2.5 border-b border-white/5 bg-black/30 backdrop-blur-sm z-30 relative shrink-0 rounded-lg">
+                <div className="w-full overflow-hidden py-unit border-b border-outline-variant/30 bg-[#08080a] z-30 relative shrink-0 rounded">
                   <div className="flex w-max animate-marquee">
                     {[0, 1].map((copy) => (
                       <div
                         key={copy}
-                        className="flex gap-12 px-6 text-xs font-mono tracking-widest text-neutral-400 uppercase"
+                        className="flex gap-gutter px-gutter font-label-sm text-[11px] font-mono tracking-widest text-outline uppercase"
                       >
                         {tickerKeys.map((ticker) => {
                           const item = allPrices[ticker];
                           return (
                             <span
                               key={`${copy}-${ticker}`}
-                              className="flex items-center gap-2"
+                              className="flex items-center gap-unit"
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
                                   item.pct_change >= 0 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"
                                 } inline-block`}
                               />
-                              <span className="text-white font-bold">{ticker}</span>
-                              <span className="text-neutral-500">${item.price.toFixed(2)}</span>
+                              <span className="text-on-surface font-bold">{ticker}</span>
+                              <span className="text-outline">${item.price.toFixed(2)}</span>
                               <span
                                 className={
                                   item.pct_change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"
@@ -675,7 +672,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Dropdowns controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 relative z-40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-stack-sm relative z-40">
                   <CustomSelect
                     label="Global Node"
                     value={selectedMarket}
@@ -700,14 +697,14 @@ export default function LandingPage() {
                     options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]}
                     onChange={() => {}}
                   />
-                  <div className="p-4 rounded-[20px] border border-white/5 bg-white/5 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-400">
+                  <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
+                    <div className="flex items-center gap-unit mb-1">
+                      <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                      <span className="font-label-sm text-[10px] text-outline tracking-wider uppercase">
                         Compute Online
                       </span>
                     </div>
-                    <div className="flex justify-between text-[10px] font-mono text-neutral-500">
+                    <div className="flex justify-between font-label-sm text-[10px] text-on-surface-variant font-mono">
                       <span>LAT: 12ms</span>
                       <span>GPU: A100</span>
                     </div>
@@ -715,20 +712,20 @@ export default function LandingPage() {
                 </div>
 
                 {/* Stats Blocks */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-                  <div className="p-5 border border-white/5 bg-white/5 rounded-xl flex flex-col justify-center">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A0A0AC] mb-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-stack-sm w-full">
+                  <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
+                    <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-1">
                       Valuation
                     </span>
-                    <div className="font-mono text-2xl font-bold text-white">
+                    <div className="font-headline-lg text-headline-lg font-mono text-on-surface">
                       {stockData
                         ? latestClose.toLocaleString(undefined, { minimumFractionDigits: 2 })
                         : "—"}
-                      <span className="text-xs text-neutral-500 ml-1">{currency}</span>
+                      <span className="font-label-sm text-[11px] text-outline ml-1">{currency}</span>
                     </div>
                     {stockData && (
                       <div
-                        className={`text-sm font-bold mt-1 ${
+                        className={`font-label-sm text-[12px] mt-1 ${
                           pctChange >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"
                         }`}
                       >
@@ -738,37 +735,37 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                  <div className="p-5 border border-white/5 bg-white/5 rounded-xl flex flex-col justify-center">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A0A0AC] mb-2">
+                  <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
+                    <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-1">
                       Volatility
                     </span>
-                    <div className="font-mono text-2xl font-bold text-white">
+                    <div className="font-headline-lg text-headline-lg font-mono text-on-surface">
                       {stockData ? `${volatility.toFixed(2)}%` : "—"}
                     </div>
-                    <span className="text-[10px] font-mono text-neutral-500 mt-1">
+                    <span className="font-label-sm text-[10px] font-mono text-outline mt-1">
                       {stockData ? `Beta: ${(volatility / 15).toFixed(2)}` : ""}
                     </span>
                   </div>
 
-                  <div className="p-5 border border-white/5 bg-white/5 rounded-xl flex flex-col justify-center">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A0A0AC] mb-2">
+                  <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
+                    <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-1">
                       VWAP (20d)
                     </span>
-                    <div className="font-mono text-2xl font-bold text-white">
+                    <div className="font-headline-lg text-headline-lg font-mono text-on-surface">
                       {stockData ? vwap.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
                     </div>
-                    <span className="text-[10px] font-mono text-neutral-500 mt-1">
+                    <span className="font-label-sm text-[10px] font-mono text-outline mt-1">
                       {stockData && vwap !== 0
                         ? `Dev: ${(((latestClose / vwap) - 1) * 100).toFixed(2)}%`
                         : ""}
                     </span>
                   </div>
 
-                  <div className="p-5 border border-white/5 bg-white/5 rounded-xl flex flex-col justify-center">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A0A0AC] mb-3">
+                  <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
+                    <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-2">
                       Imbalance
                     </span>
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-2 relative">
+                    <div className="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden mb-1 relative">
                       <div
                         className={`h-full rounded-full transition-all duration-700 ${
                           imbalance > 50 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"
@@ -776,7 +773,7 @@ export default function LandingPage() {
                         style={{ width: `${imbalance}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-[10px] font-mono font-medium text-[#A0A0AC]">
+                    <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
                       <span>BID {Math.round(imbalance)}%</span>
                       <span>ASK {Math.round(100 - imbalance)}%</span>
                     </div>
@@ -784,15 +781,15 @@ export default function LandingPage() {
                 </div>
 
                 {/* Terminal Tab Selector */}
-                <div className="flex border-b border-white/10 overflow-x-auto hide-scrollbar gap-2">
+                <div className="flex border-b border-outline-variant/30 overflow-x-auto hide-scrollbar gap-unit">
                   {tabs.map((tab) => (
                     <button
                       key={tab}
                       onClick={() => handleTabClick(tab)}
-                      className={`px-4 py-2 border-b-2 font-semibold text-xs whitespace-nowrap transition-colors uppercase tracking-wider ${
+                      className={`px-stack-sm py-unit border-b-[2px] font-label-sm text-[11px] whitespace-nowrap transition-colors uppercase tracking-wider ${
                         activeTerminalTab === tab
-                          ? "border-cyan-400 text-cyan-400"
-                          : "border-transparent text-neutral-400 hover:text-white"
+                          ? "border-secondary text-secondary"
+                          : "border-transparent text-outline hover:text-on-surface"
                       }`}
                     >
                       {tab}
@@ -801,11 +798,11 @@ export default function LandingPage() {
                 </div>
 
                 {/* Active Page Viewport Rendering the Active Component */}
-                <div className="min-h-[400px] border border-white/5 bg-[#05060A]/80 rounded-[20px] p-6 relative overflow-hidden flex flex-col justify-between">
+                <div className="min-h-[400px] border border-outline-variant/30 bg-[#08080a] rounded p-stack-md relative overflow-hidden flex flex-col justify-between">
                   {loading ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                      <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-                      <span className="text-xs text-neutral-500 font-mono">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-stack-sm">
+                      <div className="w-6 h-6 rounded-full border-[2px] border-secondary border-t-transparent animate-spin" />
+                      <span className="font-label-sm text-[10px] text-outline font-mono">
                         SYNCING TERMINAL DATA...
                       </span>
                     </div>

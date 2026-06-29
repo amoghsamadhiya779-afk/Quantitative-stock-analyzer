@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nexus Quant Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,400;0,700;1,500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#43e188",
+                    "on-primary-fixed": "#380d00",
+                    "surface-dim": "#131313",
+                    "inverse-surface": "#e2e2e2",
+                    "on-secondary-fixed-variant": "#00522b",
+                    "on-surface": "#e2e2e2",
+                    "on-surface-variant": "#ddc1b7",
+                    "on-error-container": "#ffdad6",
+                    "error-container": "#93000a",
+                    "on-tertiary": "#670211",
+                    "secondary-fixed-dim": "#43e188",
+                    "primary": "#ffb59a",
+                    "outline": "#a48b83",
+                    "primary-fixed-dim": "#ffb59a",
+                    "surface-container": "#1f1f1f",
+                    "tertiary-fixed": "#ffdad8",
+                    "surface-container-low": "#1b1b1b",
+                    "on-tertiary-fixed-variant": "#881d24",
+                    "on-secondary-container": "#004825",
+                    "surface-tint": "#ffb59a",
+                    "inverse-on-surface": "#303030",
+                    "secondary-fixed": "#66fea2",
+                    "secondary-container": "#02c16d",
+                    "on-secondary-fixed": "#00210e",
+                    "tertiary": "#ffb3b0",
+                    "surface": "#131313",
+                    "error": "#ffb4ab",
+                    "on-error": "#690005",
+                    "inverse-primary": "#9e421b",
+                    "tertiary-container": "#ee696a",
+                    "on-primary-container": "#541800",
+                    "on-background": "#e2e2e2",
+                    "on-primary": "#5b1b00",
+                    "surface-container-highest": "#353535",
+                    "on-primary-fixed-variant": "#7f2b04",
+                    "surface-bright": "#393939",
+                    "on-secondary": "#00391c",
+                    "on-tertiary-container": "#60000e",
+                    "surface-container-high": "#2a2a2a",
+                    "on-tertiary-fixed": "#410006",
+                    "surface-variant": "#353535",
+                    "surface-container-lowest": "#0e0e0e",
+                    "background": "#131313",
+                    "outline-variant": "#56423b",
+                    "primary-fixed": "#ffdbcf",
+                    "tertiary-fixed-dim": "#ffb3b0",
+                    "primary-container": "#e2754a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "stack-xl": "64px",
+                    "gutter": "24px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-desktop": "48px",
+                    "margin-mobile": "16px",
+                    "stack-lg": "32px",
+                    "stack-xs": "4px"
+            },
+            "fontFamily": {
+                    "display-md": [
+                            "Playfair Display"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Playfair Display"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "data-table": [
+                            "Inter"
+                    ],
+                    "display-lg-mobile": [
+                            "Playfair Display"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "display-md": [
+                            "36px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "88px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "data-table": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-black text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- Top Navigation -->
+<nav class="bg-surface-container dark:bg-surface-container w-full h-16 border-b border-outline-variant dark:border-outline-variant flex justify-between items-center w-full px-margin-desktop mx-auto z-50 sticky top-0">
+<div class="flex items-center gap-gutter">
+<a class="font-display-md text-display-md font-bold text-on-surface dark:text-on-surface" href="#">Nexus Quant</a>
+<div class="hidden md:flex gap-gutter ml-stack-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors cursor-pointer active:opacity-80 py-4 text-label-sm uppercase" href="#">Markets</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors cursor-pointer active:opacity-80 py-4 text-label-sm uppercase" href="#">Research</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors cursor-pointer active:opacity-80 py-4 text-label-sm uppercase" href="#">Portfolio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors cursor-pointer active:opacity-80 py-4 text-label-sm uppercase" href="#">Settings</a>
+</div>
+</div>
+<button class="bg-primary-container text-white px-stack-md py-stack-sm rounded uppercase font-label-sm text-label-sm cursor-pointer active:opacity-80 transition-colors">Launch Terminal</button>
+</nav>
+<!-- Hero Section -->
+<main class="flex-grow flex flex-col lg:flex-row relative">
+<!-- Left Content (Headline) -->
+<div class="w-full lg:w-1/3 flex flex-col justify-end p-margin-desktop lg:pb-[120px] z-10 relative">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-stack-lg leading-tight tracking-tight">
+                Institutional Quantitative<br/>
+<span class="text-primary-container italic font-medium">microsecond-synchronized</span><br/>
+                Intelligence
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-stack-xl max-w-md border-l-2 border-outline-variant pl-stack-md">
+                Uncompromising precision for algorithmic trading. Direct market access merged with unparalleled analytical depth, presented without distraction.
+            </p>
+<div class="flex flex-col gap-stack-md border-t border-outline-variant pt-stack-md max-w-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Validated Integration Partners</span>
+<div class="flex flex-wrap gap-stack-md opacity-70 grayscale">
+<span class="font-body-md font-bold text-on-surface">ALPHA VANTAGE</span>
+<span class="font-body-md font-bold text-on-surface">NASDAQ</span>
+<span class="font-body-md font-bold text-on-surface">BLOOMBERG</span>
+<span class="font-body-md font-bold text-on-surface">REFINITIV</span>
+</div>
+</div>
+</div>
+<!-- Right Content (Terminal Mockup) -->
+<div class="w-full lg:w-2/3 p-margin-mobile lg:p-margin-desktop flex items-center justify-center relative overflow-hidden">
+<!-- Terminal Container (Surface-3 equivalent: bg-[#1c1d22]) -->
+<div class="w-full h-full max-h-[800px] bg-[#1c1d22] rounded-[10px] border border-outline-variant p-stack-sm flex flex-col relative z-10 overflow-hidden transform lg:translate-x-[5%] lg:scale-105">
+<!-- Terminal Header -->
+<div class="flex justify-between items-center px-stack-md py-stack-sm border-b border-outline-variant/50 mb-stack-sm">
+<div class="flex items-center gap-stack-sm">
+<span class="w-3 h-3 rounded-full bg-outline-variant"></span>
+<span class="w-3 h-3 rounded-full bg-outline-variant"></span>
+<span class="w-3 h-3 rounded-full bg-outline-variant"></span>
+</div>
+<span class="font-label-sm text-label-sm text-outline font-mono">NQ-TERM_v2.4.1 [SECURE]</span>
+<div class="flex gap-unit">
+<span class="material-symbols-outlined text-outline text-[16px]">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-outline text-[16px]">lock</span>
+</div>
+</div>
+<!-- Terminal Layout Grid -->
+<div class="flex-grow grid grid-cols-12 gap-stack-sm p-unit">
+<!-- Left Sidebar (Sub-panel: #08080a) -->
+<div class="col-span-3 bg-[#08080a] rounded border border-outline-variant/30 p-stack-sm flex flex-col gap-stack-sm font-mono text-[11px] text-on-surface-variant overflow-hidden">
+<div class="border-b border-outline-variant/30 pb-unit text-primary mb-unit">PORTFOLIO.SYS</div>
+<div class="flex justify-between hover:bg-surface-2 px-unit py-[2px] cursor-pointer"><span>EQTY_US</span><span class="text-secondary">+1.24%</span></div>
+<div class="flex justify-between hover:bg-surface-2 px-unit py-[2px] cursor-pointer"><span>FX_MAJOR</span><span class="text-error">-0.41%</span></div>
+<div class="flex justify-between hover:bg-surface-2 px-unit py-[2px] cursor-pointer"><span>CMDTY_ENG</span><span class="text-secondary">+0.08%</span></div>
+<div class="flex justify-between hover:bg-surface-2 px-unit py-[2px] cursor-pointer bg-surface-container"><span>DERIV_OPT</span><span class="text-primary-container">+3.12%</span></div>
+<div class="flex justify-between hover:bg-surface-2 px-unit py-[2px] cursor-pointer"><span>CRYPTO_HGH</span><span class="text-error">-2.11%</span></div>
+<div class="border-b border-outline-variant/30 pb-unit text-primary mt-stack-md mb-unit">ALERTS.LOG</div>
+<div class="text-outline truncate">&gt; Volatility spike detected in #XAU</div>
+<div class="text-outline truncate">&gt; Rebalancing threshold met: Portfolio B</div>
+<div class="text-outline truncate">&gt; API Latency: 4ms. Nominal.</div>
+</div>
+<!-- Main Chart Area (Sub-panel: #08080a) -->
+<div class="col-span-9 flex flex-col gap-stack-sm">
+<!-- Top Row (Chart & Stats) -->
+<div class="flex-grow flex gap-stack-sm">
+<div class="w-2/3 bg-[#08080a] rounded border border-outline-variant/30 p-stack-md flex flex-col relative overflow-hidden">
+<div class="flex justify-between items-start mb-stack-md z-10">
+<div>
+<div class="font-headline-md text-headline-md text-on-surface font-mono">NQ_QUANT_ALGO_01</div>
+<div class="font-label-sm text-label-sm text-secondary">ACTIVE - RUNNING</div>
+</div>
+<div class="text-right">
+<div class="font-display-md text-display-md text-on-surface font-mono">1.1482</div>
+<div class="font-label-sm text-label-sm text-secondary font-mono">+0.0034 (+0.3%)</div>
+</div>
+</div>
+<!-- Abstract Chart Representation (CSS/HTML) -->
+<div class="flex-grow flex items-end gap-[2px] opacity-60">
+<div class="w-full h-1/4 bg-surface-variant"></div>
+<div class="w-full h-1/3 bg-surface-variant"></div>
+<div class="w-full h-1/5 bg-surface-variant"></div>
+<div class="w-full h-2/5 bg-surface-variant"></div>
+<div class="w-full h-1/2 bg-surface-variant"></div>
+<div class="w-full h-2/3 bg-secondary"></div>
+<div class="w-full h-3/5 bg-secondary"></div>
+<div class="w-full h-4/5 bg-secondary"></div>
+<div class="w-full h-full bg-secondary"></div>
+</div>
+<!-- Grid Lines Overlay -->
+<div class="absolute inset-0 border-t border-outline-variant/10 top-1/4"></div>
+<div class="absolute inset-0 border-t border-outline-variant/10 top-2/4"></div>
+<div class="absolute inset-0 border-t border-outline-variant/10 top-3/4"></div>
+</div>
+<div class="w-1/3 bg-[#08080a] rounded border border-outline-variant/30 p-stack-md flex flex-col gap-stack-sm font-mono">
+<div class="text-primary text-[11px]">METRICS</div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-unit"><span class="text-outline">Sharpe</span><span class="text-on-surface">2.4</span></div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-unit"><span class="text-outline">Sortino</span><span class="text-on-surface">3.1</span></div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-unit"><span class="text-outline">Max DD</span><span class="text-on-surface">4.2%</span></div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-unit"><span class="text-outline">Win Rate</span><span class="text-on-surface">62%</span></div>
+<div class="flex justify-between border-b border-outline-variant/20 pb-unit"><span class="text-outline">Alpha</span><span class="text-secondary">+1.8</span></div>
+</div>
+</div>
+<!-- Bottom Row (Data Table) -->
+<div class="h-1/3 bg-[#08080a] rounded border border-outline-variant/30 p-stack-md overflow-hidden flex flex-col">
+<div class="text-primary text-[11px] mb-stack-sm font-mono">EXECUTION.STREAM</div>
+<table class="w-full text-left font-data-table text-data-table text-on-surface-variant">
+<thead>
+<tr class="text-[10px] uppercase text-outline border-b border-outline-variant/30">
+<th class="pb-unit font-normal">Time</th>
+<th class="pb-unit font-normal">Symbol</th>
+<th class="pb-unit font-normal">Side</th>
+<th class="pb-unit font-normal">Size</th>
+<th class="pb-unit font-normal">Price</th>
+</tr>
+</thead>
+<tbody class="text-[12px] font-mono">
+<tr class="border-b border-outline-variant/10">
+<td class="py-[4px] text-outline">14:23:01.442</td>
+<td class="py-[4px]">AAPL</td>
+<td class="py-[4px] text-secondary">BUY</td>
+<td class="py-[4px]">1000</td>
+<td class="py-[4px]">173.50</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="py-[4px] text-outline">14:22:58.109</td>
+<td class="py-[4px]">TSLA</td>
+<td class="py-[4px] text-error">SELL</td>
+<td class="py-[4px]">500</td>
+<td class="py-[4px]">214.20</td>
+</tr>
+<tr class="border-b border-outline-variant/10">
+<td class="py-[4px] text-outline">14:22:45.002</td>
+<td class="py-[4px]">MSFT</td>
+<td class="py-[4px] text-secondary">BUY</td>
+<td class="py-[4px]">2000</td>
+<td class="py-[4px]">328.15</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Atmospheric accent (minimal, CSS only) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent pointer-events-none mix-blend-screen"></div>
+</div>
+</main>
+<!-- Footer Navigation -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest w-full py-4 border-t border-outline-variant dark:border-outline-variant flex justify-between items-center px-margin-desktop w-full mt-auto z-50">
+<div class="font-label-sm text-label-sm text-outline dark:text-outline">
+            © 2024 Nexus Quant Intelligence. Confidential.
+        </div>
+<div class="flex gap-gutter">
+<a class="font-label-sm text-label-sm text-outline dark:text-outline hover:text-on-surface dark:hover:text-on-surface uppercase" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-outline dark:text-outline hover:text-on-surface dark:hover:text-on-surface uppercase" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-outline dark:text-outline hover:text-on-surface dark:hover:text-on-surface uppercase" href="#">Regulatory Disclosures</a>
+</div>
+</footer>
+</body></html>
