@@ -322,7 +322,7 @@ export default function LandingPage() {
         </header>
 
         {/* Main content wrapper */}
-        <main className="bg-background min-h-screen text-on-background relative">
+        <main className="bg-transparent min-h-screen text-on-background relative">
           <div className="max-w-[1200px] mx-auto px-margin-mobile lg:px-margin-desktop py-12 flex flex-col gap-24">
             
             {/* 1. Hero Section */}

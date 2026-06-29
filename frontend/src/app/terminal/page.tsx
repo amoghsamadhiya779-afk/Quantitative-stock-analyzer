@@ -16,7 +16,7 @@ import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 import CustomSelect from "@/components/ui/CustomSelect";
 import WatchlistPanel from "@/components/ui/WatchlistPanel";
-import CosmoqBackground from "@/components/ui/CosmoqBackground";
+import ParticlePhysicsBackground from "@/components/ui/ParticlePhysicsBackground";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { RightRail } from "@/components/ui/RightRail";
 
@@ -201,30 +201,29 @@ export default function TerminalPage() {
   const imbalance = stockData ? Math.min(85, Math.max(30, 50 + (pctChange * 10))) : 50;
 
   return (
-    <div className="flex h-screen w-full overflow-hidden font-sans text-foreground bg-black">
-      {/* COSMOQ Animated Background */}
-      <CosmoqBackground />
+    <div className="flex h-screen w-full overflow-hidden font-body-md text-on-background bg-background">
+      {/* Particle Animated Background */}
+      <ParticlePhysicsBackground />
 
       <Sidebar activeTab={activePage} onTabSelect={setActivePage} />
 
-      <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full flex flex-col relative z-10 hide-scrollbar bg-black">
+      <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full flex flex-col relative z-10 hide-scrollbar bg-transparent">
         {/* Top Header */}
-        <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-black/20 backdrop-blur-md border-b border-white/5 z-50">
+        <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
           <div className="max-w-[1200px] mx-auto flex justify-between items-center">
-            {/* Logo & Wordmark */}
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md shadow-xl hover:scale-105 transition-transform pointer-events-auto z-50 relative">
-              <span className="font-display font-bold text-xl tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+            <Link href="/" className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50 backdrop-blur-md shadow-xl hover:scale-105 transition-transform pointer-events-auto z-50 relative">
+              <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">
                 NEXUS
               </span>
             </Link>
             {/* Navigation Links */}
-            <nav className="flex items-center gap-6">
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-                <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-[var(--profit)]"} live-indicator`} />
-                <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-400">{loading ? "Syncing..." : "Online"}</span>
+            <nav className="flex items-center gap-gutter">
+              <div className="hidden md:flex items-center gap-unit px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30">
+                <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-secondary"} live-indicator`} />
+                <span className="font-label-sm text-[10px] tracking-wider uppercase text-outline">{loading ? "Syncing..." : "Online"}</span>
               </div>
-              <a href="/" className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-400 hover:text-white transition-colors border border-white/10 rounded-full hover:bg-white/5">
+              <a href="/" className="px-stack-sm py-1.5 font-label-sm text-[10px] uppercase tracking-[0.15em] text-outline hover:text-on-surface transition-colors border border-outline-variant/30 rounded hover:bg-surface-variant">
                 Exit Terminal
               </a>
             </nav>
@@ -236,17 +235,17 @@ export default function TerminalPage() {
           variants={tickerVariants}
           initial="hidden"
           animate="visible"
-          className="w-full overflow-hidden py-3 border-b border-white/5 bg-black/30 backdrop-blur-sm z-40 relative shrink-0"
+          className="w-full overflow-hidden py-unit border-b border-outline-variant/30 bg-[#08080a] z-40 relative shrink-0"
         >
           <div className="flex w-max animate-marquee">
             {[0, 1].map((copy) => (
-              <div key={copy} className="flex gap-12 px-6 text-xs font-mono tracking-widest text-neutral-400 uppercase">
+              <div key={copy} className="flex gap-gutter px-gutter font-label-sm text-[11px] font-mono tracking-widest text-outline uppercase">
                 {tickerKeys.map((ticker, i) => {
                   const item = allPrices[ticker];
                   return (
                     <motion.span
                       key={`${copy}-${ticker}`}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-unit"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.5 + i * 0.03, duration: 0.3 }}
@@ -272,53 +271,53 @@ export default function TerminalPage() {
             {/* Always Visible Sections */}
           {activePage === "overview" && (
             <div className="max-w-4xl pt-4">
-              <h2 className="font-display text-5xl md:text-[66px] font-semibold text-white leading-[0.95] mb-6 tracking-tight">
+              <h2 className="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface leading-tight mb-stack-lg tracking-tight">
                 Institutional Quantitative Intelligence
               </h2>
-              <p className="text-body-lg text-[#A0A0AC] max-w-2xl leading-relaxed">
+              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
                 Nexus Quant synthesizes global macroeconomic data, real-time liquidity flow, and state-of-the-art neural networks into a singular, highly responsive interface.
               </p>
             </div>
           )}
 
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#A0A0AC] font-semibold mt-4 mb-2">Global Liquidity Nodes</div>
+          <div className="font-label-sm text-label-sm text-outline uppercase tracking-widest mt-stack-md mb-stack-xs">Global Liquidity Nodes</div>
           <CommoditiesBar />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 relative z-40 cosmoq-card p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-stack-sm relative z-40 bg-surface-container border border-outline-variant/30 rounded p-stack-md">
             <CustomSelect label="Global Node" value={selectedMarket} options={marketNames} onChange={(v) => setSelectedMarket(v)} />
             <CustomSelect label="Target Asset" value={selectedTicker} options={tickers} onChange={(v) => setSelectedTicker(v)} />
             <CustomSelect label="AI Architecture" value={selectedAlgo} options={algos} onChange={(v) => setSelectedAlgo(v)} />
             <CustomSelect label="Execution Routing" value="Dark Pool Aggregator" options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]} onChange={() => {}} />
-            <div className="p-4 rounded-[20px] border border-white/5 bg-white/5 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-[var(--profit)]"} live-indicator`} />
-                <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-400">{loading ? "Syncing Network..." : "Compute Online"}</span>
+            <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
+              <div className="flex items-center gap-unit mb-1">
+                <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-secondary"} live-indicator`} />
+                <span className="font-label-sm text-[10px] tracking-wider uppercase text-outline">{loading ? "Syncing Network..." : "Compute Online"}</span>
               </div>
-              <div className="flex justify-between text-[10px] font-mono text-neutral-500">
+              <div className="flex justify-between font-label-sm text-[10px] font-mono text-on-surface-variant">
                 <span>LAT: {loading ? "..." : "12ms"}</span>
                 <span>GPU: A100</span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-[20px] items-stretch cosmoq-card p-6 md:p-8">
-            <div className="flex-1 flex flex-col items-start gap-6 w-full">
-              <img src={logoError ? getFallbackLogo(selectedTicker) : getLogoUrl(selectedTicker)} onError={() => setLogoError(true)} alt={selectedTicker} className="w-24 h-24 rounded-[20px] border border-white/10 object-contain bg-black/40 p-3" />
+          <div className="flex flex-col lg:flex-row gap-stack-lg items-stretch bg-[#1c1d22] border border-outline-variant/30 rounded p-stack-md">
+            <div className="flex-1 flex flex-col items-start gap-stack-sm w-full">
+              <img src={logoError ? getFallbackLogo(selectedTicker) : getLogoUrl(selectedTicker)} onError={() => setLogoError(true)} alt={selectedTicker} className="w-24 h-24 rounded border border-outline-variant/30 object-contain bg-surface-container p-3" />
               <div>
-                <h2 className="font-display text-5xl md:text-7xl font-bold tracking-tighter text-white">{selectedTicker || "—"}</h2>
-                <span className="inline-block mt-3 badge-neutral">{region}</span>
+                <h2 className="font-display-lg text-display-lg text-on-surface tracking-tighter">{selectedTicker || "—"}</h2>
+                <span className="inline-block mt-unit bg-surface-container-highest text-on-surface font-label-sm text-[11px] px-2 py-1 rounded border border-outline-variant/30 uppercase">{region}</span>
               </div>
             </div>
-            <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+            <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-stack-sm w-full">
               <StatBlock label="Valuation" value={stockData ? latestClose.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"} sub={currency} delta={stockData ? `${pctChange >= 0 ? "+" : ""}${Number(pctChange).toFixed(2)}%` : undefined} deltaColor={stockData && pctChange >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"} />
               <StatBlock label="Volatility" value={stockData ? `${Number(volatility).toFixed(1)}%` : "—"} sub={stockData ? `Beta: ${Number(vwap !== 0 ? volatility / 15 : 0).toFixed(2)}` : ""} />
               <StatBlock label="VWAP (20d)" value={stockData ? vwap.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"} sub={stockData ? `Dev: ${Number(vwap !== 0 ? ((latestClose / vwap) - 1) * 100 : 0).toFixed(2)}%` : ""} />
-              <div className="p-5 cosmoq-card flex flex-col justify-center">
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-[#A0A0AC] mb-3">Imbalance</span>
-                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-2 relative">
+              <div className="p-stack-sm bg-[#08080a] border border-outline-variant/30 rounded flex flex-col justify-center">
+                <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline mb-2">Imbalance</span>
+                <div className="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden mb-1 relative">
                   <div className={`h-full rounded-full transition-all duration-700 ${imbalance > 50 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"}`} style={{ width: `${imbalance}%` }} />
                 </div>
-                <div className="flex justify-between text-[10px] font-mono font-medium text-[#A0A0AC]">
+                <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
                   <span>BID {Math.round(imbalance)}%</span>
                   <span>ASK {Math.round(100 - imbalance)}%</span>
                 </div>
@@ -359,12 +358,12 @@ export default function TerminalPage() {
 
 function StatBlock({ label, value, sub, delta, deltaColor }: any) {
   return (
-    <div className="p-5 cosmoq-card flex flex-col justify-center">
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A0A0AC] mb-2">{label}</span>
-      <div className="font-mono text-2xl font-bold text-white">
-        {value} <span className="text-xs text-neutral-500 ml-1">{sub}</span>
+    <div className="p-stack-sm bg-[#08080a] border border-outline-variant/30 rounded flex flex-col justify-center">
+      <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline mb-1">{label}</span>
+      <div className="font-headline-lg font-mono text-on-surface">
+        {value} <span className="font-label-sm text-[11px] text-outline ml-1">{sub}</span>
       </div>
-      {delta && <div className={`text-sm font-bold mt-1 ${deltaColor}`}>{delta}</div>}
+      {delta && <div className={`font-label-sm text-[12px] mt-1 ${deltaColor}`}>{delta}</div>}
     </div>
   );
 }
