@@ -19,6 +19,7 @@ import WatchlistPanel from "@/components/ui/WatchlistPanel";
 import ParticlePhysicsBackground from "@/components/ui/ParticlePhysicsBackground";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { RightRail } from "@/components/ui/RightRail";
+import { FloatingIsland } from "@/components/ui/FloatingIsland";
 
 import {
   fetchMarkets,
@@ -206,8 +207,9 @@ export default function TerminalPage() {
       <ParticlePhysicsBackground />
 
       <Sidebar activeTab={activePage} onTabSelect={setActivePage} />
+      <FloatingIsland activeTab={activePage} onTabSelect={setActivePage} />
 
-      <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full flex flex-col relative z-10 hide-scrollbar bg-transparent">
+      <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full flex flex-col relative z-10 hide-scrollbar bg-transparent pb-[80px] md:pb-0">
         {/* Top Header */}
         <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
           <div className="max-w-[1200px] mx-auto flex justify-between items-center">

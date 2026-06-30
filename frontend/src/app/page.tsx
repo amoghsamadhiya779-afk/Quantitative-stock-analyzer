@@ -59,6 +59,17 @@ export default function LandingPage() {
   const platformRef = useRef<HTMLDivElement>(null);
   const scrollTriggerRef = useRef<any>(null);
 
+  // Hyper-zoom transition state
+  const [isZoomingToTerminal, setIsZoomingToTerminal] = useState(false);
+
+  const handleLaunchTerminal = () => {
+    setIsZoomingToTerminal(true);
+    // 600ms perfectly aligns with the framer motion transition
+    setTimeout(() => {
+      router.push("/terminal");
+    }, 600);
+  };
+
   // Terminal Workspace State (Interactive Section)
   const [markets, setMarkets] = useState<Record<string, MarketInfo>>({});
   const [marketNames, setMarketNames] = useState<string[]>([]);
@@ -320,6 +331,40 @@ export default function LandingPage() {
       <div className="relative bg-background text-on-background overflow-x-hidden min-h-screen font-body-md">
         <ParticlePhysicsBackground />
 
+        {/* HYPER-ZOOM OVERLAY */}
+        <AnimatePresence>
+          {isZoomingToTerminal && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              style={{ willChange: "transform, opacity" }}
+              className="fixed inset-0 z-[100] bg-background flex flex-col transform-gpu pointer-events-none"
+            >
+              <ParticlePhysicsBackground />
+              <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
+                <div className="max-w-[1200px] mx-auto flex justify-between items-center opacity-50">
+                  <div className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50">
+                    <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">NEXUS</span>
+                  </div>
+                  <div className="hidden md:flex items-center gap-unit px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30">
+                    <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="font-label-sm text-[10px] tracking-wider uppercase text-outline">Syncing...</span>
+                  </div>
+                </div>
+              </header>
+              <div className="flex-1 w-full flex items-center justify-center">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+                  className="w-16 h-16 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin" 
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header navigation element */}
         <header className="sticky top-0 z-50 w-full bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop h-16">
           <div className="flex items-center gap-gutter">
@@ -332,7 +377,7 @@ export default function LandingPage() {
           </div>
           <div>
             <button
-              onClick={() => router.push("/terminal")}
+              onClick={handleLaunchTerminal}
               className="bg-primary-container text-white px-stack-md py-stack-sm rounded uppercase font-label-sm text-label-sm cursor-pointer active:opacity-80 transition-colors"
             >
               Launch Terminal
@@ -359,13 +404,13 @@ export default function LandingPage() {
               </p>
               <div className="flex gap-stack-md">
                 <button
-                  onClick={() => router.push("/terminal")}
+                  onClick={handleLaunchTerminal}
                   className="bg-primary-container text-white px-stack-md py-stack-md rounded uppercase font-label-sm text-label-sm cursor-pointer active:opacity-80 transition-colors"
                 >
                   Start Live Sandbox
                 </button>
                 <button
-                  onClick={() => router.push("/terminal")}
+                  onClick={handleLaunchTerminal}
                   className="px-stack-md py-stack-md rounded border border-outline-variant bg-surface-container/50 backdrop-blur-md text-on-surface uppercase font-label-sm text-label-sm hover:bg-surface-variant transition-colors"
                 >
                   Dedicated Console
@@ -404,7 +449,7 @@ export default function LandingPage() {
               className="w-full min-h-screen py-24 flex items-center justify-center relative z-20"
             >
               {/* Unified Terminal Window */}
-              <div className="w-[95%] max-w-[1300px] h-[700px] rounded-[10px] border border-outline-variant bg-[#1c1d22] shadow-2xl overflow-hidden flex flex-col relative z-10 pointer-events-none">
+              <div className="w-[95%] max-w-[1300px] h-[550px] md:h-[700px] rounded-[10px] border border-outline-variant bg-[#1c1d22] shadow-2xl overflow-hidden flex flex-col relative z-10 pointer-events-none">
                 {/* Terminal Header */}
                 <div className="flex justify-between items-center px-stack-md py-stack-sm border-b border-outline-variant/50 bg-[#1c1d22] z-20 select-none shrink-0">
                   <div className="flex items-center gap-stack-sm">
@@ -435,7 +480,7 @@ export default function LandingPage() {
                   </AnimatePresence>
                   
                   {/* Gradient Blur Overlay (Lower Half) */}
-                  <div className="absolute bottom-0 left-0 w-full h-[220px] bg-gradient-to-t from-[#08080a] via-[#08080a]/90 to-transparent backdrop-blur-[2px] flex flex-col justify-end p-stack-lg z-10">
+                  <div className="absolute bottom-0 left-0 w-full h-[200px] md:h-[220px] bg-gradient-to-t from-[#08080a] via-[#08080a]/90 to-transparent backdrop-blur-[2px] flex flex-col justify-end p-stack-md md:p-stack-lg z-10">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={`desc-${activeFeature}`}
@@ -444,10 +489,10 @@ export default function LandingPage() {
                         exit={{ opacity: 0, y: -15 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
                       >
-                        <h3 className="font-display-md text-[24px] font-bold text-on-surface mb-stack-xs drop-shadow-lg tracking-tight">
+                        <h3 className="font-display-md text-[20px] md:text-[24px] font-bold text-on-surface mb-stack-xs drop-shadow-lg tracking-tight">
                           {features[activeFeature].title}
                         </h3>
-                        <p className="font-body-md text-[14px] text-on-surface-variant max-w-3xl leading-relaxed">
+                        <p className="font-body-md text-[12px] md:text-[14px] text-on-surface-variant max-w-3xl leading-relaxed line-clamp-2 md:line-clamp-none">
                           {features[activeFeature].description}
                         </p>
                       </motion.div>
