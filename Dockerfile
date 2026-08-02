@@ -7,7 +7,8 @@ USER user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH \
     PYTHONPATH=$HOME/app \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    TF_USE_LEGACY_KERAS=1
 
 WORKDIR $HOME/app
 

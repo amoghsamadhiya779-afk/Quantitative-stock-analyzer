@@ -104,12 +104,13 @@ def train_market(index_key, filename):
     y_train, y_test = y[:seq_split_idx], y[seq_split_idx:]
 
     input_shape = (SEQ_LENGTH, len(features))
-    
-    # Define models to train
-    models_to_train = {
-        "CNN_BiLSTM_Attention": ModelFactory.build_cnn_bilstm_attention(input_shape),
-        "TimeSeriesTransformer": ModelFactory.build_transformer_forecaster(input_shape),
-        "AdvancedBiLSTM": ModelFactory.build_advanced_bilstm(input_shape)
+
+    # Define models to train. Built lazily (builder callables, not instances) so an
+    # already-trained architecture is skipped without even constructing it.
+    model_builders = {
+        "CNN_BiLSTM_Attention": lambda: ModelFactory.build_cnn_bilstm_attention(input_shape),
+        "TimeSeriesTransformer": lambda: ModelFactory.build_transformer_forecaster(input_shape),
+        "AdvancedBiLSTM": lambda: ModelFactory.build_advanced_bilstm(input_shape),
     }
 
     # Save scalers (shared across models)
@@ -121,27 +122,37 @@ def train_market(index_key, filename):
     # Also save the features list for inference mapping
     joblib.dump(features, os.path.join(MODEL_DIR, f"{index_key}_features_list.pkl"))
 
-    # 5. Train all models
-    for model_name, model in models_to_train.items():
-        print(f"\n[TRAIN] Training {model_name}...")
-        
+    # 5. Train all models. Skip any architecture whose .keras file already exists (lets an
+    # interrupted/crashed multi-market run resume without redoing completed work), and log
+    # + continue on a per-model training failure instead of aborting every remaining market.
+    for model_name, build_model in model_builders.items():
         model_save_path = os.path.join(MODEL_DIR, f"{index_key}_{model_name}.keras")
-        
+
+        if os.path.exists(model_save_path):
+            print(f"\n[SKIP] {model_name} for {index_key} already trained at {model_save_path}")
+            continue
+
+        print(f"\n[TRAIN] Training {model_name}...")
+        model = build_model()
+
         callbacks = [
             EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True),
             ModelCheckpoint(filepath=model_save_path, monitor='val_loss', save_best_only=True),
             tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-5)
         ]
-        
-        model.fit(
-            X_train, y_train,
-            validation_data=(X_test, y_test),
-            epochs=50,
-            batch_size=64,
-            callbacks=callbacks,
-            verbose=2
-        )
-        print(f"[SUCCESS] {model_name} saved for {index_key}!")
+
+        try:
+            model.fit(
+                X_train, y_train,
+                validation_data=(X_test, y_test),
+                epochs=50,
+                batch_size=64,
+                callbacks=callbacks,
+                verbose=2
+            )
+            print(f"[SUCCESS] {model_name} saved for {index_key}!")
+        except Exception as e:
+            print(f"[ERROR] Training {model_name} for {index_key} failed: {e}")
 
 if __name__ == "__main__":
     for key, filename in MARKET_REGISTRY.items():
