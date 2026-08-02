@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { Activity } from "lucide-react";
 
@@ -11,7 +12,17 @@ import MLPrediction from "@/components/workflows/MLPrediction";
 import PortfolioOptimization from "@/components/workflows/PortfolioOptimization";
 import RiskAnalytics from "@/components/workflows/RiskAnalytics";
 import Backtesting from "@/components/workflows/Backtesting";
-import NewsDrivenMarket from "@/components/features/NewsDrivenMarket";
+
+// Pulls in three.js/@react-three/fiber/drei (globe) - only load it when a news/macro
+// tab is actually opened instead of bundling it into every terminal page load.
+const NewsDrivenMarket = dynamic(() => import("@/components/features/NewsDrivenMarket"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full min-h-[480px] flex items-center justify-center text-outline font-label-sm text-[10px] uppercase tracking-widest">
+      Loading macro view...
+    </div>
+  ),
+});
 
 import CommoditiesBar from "@/components/ui/CommoditiesBar";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -168,17 +179,21 @@ export default function TerminalPage() {
     let active = true;
 
     const fetchData = () => {
+      // The selected algo is already one of algoKeys - fetch each algo's prediction
+      // exactly once (was fetching the selected one twice: once here explicitly, again
+      // inside the algoKeys map) and pick the primary out of the shared results.
       const algoKeys = Object.values(ALGO_MAP);
       Promise.all([
         fetchStockData(selectedMarket, selectedTicker).catch(() => null),
-        fetchPrediction(selectedMarket, selectedTicker, ALGO_MAP[selectedAlgo]).catch(() => null),
         ...algoKeys.map(algo => fetchPrediction(selectedMarket, selectedTicker, algo).catch(() => null))
-      ]).then(([sd, primaryPr, ...allPrs]) => {
+      ]).then(([sd, ...allPrs]) => {
         if (!active) return;
         if (sd) setStockData(sd as any);
-        if (primaryPr) setPrediction(primaryPr as any);
         const validPrs = allPrs.filter(Boolean) as PredictionResult[];
         if (validPrs.length > 0) setAllPredictions(validPrs);
+        const primaryIndex = algoKeys.indexOf(ALGO_MAP[selectedAlgo]);
+        const primaryPr = primaryIndex >= 0 ? allPrs[primaryIndex] : null;
+        if (primaryPr) setPrediction(primaryPr as any);
         setLoading(false);
       });
     };

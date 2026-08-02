@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabSelect }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-center justify-between p-4 border-b border-outline-variant/30 h-16 shrink-0">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
           {isExpanded ? (
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabSelect }) => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2.5 space-y-1 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2.5 space-y-1 scrollbar-hide" style={{ contain: 'layout paint' }}>
         {navItems.map((item) => {
           const isActive = activeTab === item.id || item.subItems?.some(sub => activeTab === sub.id);
           const Icon = item.icon;

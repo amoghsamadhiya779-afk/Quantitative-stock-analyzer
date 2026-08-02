@@ -1,18 +1,12 @@
 import { motion } from "framer-motion";
-import { useCursor } from "../providers/CursorProvider";
 
 export default function PortfolioHealthWidget({ ticker, pctChange }: { ticker: string, pctChange: number }) {
-  const { setCursorType } = useCursor();
   // Mock impact on portfolio
   const impact = Number(pctChange * 0.15).toFixed(2); // assuming 15% weight
   const isPositive = pctChange >= 0;
 
   return (
-    <div 
-      className="p-5 glass-card relative overflow-hidden group transition-all"
-      onMouseEnter={() => setCursorType("hover-card")}
-      onMouseLeave={() => setCursorType("default")}
-    >
+    <div className="p-5 glass-card relative overflow-hidden group transition-all">
       <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
       <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[var(--accent)] to-[var(--accent-secondary)]" />
       <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50 mb-3 pl-2 relative z-10">Portfolio Impact</div>

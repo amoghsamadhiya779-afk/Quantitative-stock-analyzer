@@ -25,7 +25,6 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, onTab
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] md:hidden">
       <motion.div
-        layout
         initial={{ borderRadius: 32 }}
         animate={{
           width: expanded ? 280 : 'auto',
@@ -34,7 +33,6 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, onTab
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         className="bg-surface-container-highest/90 backdrop-blur-xl border border-outline-variant shadow-2xl overflow-hidden flex flex-col"
-        style={{ willChange: 'width, height' }}
       >
         <AnimatePresence mode="wait">
           {!expanded ? (

@@ -2,19 +2,9 @@
 
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
-import {
-  BacktestModel,
-  RiskModel,
-  PortfolioModel,
-  MLModel,
-  IndicatorModel,
-  NewsModel,
-} from "@/components/ui/FeatureModels";
 import { ScrollManager } from "@/lib/ScrollManager";
-import { CursorProvider } from "@/components/providers/CursorProvider";
 
 // Live Workflow components for the Terminal Section
 import MarketDataIngestion from "@/components/workflows/MarketDataIngestion";
@@ -51,6 +41,7 @@ const algos = Object.keys(ALGO_MAP);
 export default function LandingPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
   const allPrices = useAllPrices();
   const tickerKeys = Object.keys(allPrices);
 
@@ -93,7 +84,6 @@ export default function LandingPage() {
         title: "Market Data Ingestion",
         description:
           "Ingest and parse raw trade ticks, order book dynamics, and liquidity updates instantly from global nodes with microsecond precision.",
-        model: <NewsModel />,
       },
       {
         id: 1,
@@ -101,7 +91,6 @@ export default function LandingPage() {
         title: "Technical Indicator Suite",
         description:
           "Generate momentum, volatility, and trend indicators in real-time, matching institutional trading desk specifications.",
-        model: <IndicatorModel />,
       },
       {
         id: 2,
@@ -109,7 +98,6 @@ export default function LandingPage() {
         title: "Neural Predictions",
         description:
           "Employ CNN-BiLSTM networks and spatial attention layers to generate statistically sound directional probability bounds.",
-        model: <MLModel />,
       },
       {
         id: 3,
@@ -117,7 +105,6 @@ export default function LandingPage() {
         title: "Portfolio Optimization",
         description:
           "Run robust covariance calculations and Sharpe ratio optimizations to reallocate capital dynamically and protect margins.",
-        model: <PortfolioModel />,
       },
       {
         id: 4,
@@ -125,7 +112,6 @@ export default function LandingPage() {
         title: "Systemic Risk Analytics",
         description:
           "Measure systemic beta exposures, portfolio Value-at-Risk (VaR), and regime correlations before they impact your balance sheet.",
-        model: <RiskModel />,
       },
       {
         id: 5,
@@ -133,7 +119,6 @@ export default function LandingPage() {
         title: "Algorithmic Backtesting",
         description:
           "Simulate complex algorithms over historical decades, accounting for bid-ask spread slippage, fees, and sudden liquidity gaps.",
-        model: <BacktestModel />,
       },
     ],
     []
@@ -252,6 +237,8 @@ export default function LandingPage() {
 
   // Auto-play Slideshow for Walkthrough
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const interval = setInterval(() => {
       setActiveFeature((prev) => {
         const next = (prev + 1) % features.length;
@@ -267,7 +254,7 @@ export default function LandingPage() {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [prefersReducedMotion]);
 
   const handleFeatureClick = (index: number) => {
     setActiveFeature(index);
@@ -327,7 +314,6 @@ export default function LandingPage() {
   if (!mounted) return null;
 
   return (
-    <CursorProvider>
       <div className="relative bg-background text-on-background overflow-x-hidden min-h-screen font-body-md">
         <ParticlePhysicsBackground />
 
@@ -341,7 +327,6 @@ export default function LandingPage() {
               style={{ willChange: "transform, opacity" }}
               className="fixed inset-0 z-[100] bg-background flex flex-col transform-gpu pointer-events-none"
             >
-              <ParticlePhysicsBackground />
               <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
                 <div className="max-w-[1200px] mx-auto flex justify-between items-center opacity-50">
                   <div className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50">
@@ -469,9 +454,9 @@ export default function LandingPage() {
                   <AnimatePresence mode="wait">
                     <motion.div 
                       key={activeFeature}
-                      initial={{ filter: "blur(12px)", opacity: 0, scale: 1.05 }}
-                      animate={{ filter: "blur(0px)", opacity: 1, scale: 1 }}
-                      exit={{ filter: "blur(12px)", opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 1.05 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                       className="w-full h-full transform-gpu origin-center p-stack-md pb-[140px]"
                     >
@@ -862,7 +847,7 @@ export default function LandingPage() {
               key="boot-sequence"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
+              exit={{ opacity: 0, scale: 0.9 }}
               className="flex flex-col items-start font-mono text-cyan-400 text-lg sm:text-2xl gap-4 max-w-3xl w-[90%] z-10 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
             >
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
@@ -924,6 +909,5 @@ export default function LandingPage() {
           </div>
         )}
       </AnimatePresence>
-    </CursorProvider>
   );
 }

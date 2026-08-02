@@ -5,8 +5,6 @@ import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Fuel, Gem, CircleDollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 
-import { useCursor } from "../providers/CursorProvider";
-
 interface CommodityData {
   name: string;
   symbol: string;
@@ -38,7 +36,6 @@ const initialCommodities: CommodityData[] = [
 
 export default function CommoditiesBar() {
   const [commodities] = useState(initialCommodities);
-  const { setCursorType } = useCursor();
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -48,8 +45,6 @@ export default function CommoditiesBar() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          onMouseEnter={() => setCursorType("hover-button")}
-          onMouseLeave={() => setCursorType("default")}
           className="flex-shrink-0 flex items-center gap-3 p-3 glass-card hover:border-[var(--accent)]/50 transition-all min-w-[180px]"
         >
           <div className="p-1.5 rounded-lg bg-foreground/5" style={{ color: c.color }}>

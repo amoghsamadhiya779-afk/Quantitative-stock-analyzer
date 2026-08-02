@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { useReducedMotion } from "framer-motion";
 import * as THREE from "three";
 
 export const MARKET_LOCATIONS: Record<string, [number, number]> = {
@@ -15,6 +16,9 @@ export const MARKET_LOCATIONS: Record<string, [number, number]> = {
   "Brazil (Bovespa)": [-23.5505, -46.6333],
   "Indonesia (IDX)": [-6.2088, 106.8456],
 };
+
+const WORLD_Y_AXIS = new THREE.Vector3(0, 1, 0);
+const AUTO_ROTATE_RAD_PER_SEC = 0.0026 * 60; // was a fixed 0.0026 rad/frame ("at 60fps") - now frame-rate independent
 
 // Convert lat/long coordinates to 3D Cartesian coordinates on sphere
 function convertLatLngToVector3(lat: number, lng: number, radius: number): THREE.Vector3 {
@@ -36,6 +40,7 @@ interface Props {
 
 export default function GlobeWidget({ activeLocation, onSelectMarket, onHoverNode }: Props) {
   const [isHovered, setIsHovered] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <div 
@@ -46,16 +51,18 @@ export default function GlobeWidget({ activeLocation, onSelectMarket, onHoverNod
       <Canvas
         camera={{ position: [0, 0, 6], fov: 45 }}
         style={{ width: "100%", height: "100%" }}
+        dpr={[1, 1.5]}
       >
         <ambientLight intensity={0.4} />
         <pointLight position={[10, 10, 10]} intensity={1.8} />
         <pointLight position={[-10, -10, -10]} intensity={0.6} />
         
-        <GlobeScene 
-          activeLocation={activeLocation} 
-          onSelectMarket={onSelectMarket} 
+        <GlobeScene
+          activeLocation={activeLocation}
+          onSelectMarket={onSelectMarket}
           onHoverNode={onHoverNode}
           isHovered={isHovered}
+          prefersReducedMotion={!!prefersReducedMotion}
         />
         
         <OrbitControls
@@ -76,14 +83,16 @@ interface NodeProps {
   isActive: boolean;
   onClick: () => void;
   onHoverNode?: (name: string | null) => void;
+  prefersReducedMotion?: boolean;
 }
 
-function MarketNode({ name, position, isActive, onClick, onHoverNode }: NodeProps) {
+function MarketNode({ name, position, isActive, onClick, onHoverNode, prefersReducedMotion }: NodeProps) {
   const [hovered, setHovered] = useState(false);
   const ringRef = useRef<THREE.Mesh>(null);
 
   // Pulsing scale animation
   useFrame(({ clock }) => {
+    if (prefersReducedMotion) return;
     if (ringRef.current) {
       const time = clock.getElapsedTime();
       const scale = 1 + (time % 1) * 0.8;
@@ -140,12 +149,13 @@ function MarketNode({ name, position, isActive, onClick, onHoverNode }: NodeProp
   );
 }
 
-function OrbitRings({ radius }: { radius: number }) {
+function OrbitRings({ radius, prefersReducedMotion }: { radius: number; prefersReducedMotion?: boolean }) {
   const ringRef1 = useRef<THREE.Mesh>(null);
   const ringRef2 = useRef<THREE.Mesh>(null);
 
   // Rotate orbital bands at different speeds to resemble an enterprise AI system
   useFrame(({ clock }) => {
+    if (prefersReducedMotion) return;
     const time = clock.getElapsedTime();
     if (ringRef1.current) {
       ringRef1.current.rotation.x = time * 0.05;
@@ -173,9 +183,10 @@ function OrbitRings({ radius }: { radius: number }) {
 
 interface SceneProps extends Props {
   isHovered: boolean;
+  prefersReducedMotion: boolean;
 }
 
-function GlobeScene({ activeLocation, onSelectMarket, onHoverNode, isHovered }: SceneProps) {
+function GlobeScene({ activeLocation, onSelectMarket, onHoverNode, isHovered, prefersReducedMotion }: SceneProps) {
   const globeRef = useRef<THREE.Group>(null);
   const targetRotation = useRef<THREE.Quaternion | null>(null);
   const radius = 2.2;
@@ -199,9 +210,9 @@ function GlobeScene({ activeLocation, onSelectMarket, onHoverNode, isHovered }: 
         if (globeRef.current.quaternion.angleTo(targetRotation.current) < 0.01) {
           targetRotation.current = null;
         }
-      } else if (!isHovered) {
-        // Continuous auto-rotation (1 rev ~40s = 0.0026 rad/frame at 60fps)
-        globeRef.current.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), 0.0026);
+      } else if (!isHovered && !prefersReducedMotion) {
+        // Continuous auto-rotation (1 rev ~40s), frame-rate independent via delta
+        globeRef.current.rotateOnWorldAxis(WORLD_Y_AXIS, AUTO_ROTATE_RAD_PER_SEC * delta);
       }
     }
   });
@@ -232,13 +243,13 @@ function GlobeScene({ activeLocation, onSelectMarket, onHoverNode, isHovered }: 
       </mesh>
 
       {/* High-tech rotating rings */}
-      <OrbitRings radius={radius} />
-      
+      <OrbitRings radius={radius} prefersReducedMotion={prefersReducedMotion} />
+
       {/* Active node markers */}
       {Object.entries(MARKET_LOCATIONS).map(([name, loc]) => {
         const isActive = activeLocation && activeLocation[0] === loc[0] && activeLocation[1] === loc[1];
         const pos = convertLatLngToVector3(loc[0], loc[1], radius);
-        
+
         return (
           <MarketNode
             key={name}
@@ -247,6 +258,7 @@ function GlobeScene({ activeLocation, onSelectMarket, onHoverNode, isHovered }: 
             isActive={!!isActive}
             onClick={() => onSelectMarket?.(name)}
             onHoverNode={onHoverNode}
+            prefersReducedMotion={prefersReducedMotion}
           />
         );
       })}

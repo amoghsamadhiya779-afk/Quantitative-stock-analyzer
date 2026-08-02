@@ -65,31 +65,47 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
     }
   };
 
+  const REVEAL_DURATION_MS = 1500;
+
   const startProgressiveAnimation = (data: BacktestResult) => {
     setIsAnimating(true);
-    let currentIndex = 0;
     const totalPoints = data.dates.length;
     const fullList = data.dates.map((d, i) => ({
       date: d,
       strategy: data.strategy_equity[i],
       benchmark: data.buy_hold_equity[i]
     }));
-    
+
     // Immediately show first few points to prevent empty chart error
     setVisibleData(fullList.slice(0, 1));
-    
-    const animate = () => {
-      currentIndex += Math.ceil(totalPoints / 100); // 100 frames max for smooth but fast animation
-      if (currentIndex >= totalPoints) {
+
+    // Time-based (not frame-count-based), so the reveal takes the same wall-clock
+    // time regardless of display refresh rate (was fixed-step-per-frame, which
+    // finished 2x faster at 120Hz than at 60Hz).
+    const startTime = performance.now();
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - startTime) / REVEAL_DURATION_MS);
+      if (progress >= 1) {
         setVisibleData(fullList);
         setIsAnimating(false);
         return;
       }
-      setVisibleData(fullList.slice(0, currentIndex));
+      setVisibleData(fullList.slice(0, Math.max(1, Math.ceil(progress * totalPoints))));
       animationRef.current = requestAnimationFrame(animate);
     };
-    
+
     animationRef.current = requestAnimationFrame(animate);
+  };
+
+  const computeWinRate = (data: BacktestResult) => {
+    let wins = 0;
+    let total = 0;
+    for (let i = 1; i < data.strategy_equity.length; i++) {
+      if (data.strategy_equity[i] === data.strategy_equity[i - 1]) continue; // flat/no position day
+      total++;
+      if (data.strategy_equity[i] > data.strategy_equity[i - 1]) wins++;
+    }
+    return total > 0 ? (wins / total) * 100 : 0;
   };
 
   const getMetric = (type: 'return' | 'sharpe' | 'drawdown' | 'winrate') => {
@@ -108,7 +124,7 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
       case 'drawdown':
         return (backtestData.max_drawdown * ratio).toFixed(1) + "%";
       case 'winrate':
-        return Math.min(100, 50 + (ratio * 15)).toFixed(1) + "%"; // Pseudo win rate for display
+        return (computeWinRate(backtestData) * ratio).toFixed(1) + "%";
     }
   };
 
@@ -185,6 +201,9 @@ export default function Backtesting({ selectedMarket, selectedTicker, selectedAl
               <div>
                 <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Cumulative Return Equity Curve</h2>
                 <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Comparing strategy equity simulation against baseline buy-and-hold index.</p>
+                {backtestData?.model_used && (
+                  <p className="font-label-sm text-[10px] text-secondary/80 tracking-widest mt-1">Engine: {backtestData.model_used}</p>
+                )}
               </div>
 
               <div className="flex items-center gap-3 font-label-sm text-[10px] font-mono">

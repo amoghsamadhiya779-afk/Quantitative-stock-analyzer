@@ -1,9 +1,6 @@
 import { motion } from "framer-motion";
-import { useCursor } from "../providers/CursorProvider";
 
 export default function QuantResearchScore({ score = 75 }: { score?: number }) {
-  const { setCursorType } = useCursor();
-
   // SVG Donut chart for score
   const radius = 30;
   const circumference = 2 * Math.PI * radius;
@@ -14,11 +11,7 @@ export default function QuantResearchScore({ score = 75 }: { score?: number }) {
   if (score < 40) color = "var(--loss)";
 
   return (
-    <div 
-      className="flex items-center gap-4 p-5 glass-card relative overflow-hidden group"
-      onMouseEnter={() => setCursorType("hover-card")}
-      onMouseLeave={() => setCursorType("default")}
-    >
+    <div className="flex items-center gap-4 p-5 glass-card relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
       <div className="relative w-[70px] h-[70px] flex items-center justify-center">
         <svg className="w-full h-full transform -rotate-90">

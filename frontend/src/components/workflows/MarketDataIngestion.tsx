@@ -80,8 +80,14 @@ export default function MarketDataIngestion() {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    const el = logContainerRef.current;
+    if (!el) return;
+    // Only auto-follow if the user is already near the bottom - avoids yanking
+    // the view away from someone scrolled up to read history, and skips the
+    // scrollTop write (and the layout it forces) once they've scrolled away.
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [logs]);
 
@@ -156,7 +162,7 @@ export default function MarketDataIngestion() {
             </div>
           ) : (
             logs.map((log, index) => (
-              <div key={index} className="flex items-start gap-4 hover:bg-surface-variant py-1 px-2 rounded transition-colors duration-150 transform-gpu">
+              <div key={index} className="flex items-start gap-4 hover:bg-surface-variant py-1 px-2 rounded transition-colors duration-150">
                 <span className="text-secondary/70 select-none">{log.timestamp}</span>
                 <span className={`font-semibold shrink-0 select-none ${getLevelColor(log.level)}`}>[{log.level}]</span>
                 <span className="text-outline shrink-0 select-none">{log.source}:</span>

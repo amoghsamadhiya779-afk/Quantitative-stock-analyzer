@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
-// Global cache for ticker data
-const globalPriceStore: Record<string, { price: number; change: number; pct_change: number }> = {
+type PriceEntry = { price: number; change: number; pct_change: number };
+
+const INITIAL_PRICES: Record<string, PriceEntry> = {
   AAPL: { price: 184.20, change: 2.2, pct_change: 1.2 },
   MSFT: { price: 402.10, change: -1.5, pct_change: -0.4 },
   NVDA: { price: 890.50, change: 15.2, pct_change: 1.7 },
@@ -13,66 +14,57 @@ const globalPriceStore: Record<string, { price: number; change: number; pct_chan
   GOOGL: { price: 138.20, change: 0.5, pct_change: 0.4 },
 };
 
-// Subscribers list to trigger re-renders
-const subscribers: Set<() => void> = new Set();
+// A fresh snapshot object is published once per tick (not once per render), so
+// useSyncExternalStore's Object.is comparison correctly detects real updates while
+// renders that happen between ticks all see the same stable reference (no forced re-renders).
+let snapshot: Record<string, PriceEntry> = INITIAL_PRICES;
 
-const notifySubscribers = () => {
-  subscribers.forEach((callback) => callback());
-};
+const subscribers = new Set<() => void>();
+const notify = () => subscribers.forEach((callback) => callback());
 
-// Simulate live price ticks every 2 seconds
+function subscribe(callback: () => void) {
+  subscribers.add(callback);
+  return () => {
+    subscribers.delete(callback);
+  };
+}
+
+function getSnapshot() {
+  return snapshot;
+}
+
+function ensureTicker(symbol: string) {
+  if (snapshot[symbol]) return;
+  snapshot = { ...snapshot, [symbol]: { price: 100 + Math.random() * 100, change: 0, pct_change: 0 } };
+  notify();
+}
+
+function tick() {
+  // Paused while the tab is backgrounded - no point re-rendering hidden components every 2s.
+  if (document.hidden) return;
+
+  const next: Record<string, PriceEntry> = {};
+  for (const ticker of Object.keys(snapshot)) {
+    const data = snapshot[ticker];
+    const move = (Math.random() - 0.5) * 0.5; // +/- 0.25 max move
+    const price = data.price + move;
+    const change = data.change + move;
+    next[ticker] = { price, change, pct_change: (change / (price - change)) * 100 };
+  }
+  snapshot = next;
+  notify();
+}
+
 if (typeof window !== "undefined") {
-  setInterval(() => {
-    Object.keys(globalPriceStore).forEach((ticker) => {
-      const data = globalPriceStore[ticker];
-      const move = (Math.random() - 0.5) * 0.5; // +/- 0.25 max move
-      data.price += move;
-      data.change += move;
-      data.pct_change = (data.change / (data.price - data.change)) * 100;
-    });
-    notifySubscribers();
-  }, 2000);
+  setInterval(tick, 2000);
 }
 
 export function usePriceFeed(symbol: string) {
-  const [data, setData] = useState(globalPriceStore[symbol] || { price: 100, change: 0, pct_change: 0 });
-
-  useEffect(() => {
-    // If symbol isn't in store yet, initialize it
-    if (!globalPriceStore[symbol]) {
-      globalPriceStore[symbol] = { price: 100 + Math.random() * 100, change: 0, pct_change: 0 };
-      setData(globalPriceStore[symbol]);
-    }
-
-    const handler = () => {
-      if (globalPriceStore[symbol]) {
-        // Create new object reference to trigger re-render
-        setData({ ...globalPriceStore[symbol] });
-      }
-    };
-
-    subscribers.add(handler);
-    return () => {
-      subscribers.delete(handler);
-    };
-  }, [symbol]);
-
-  return data;
+  useEffect(() => ensureTicker(symbol), [symbol]);
+  const all = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return all[symbol] || { price: 100, change: 0, pct_change: 0 };
 }
 
 export function useAllPrices() {
-  const [data, setData] = useState({ ...globalPriceStore });
-
-  useEffect(() => {
-    const handler = () => {
-      setData({ ...globalPriceStore });
-    };
-
-    subscribers.add(handler);
-    return () => {
-      subscribers.delete(handler);
-    };
-  }, []);
-
-  return data;
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

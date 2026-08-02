@@ -1,17 +1,10 @@
 import { motion } from "framer-motion";
-import { useCursor } from "../providers/CursorProvider";
 
 export default function ResearchSnapshotCard({ data, currency }: any) {
-  const { setCursorType } = useCursor();
-
   if (!data) return null;
 
   return (
-    <div 
-      className="p-5 glass-card relative overflow-hidden group"
-      onMouseEnter={() => setCursorType("hover-card")}
-      onMouseLeave={() => setCursorType("default")}
-    >
+    <div className="p-5 glass-card relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none" />
       
       <div className="flex justify-between items-center mb-6 relative z-10">
@@ -19,7 +12,7 @@ export default function ResearchSnapshotCard({ data, currency }: any) {
         <span className="text-[10px] font-mono bg-[var(--foreground)]/10 px-2 py-1 rounded text-[var(--foreground)]/60">LIVE</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 relative z-10" onMouseEnter={(e) => { e.stopPropagation(); setCursorType("hover-data"); }} onMouseLeave={(e) => { e.stopPropagation(); setCursorType("hover-card"); }}>
+      <div className="grid grid-cols-2 gap-4 relative z-10">
         <div>
           <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--foreground)]/50">Current Price</div>
           <div className="font-mono text-xl font-bold">{data.latest_close.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs text-[var(--foreground)]/40">{currency}</span></div>
