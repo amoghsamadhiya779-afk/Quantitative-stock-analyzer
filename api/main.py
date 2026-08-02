@@ -387,21 +387,31 @@ def execute_prediction(req: InferenceRequest):
 
                 model_type_resp = f"Neural Network ({req.model_type})"
                 
-                # Dynamic Confidence Calculation based on Signal-to-Noise Ratio (SNR)
-                # We use the prediction delta against rolling volatility.
-                delta_abs = abs(predicted_price - latest_close)
-                # Fallback to simple standard deviation if Volatility_20 or GK_Vol is missing
-                vol = df['Volatility_20'].iloc[-1] if 'Volatility_20' in df.columns else (latest_close * 0.02)
-                
-                # Signal strength is ratio of expected move vs daily noise
-                signal_to_noise = delta_abs / (vol + 1e-9)
-                
-                # Map SNR to a 75-99% confidence interval using a sigmoid curve
-                base_conf = 75.0
-                max_conf = 99.5
+                # Dynamic Confidence Calculation based on Signal-to-Noise Ratio (SNR).
+                # Both terms MUST be in the same units. Previously this compared
+                # abs(predicted_price - latest_close) - a price delta in currency units -
+                # against Volatility_20, which is the rolling std of LOG RETURNS (a
+                # fraction). That made SNR scale with the share price rather than with
+                # prediction quality, so any high-priced ticker pinned confidence at the
+                # ceiling (META: a +0.03% forecast reported 99.2% confidence).
+                # The predicted log return is already the move expressed as a fraction.
+                move_frac = abs(pred_log_return)
+                vol = df['Volatility_20'].iloc[-1] if 'Volatility_20' in df.columns else 0.02
+                if not np.isfinite(vol) or vol <= 0:
+                    vol = 0.02
+
+                # "How many daily standard deviations is this forecast?"
+                signal_to_noise = move_frac / (vol + 1e-9)
+
+                # Map SNR onto a deliberately modest band. Walk-forward validation puts
+                # this model's out-of-sample directional accuracy around 51-52%, so a
+                # 75-99.5% band (the previous range) would materially overstate it. The
+                # floor is a coin flip because that is the honest worst case.
+                base_conf = 50.0
+                max_conf = 80.0
                 sigmoid = 1 / (1 + np.exp(-signal_to_noise)) # Range 0.5 to 1.0
                 scaled_sigmoid = (sigmoid - 0.5) * 2.0 # Range 0.0 to 1.0
-                
+
                 conf = float(np.clip(base_conf + (scaled_sigmoid * (max_conf - base_conf)), base_conf, max_conf))
                 
             except Exception as e:
