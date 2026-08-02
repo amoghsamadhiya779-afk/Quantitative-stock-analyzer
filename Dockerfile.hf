@@ -15,10 +15,13 @@ COPY --chown=user requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Copy backend specific files
+# Copy backend specific files. data/ is intentionally NOT copied - it's gitignored
+# (26 years of raw CSV history, too large to ship in the image) and the app already
+# falls back to a live yfinance fetch when data/raw/<file>.csv isn't present
+# (get_market_data's Fallback 2). A COPY of a path that doesn't exist in the build
+# context fails the build outright, which is what broke this Space previously.
 COPY --chown=user api/ ./api/
 COPY --chown=user src/ ./src/
-COPY --chown=user data/ ./data/
 COPY --chown=user mlops_artifacts/ ./mlops_artifacts/
 
 # Hugging Face Spaces expose port 7860 by default
