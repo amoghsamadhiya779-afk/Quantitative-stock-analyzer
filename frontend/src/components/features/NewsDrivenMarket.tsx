@@ -193,7 +193,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
         <div className="lg:col-span-5 p-stack-md rounded border border-outline-variant/30 bg-[#08080a] flex flex-col items-center justify-between overflow-hidden relative shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-shadow">
           <div className="absolute top-5 left-5 z-10">
             <h3 className="font-label-sm text-[10px] tracking-widest text-outline uppercase mb-1 font-bold">Interactive Macro Globe</h3>
-            <div className="flex items-center gap-2 font-label-sm text-[9px] font-mono text-[var(--profit)] font-bold">
+            <div className="flex items-center gap-2 font-label-sm text-[10px] font-mono text-[var(--profit)] font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--profit)] animate-ping" />
               ACTIVE: {activeMarket.toUpperCase()}
             </div>

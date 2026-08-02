@@ -158,7 +158,7 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                 </motion.h3>
               </div>
               <div className="shrink-0 flex flex-col items-end gap-1.5">
-                <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border sentiment-crossfade" style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}30`, color: item.color }}>
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border sentiment-crossfade" style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}30`, color: item.color }}>
                   {isBullish && <TrendingUp className="w-2.5 h-2.5" />}
                   {isBearish && <TrendingDown className="w-2.5 h-2.5" />}
                   {!isBullish && !isBearish && <Minus className="w-2.5 h-2.5" />}
@@ -166,7 +166,7 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                 </span>
                 <motion.button
                   layoutId={`button-${item.title}-${id}`}
-                  className="opacity-0 group-hover:opacity-100 px-3 py-1 text-[9px] uppercase tracking-widest rounded-full font-bold bg-[var(--accent)] text-white transition-all mt-2 press-feedback"
+                  className="opacity-0 group-hover:opacity-100 px-3 py-1 text-[10px] uppercase tracking-widest rounded-full font-bold bg-[var(--accent)] text-white transition-all mt-2 press-feedback"
                 >
                   Analyze
                 </motion.button>

@@ -52,8 +52,8 @@ export default function CommoditiesBar() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">{c.symbol}</span>
-              <span className={`text-[9px] font-bold ${c.change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}`}>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/50">{c.symbol}</span>
+              <span className={`text-[11px] font-bold ${c.change >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"}`}>
                 {c.change >= 0 ? "▲" : "▼"} {Math.abs(c.change).toFixed(2)}%
               </span>
             </div>

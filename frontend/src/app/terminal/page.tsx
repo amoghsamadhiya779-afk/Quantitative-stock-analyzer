@@ -243,7 +243,7 @@ export default function TerminalPage() {
                 <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-secondary"} live-indicator`} />
                 <span className="font-label-sm text-[10px] tracking-wider uppercase text-outline">{loading ? "Syncing..." : "Online"}</span>
               </div>
-              <a href="/" className="px-stack-sm py-1.5 font-label-sm text-[10px] uppercase tracking-[0.15em] text-outline hover:text-on-surface transition-colors border border-outline-variant/30 rounded hover:bg-surface-variant">
+              <a href="/" className="min-h-[44px] px-stack-sm flex items-center font-label-sm text-[10px] uppercase tracking-[0.15em] text-outline hover:text-on-surface transition-colors border border-outline-variant/30 rounded hover:bg-surface-variant">
                 Exit Terminal
               </a>
             </nav>

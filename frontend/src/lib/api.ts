@@ -162,28 +162,61 @@ export async function fetchCorrelationMatrix(marketName: string): Promise<Correl
   }
 }
 
+// Local files for tickers we ship a bundled asset for.
+const LOCAL_LOGO_TICKERS: Record<string, string> = {
+  aapl: 'aapl_logo', msft: 'msft_logo', amzn: 'amzn_logo', nvda: 'nvda_logo', meta: 'meta_logo',
+  reliance: 'reliance_logo', tcs: 'tcs_logo', hdfcbank: 'hdfc_logo', infy: 'infy_logo',
+  sbi: 'sbin_logo', sbin: 'sbin_logo', bhartiartl: 'airtel_logo',
+};
+
+// Clearbit's Logo API serves each company's actual logo from their real domain - we never
+// generate or store a copy of the artwork ourselves, only tell Clearbit which domain to
+// look up. Its default guess is `{ticker}.com`, which only works for a handful of US
+// names; every other market's ticker doesn't map to a domain by simple concatenation, so
+// without this table those requests 404 and fall through to the generic placeholder.
+// Domains below are each company's own public corporate site.
+const CLEARBIT_DOMAIN_OVERRIDES: Record<string, string> = {
+  // US
+  googl: 'google.com', 'brk-b': 'berkshirehathaway.com', jpm: 'jpmorganchase.com', v: 'visa.com',
+  // India (NIFTY 50)
+  icicibank: 'icicibank.com', hindunilvr: 'hul.co.in', itc: 'itcportal.com',
+  bhartiartl: 'airtel.in', ltim: 'ltimindtree.com',
+  // Japan (Nikkei 225)
+  '7203': 'toyota.com', '6758': 'sony.com', '9984': 'softbank.jp', '6861': 'keyence.com',
+  '8035': 'tel.com', '6501': 'hitachi.com', '4502': 'takeda.com', '6098': 'recruit-holdings.com',
+  '9432': 'ntt.com', '4063': 'shinetsu.co.jp',
+  // UK (FTSE 100)
+  shel: 'shell.com', azn: 'astrazeneca.com', hsba: 'hsbc.com', ulvr: 'unilever.com',
+  gsk: 'gsk.com', dge: 'diageo.com', bats: 'bat.com', rio: 'riotinto.com', lloy: 'lloydsbankinggroup.com',
+  // Germany (DAX 40)
+  sie: 'siemens.com', alv: 'allianz.com', dte: 'telekom.com', bas: 'basf.com', bayn: 'bayer.com',
+  mbg: 'mercedes-benz.com', vow3: 'volkswagen.com', dpw: 'dpdhl.com',
+  // Turkey (BIST 100)
+  thyao: 'turkishairlines.com', eregl: 'erdemir.com.tr', asels: 'aselsan.com.tr',
+  tuprs: 'tupras.com.tr', akbnk: 'akbank.com', garan: 'garantibbva.com.tr',
+  kchol: 'koc.com.tr', sahol: 'sabanci.com', ykbnk: 'yapikredi.com.tr', bimas: 'bim.com.tr',
+  // Brazil (Bovespa)
+  vale3: 'vale.com', petr4: 'petrobras.com.br', itub4: 'itau.com.br', bbdc4: 'banco.bradesco',
+  abev3: 'ambev.com.br', bbas3: 'bb.com.br', b3sa3: 'b3.com.br', wege3: 'weg.net',
+  itsas: 'itausa.com.br', ggbr4: 'gerdau.com',
+  // Indonesia (IDX)
+  bbca: 'bca.co.id', bbri: 'bri.co.id', bmri: 'bankmandiri.co.id', tlkm: 'telkom.co.id',
+  byan: 'bayanresources.com', asii: 'astra.co.id', tpia: 'chandra-asri.com',
+  bbni: 'bni.co.id', unvr: 'unilever.co.id', goto: 'gotocompany.com',
+};
+
 export function getLogoUrl(ticker: string): string {
   const clean = ticker.split('.')[0].replace('^', '').toLowerCase();
 
   // Served locally from public/assets - Vercel ships these as static files, so this
   // avoids an external network round trip (previously streamed from GitHub's LFS media
   // server on every logo render, uncached and unoptimized).
-  if (clean === 'aapl') return '/assets/aapl_logo.png';
-  if (clean === 'msft') return '/assets/msft_logo.png';
-  if (clean === 'amzn') return '/assets/amzn_logo.png';
-  if (clean === 'nvda') return '/assets/nvda_logo.png';
-  if (clean === 'meta') return '/assets/meta_logo.png';
-  if (clean === 'reliance') return '/assets/reliance_logo.png';
+  if (LOCAL_LOGO_TICKERS[clean]) return `/assets/${LOCAL_LOGO_TICKERS[clean]}.png`;
 
-  // Indian Market Leaders
-  if (clean === 'tcs') return '/assets/tcs_logo.png';
-  if (clean === 'hdfcbank') return '/assets/hdfc_logo.png';
-  if (clean === 'infy') return '/assets/infy_logo.png';
-  if (clean === 'sbin') return '/assets/sbin_logo.png';
-  if (clean === 'bhartiartl') return '/assets/airtel_logo.png';
-
-  // Try Clearbit, but if it 404s, the frontend onError will catch it and call getFallbackLogo
-  return `https://logo.clearbit.com/${clean}.com`;
+  // Clearbit serves the real logo from the real company domain; if it 404s the
+  // frontend's onError handler catches it and calls getFallbackLogo.
+  const domain = CLEARBIT_DOMAIN_OVERRIDES[clean] || `${clean}.com`;
+  return `https://logo.clearbit.com/${domain}`;
 }
 
 export function getFallbackLogo(ticker: string): string {

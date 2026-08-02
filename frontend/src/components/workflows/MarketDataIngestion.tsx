@@ -138,13 +138,15 @@ export default function MarketDataIngestion() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="p-2 rounded bg-surface-variant hover:bg-surface-container-highest text-on-surface transition-all duration-200"
+              aria-label={isPlaying ? "Pause simulated feed" : "Resume simulated feed"}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-surface-variant hover:bg-surface-container-highest text-on-surface transition-all duration-200"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setLogs([])}
-              className="p-2 rounded bg-surface-variant hover:bg-surface-container-highest text-on-surface transition-all duration-200"
+              aria-label="Clear log"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-surface-variant hover:bg-surface-container-highest text-on-surface transition-all duration-200"
             >
               <Trash2 className="w-4 h-4" />
             </button>

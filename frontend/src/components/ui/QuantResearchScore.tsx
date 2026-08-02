@@ -36,7 +36,7 @@ export default function QuantResearchScore({ score = 75 }: { score?: number }) {
       </div>
       <div>
         <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--foreground)]">Quant Score</div>
-        <div className="text-[9px] text-[var(--foreground)]/50 mt-1 w-32 leading-relaxed">
+        <div className="text-[10px] text-[var(--foreground)]/50 mt-1 w-32 leading-relaxed">
           Composite technical strength and alpha probability.
         </div>
       </div>

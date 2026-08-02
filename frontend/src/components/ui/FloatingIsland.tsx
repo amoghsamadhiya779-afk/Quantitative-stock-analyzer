@@ -52,7 +52,9 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, onTab
                     <button
                       key={item.id}
                       onClick={() => handleSelect(item.id)}
-                      className={`p-2.5 rounded-full transition-colors ${
+                      aria-label={item.label}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors ${
                         isActive ? 'bg-secondary/20 text-secondary' : 'text-on-surface hover:bg-surface-variant'
                       }`}
                     >
@@ -62,9 +64,10 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, onTab
                 })}
               </div>
               <div className="w-px h-6 bg-outline-variant/50 mx-1" />
-              <button 
+              <button
                 onClick={() => setExpanded(true)}
-                className="p-2.5 text-on-surface hover:text-secondary transition-colors"
+                aria-label="Expand navigation"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface hover:text-secondary transition-colors"
               >
                 <ChevronUp size={18} />
               </button>
@@ -80,7 +83,11 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, onTab
             >
               <div className="flex justify-between items-center pb-2 border-b border-outline-variant/30">
                 <span className="font-label-sm font-bold uppercase tracking-widest text-outline text-[10px]">Navigation</span>
-                <button onClick={() => setExpanded(false)} className="text-outline hover:text-on-surface">
+                <button
+                  onClick={() => setExpanded(false)}
+                  aria-label="Collapse navigation"
+                  className="min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-center text-outline hover:text-on-surface"
+                >
                   <X size={16} />
                 </button>
               </div>
