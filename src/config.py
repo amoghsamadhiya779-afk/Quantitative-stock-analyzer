@@ -1,5 +1,5 @@
-import os 
-class PiplineConfig:
+import os
+class PipelineConfig:
     """ Enterprise Configuration & Registry
     """
     SEQ_LENGTH = 60
@@ -17,7 +17,7 @@ class PiplineConfig:
     @classmethod 
     def setup_directories(cls):
          for directory in [cls.PLOT_DIR,cls.MODEL_DIR,cls.LOG_DIR]:
-              os.makeddirs(directory,exist_ok=True)
+              os.makedirs(directory,exist_ok=True)
     @classmethod 
     def get_data_path(cls,index_key="SP500"):
          model_path= os.path.join(cls.MODEL_DIR,f"best{index_key}_model.h5")

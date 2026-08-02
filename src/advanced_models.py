@@ -99,10 +99,14 @@ class ModelFactory:
         x = Dropout(dropout)(x)
         
         # Dense Head
-        x = Dense(32, activation='relu')(x)
-        outputs = Dense(1, dtype='float32')(x)
-        
+        x = Dense(32, activation='relu', kernel_regularizer=l2(1e-4))(x)
+        outputs = Dense(1, kernel_regularizer=l2(1e-4), dtype='float32')(x)
+
         model = Model(inputs=inputs, outputs=outputs, name="AdvancedBiLSTM")
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)
-        model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        # Huber instead of raw MSE: the target is now a return series (fat-tailed, with
+        # occasional large single-day moves) rather than a smooth price level, and Huber
+        # is far less sensitive to those outlier days dominating the loss. Matches the
+        # loss already used by the other two architectures.
+        model.compile(optimizer=optimizer, loss=tf.keras.losses.Huber(), metrics=['mae'])
         return model

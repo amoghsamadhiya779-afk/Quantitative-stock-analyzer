@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from optuna.integration import TFKerasPruningCallback
 from sklearn.metrics import root_mean_squared_error
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from src.advanced_models import ModelFactory
 from src.feature_engineering import FeatureEngineering
@@ -19,19 +19,16 @@ if gpus:
     except RuntimeError as e:
         print(e)
 
-# Enable mixed precision for faster training on Tensor Cores
-tf.keras.mixed_precision.set_global_policy('mixed_float16')
+# NOTE: mixed_float16 was previously enabled here and is what produced the
+# 'quantization_config' Keras deserialization failures seen in production (api/main.py's
+# monkey-patch was a hotfix for exactly this). Keep training precision matched to serving.
+# tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
-def calculate_directional_accuracy(y_true, y_pred, y_prev):
-    """
-    Directional Accuracy: Percentage of times the predicted movement direction 
-    matches the actual movement direction.
-    """
-    actual_direction = np.sign(y_true - y_prev)
-    pred_direction = np.sign(y_pred - y_prev)
-    # Ignore flat movements (0) or count them as mismatch
-    matches = (actual_direction == pred_direction)
-    return np.mean(matches)
+def calculate_directional_accuracy(y_true, y_pred):
+    """Directional accuracy on RETURNS: fraction of samples where the predicted return
+    has the same sign as the actual return. (Previously computed against a reference
+    'previous close' price, which made sense only when the target was a price level.)"""
+    return np.mean(np.sign(y_true) == np.sign(y_pred))
 
 def create_sequences(data, target, seq_length):
     xs, ys = [], []
@@ -45,34 +42,39 @@ def load_and_prepare_data(file_path, seq_length):
     df['Dollar_Volume'] = df['Close'] * df['Volume']
     top_ticker = df.groupby('Ticker')['Dollar_Volume'].median().idxmax()
     subset = df[df['Ticker'] == top_ticker].sort_values('Date')
-    
-    subset = FeatureEngineering.engineer_features(subset).dropna()
-    
-    # We need to keep track of unscaled 'Close' for directional accuracy
-    # But for optimization, scaled metrics are also fine.
-    
-    features = [c for c in subset.columns if c not in ['Date', 'Ticker', 'Dollar_Volume']]
-    
+
+    subset = FeatureEngineering.engineer_features(subset)
+
+    # Target = next-bar log return (matches run_pipeline.py's training target), not the
+    # raw price level Close already sits in the feature set as.
+    subset['Target_Return'] = np.log(subset['Close'].shift(-1) / subset['Close'])
+    subset = subset.dropna(subset=['Target_Return'])
+
+    features = [c for c in subset.columns if c not in ['Date', 'Ticker', 'Dollar_Volume', 'Target_Return']]
+
+    # Fit scalers on the TRAIN split only (see below), then transform both splits -
+    # fitting on the full series first leaks the validation period's distribution into training.
+    raw_features = subset[features].values
+    raw_target = subset[['Target_Return']].values
+    split_idx = int(len(raw_features) * 0.8)
+
     feature_scaler = MinMaxScaler()
-    target_scaler = MinMaxScaler()
-    
-    scaled_features = feature_scaler.fit_transform(subset[features].values)
-    scaled_target = target_scaler.fit_transform(subset[['Close']].values)
-    
+    target_scaler = StandardScaler()
+
+    feature_scaler.fit(raw_features[:split_idx])
+    target_scaler.fit(raw_target[:split_idx])
+
+    scaled_features = feature_scaler.transform(raw_features)
+    scaled_target = target_scaler.transform(raw_target)
+
     X, y = create_sequences(scaled_features, scaled_target, seq_length)
-    
-    # Split 80/20
-    split_idx = int(len(X) * 0.8)
-    X_train, X_val = X[:split_idx], X[split_idx:]
-    y_train, y_val = y[:split_idx], y[split_idx:]
-    
-    # To calculate directional accuracy, we need the "previous" close for the validation set
-    # The previous close for y[i] is the last element of X[i] if Close is a feature.
-    # Let's find the index of 'Close'
-    close_idx = features.index('Close')
-    y_prev_val = X_val[:, -1, close_idx] # The close price at the last timestep of the sequence
-    
-    return X_train, y_train, X_val, y_val, y_prev_val, target_scaler, len(features)
+
+    # Re-anchor the split in sequence-space to where the scalers stopped seeing data.
+    seq_split_idx = split_idx - seq_length
+    X_train, X_val = X[:seq_split_idx], X[seq_split_idx:]
+    y_train, y_val = y[:seq_split_idx], y[seq_split_idx:]
+
+    return X_train, y_train, X_val, y_val, target_scaler, len(features)
 
 class Objective:
     def __init__(self, data_path):
@@ -90,7 +92,7 @@ class Objective:
         sequence_length = trial.suggest_int("sequence_length", 30, 180, step=30)
 
         # 2. Prepare Data (with dynamic sequence length)
-        X_train, y_train, X_val, y_val, y_prev_val, target_scaler, num_features = load_and_prepare_data(self.data_path, sequence_length)
+        X_train, y_train, X_val, y_val, target_scaler, num_features = load_and_prepare_data(self.data_path, sequence_length)
 
         # 3. Build Model
         input_shape = (sequence_length, num_features)
@@ -106,9 +108,10 @@ class Objective:
 
         # 4. Callbacks
         log_dir = f"mlops_artifacts/logs/optuna/trial_{trial.number}"
+        os.makedirs(log_dir, exist_ok=True)
         callbacks = [
-            tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
-            tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=1e-6),
+            tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True),
+            tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, min_lr=1e-6),
             TFKerasPruningCallback(trial, "val_loss"),
             tf.keras.callbacks.TensorBoard(log_dir=log_dir),
             tf.keras.callbacks.CSVLogger(f"{log_dir}/history.csv")
@@ -118,7 +121,7 @@ class Objective:
         model.fit(
             X_train, y_train,
             validation_data=(X_val, y_val),
-            epochs=5, # Capped for tuning speed
+            epochs=50,
             batch_size=batch_size,
             callbacks=callbacks,
             verbose=0
@@ -127,43 +130,47 @@ class Objective:
         # 6. Evaluate
         y_pred_scaled = model.predict(X_val, verbose=0).flatten()
         y_val_scaled = y_val.flatten()
-        
-        # Calculate RMSE on scaled data as secondary
+
         rmse = root_mean_squared_error(y_val_scaled, y_pred_scaled)
 
-        # Calculate Directional Accuracy
-        # y_prev_val is already scaled, which is fine since sign(a-b) == sign(scale(a)-scale(b)) for MinMax
-        da = calculate_directional_accuracy(y_val_scaled, y_pred_scaled, y_prev_val)
+        # Directional accuracy directly on the (scaled) returns - sign is invariant to
+        # StandardScaler's positive linear transform, so no need to inverse-transform first.
+        da = calculate_directional_accuracy(y_val_scaled, y_pred_scaled)
 
         # Optuna supports multi-objective optimization
         return da, rmse
 
-def run_optimization(study_name="cnn_bilstm_attention_study", n_trials=50):
-    data_slice = os.path.join("data", "raw", "Bovespa_Brazil.csv") # Use smaller dataset for fast tuning
-    data_path = data_slice
-    
-    # Use SQLite for parallel trial support
+def run_optimization(index_key="DAX40", filename="DAX40_Germany.csv", study_name=None, n_trials=40):
+    data_path = os.path.join("data", "raw", filename)
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(
+            f"{data_path} not found. Pass index_key/filename matching a file that actually "
+            f"exists in data/raw (see MARKET_REGISTRY in run_pipeline.py)."
+        )
+    study_name = study_name or f"cnn_bilstm_attention_{index_key.lower()}"
+
+    # Use SQLite for parallel trial support and to persist results across runs/restarts.
     os.makedirs("mlops_artifacts/optuna", exist_ok=True)
     storage = f"sqlite:///mlops_artifacts/optuna/{study_name}.db"
-    
-    # Multi-objective: Maximize DA, Minimize RMSE
+
+    # Multi-objective: Maximize directional accuracy, Minimize RMSE
     study = optuna.create_study(
         study_name=study_name,
         storage=storage,
         directions=["maximize", "minimize"],
         load_if_exists=True
     )
-    
+
     objective = Objective(data_path)
     study.optimize(objective, n_trials=n_trials, gc_after_trial=True)
-    
+
     print("\nOptimization Finished.")
     print("Number of finished trials: ", len(study.trials))
-    
+
     # Get Pareto front (best trade-offs between DA and RMSE)
     best_trials = study.best_trials
     print(f"\nFound {len(best_trials)} optimal models on the Pareto front.")
-    
+
     for i, trial in enumerate(best_trials):
         print(f"\nBest Trial #{i}")
         print(f"  Directional Accuracy: {trial.values[0]:.4f}")
@@ -172,5 +179,7 @@ def run_optimization(study_name="cnn_bilstm_attention_study", n_trials=50):
         for key, value in trial.params.items():
             print(f"    {key}: {value}")
 
+    return study
+
 if __name__ == "__main__":
-    run_optimization(n_trials=2) # Defaulting to 2 for test run
+    run_optimization(index_key="DAX40", filename="DAX40_Germany.csv", n_trials=40)

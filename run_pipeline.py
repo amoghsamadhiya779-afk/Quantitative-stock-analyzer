@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import warnings
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import tensorflow as tf
 
 warnings.filterwarnings('ignore')
@@ -61,30 +61,48 @@ def train_market(index_key, filename):
     
     # 2. Engineer Features
     subset = df[df['Ticker'] == top_ticker].sort_values('Date')
-    subset = FeatureEngineering.engineer_features(subset).dropna()
-    
+    subset = FeatureEngineering.engineer_features(subset)
+
+    # Target = next-bar LOG RETURN, not the raw next-bar price level. Close stays a
+    # valid input feature (today's price), but predicting tomorrow's price level while
+    # Close is already in the feature set trains the model to trivially copy yesterday's
+    # close (near-zero loss, zero directional signal) instead of learning anything real.
+    subset['Target_Return'] = np.log(subset['Close'].shift(-1) / subset['Close'])
+    subset = subset.dropna(subset=['Target_Return'])
+
     if len(subset) < 200:
         print(f"[SKIPPED] Not enough historical data for {index_key}.")
         return
 
     # Filter out non-numeric cols
-    features = [c for c in subset.columns if c not in ['Date', 'Ticker', 'Dollar_Volume']]
+    features = [c for c in subset.columns if c not in ['Date', 'Ticker', 'Dollar_Volume', 'Target_Return']]
 
-    # 3. Scale Features
+    # 3. Scale Features - fit scalers on the TRAIN split only, then transform both splits.
+    # Fitting on the full (train+test) series before splitting leaks the test period's
+    # distribution (e.g. the test-period all-time-high) into training.
     print(f"[INFO] Scaling {len(features)} Tensors...")
+    raw_features = subset[features].values
+    raw_target = subset[['Target_Return']].values
+    split_idx = int(len(raw_features) * 0.8)
+
     feature_scaler = MinMaxScaler()
-    target_scaler = MinMaxScaler()
-    
-    scaled_features = feature_scaler.fit_transform(subset[features].values)
-    scaled_target = target_scaler.fit_transform(subset[['Close']].values)
-    
+    target_scaler = StandardScaler()  # returns are ~zero-centered; min/max is fragile to outlier days
+
+    feature_scaler.fit(raw_features[:split_idx])
+    target_scaler.fit(raw_target[:split_idx])
+
+    scaled_features = feature_scaler.transform(raw_features)
+    scaled_target = target_scaler.transform(raw_target)
+
     # 4. Prepare Sequences
     X, y = create_sequences(scaled_features, scaled_target, SEQ_LENGTH)
-    
-    split_idx = int(len(X) * 0.8)
-    X_train, X_test = X[:split_idx], X[split_idx:]
-    y_train, y_test = y[:split_idx], y[split_idx:]
-    
+
+    # create_sequences shortens the array by SEQ_LENGTH, so re-anchor the split in
+    # sequence-space to the same point in time the scalers were fit up to (zero leakage).
+    seq_split_idx = split_idx - SEQ_LENGTH
+    X_train, X_test = X[:seq_split_idx], X[seq_split_idx:]
+    y_train, y_test = y[:seq_split_idx], y[seq_split_idx:]
+
     input_shape = (SEQ_LENGTH, len(features))
     
     # Define models to train
@@ -94,9 +112,12 @@ def train_market(index_key, filename):
         "AdvancedBiLSTM": ModelFactory.build_advanced_bilstm(input_shape)
     }
 
-    # Save scaler (shared across models)
+    # Save scalers (shared across models)
     scaler_save_path = os.path.join(MODEL_DIR, f"{index_key}_feature_scaler.pkl")
     joblib.dump(feature_scaler, scaler_save_path)
+    # Target scaler is required at inference to invert a predicted return back to a price -
+    # previously computed but never persisted, so serving reused the feature scaler instead.
+    joblib.dump(target_scaler, os.path.join(MODEL_DIR, f"{index_key}_target_scaler.pkl"))
     # Also save the features list for inference mapping
     joblib.dump(features, os.path.join(MODEL_DIR, f"{index_key}_features_list.pkl"))
 

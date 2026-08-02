@@ -108,6 +108,9 @@ class FeatureEngineering:
         long_term_vol = df['Daily_Return'].rolling(window=200).std()
         df['Rolling_Beta'] = df['Volatility_20'] / (long_term_vol + 1e-9)
 
-        # Cleanup
-        df = df.bfill().fillna(0)
+        # Cleanup. NOTE: intentionally fillna(0) only, no bfill() - bfill would
+        # back-propagate future values through the indicator warmup window (e.g. the
+        # first 200 rows before MA_200/EMA_200/Rolling_Beta have enough history),
+        # leaking information from later rows into earlier training samples.
+        df = df.fillna(0)
         return df

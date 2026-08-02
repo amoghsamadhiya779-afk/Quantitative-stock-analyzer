@@ -1,6 +1,7 @@
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
@@ -9,6 +10,10 @@ import joblib
 import warnings
 import sqlite3
 import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from cachetools import TTLCache
 import yfinance as yf
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import logging
@@ -29,12 +34,13 @@ def patched_dense_init(self, *args, **kwargs):
     original_dense_init(self, *args, **kwargs)
 tf.keras.layers.Dense.__init__ = patched_dense_init
 # ----------------------------------------------------------------------
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import uvicorn
 
 # Append root directory to sys.path to resolve 'src' imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.feature_engineering import FeatureEngineering
+from src.strategy import build_signals, apply_costs
 
 # Configure Enterprise Logging for visibility
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - API ENGINE - %(levelname)s - %(message)s')
@@ -102,6 +108,7 @@ def get_model_paths(index_key, model_type="CNN_BiLSTM_Attention"):
     model_path = os.path.join(MODEL_DIR, f"{index_key}_{model_type}.keras")
     scaler_path = os.path.join(MODEL_DIR, f"{index_key}_feature_scaler.pkl")
     features_path = os.path.join(MODEL_DIR, f"{index_key}_features_list.pkl")
+    target_scaler_path = os.path.join(MODEL_DIR, f"{index_key}_target_scaler.pkl")
     
     # Fallback to old naming
     if not os.path.exists(model_path):
@@ -114,7 +121,7 @@ def get_model_paths(index_key, model_type="CNN_BiLSTM_Attention"):
         if os.path.exists(alt_scaler_path):
             scaler_path = alt_scaler_path
             
-    return model_path, scaler_path, features_path
+    return model_path, scaler_path, features_path, target_scaler_path
 
 app = FastAPI(title="Nexus Quant Research & Portfolio Analytics Engine", version="6.0.0", description="SQL-Backed Institutional quantitative engine with MLOps logging and Factor Analytics.")
 
@@ -124,7 +131,7 @@ def parse_cors_origins(raw_origins: str) -> list[str]:
 frontend_origins = parse_cors_origins(
     os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 )
-frontend_origin_regex = os.getenv("FRONTEND_ORIGIN_REGEX", r"https://.*\.vercel\.app")
+frontend_origin_regex = os.getenv("FRONTEND_ORIGIN_REGEX", r"^https://[\w-]+\.vercel\.app$")
 
 app.add_middleware(
     CORSMiddleware,
@@ -134,8 +141,78 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Must be added after CORS so CORS headers still apply to compressed/error responses.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 nlp_analyzer = SentimentIntensityAnalyzer()
 MODEL_CACHE = {}
+MODEL_CACHE_LOCK = threading.Lock()
+MODEL_LOAD_RETRY_COOLDOWN_SEC = 300  # don't retry a failed model load more than once per 5 min
+
+# Backtest strategy parameters.
+# DEADBAND: minimum predicted next-bar log return (~0.1%) before taking a position, so the
+# strategy ignores forecasts inside the noise floor instead of churning every bar.
+# COST_BPS: per-unit-of-notional-traded cost in basis points. Set to 0 to reproduce a
+# frictionless backtest; 5bps is a realistic retail-ish round-trip assumption per side.
+BACKTEST_DEADBAND = float(os.getenv("BACKTEST_DEADBAND", "0.001"))
+BACKTEST_COST_BPS = float(os.getenv("BACKTEST_COST_BPS", "5.0"))
+
+def get_cached_model(idx_key: str, model_type: str):
+    """Thread-safe cached model load. A failed load is remembered for
+    MODEL_LOAD_RETRY_COOLDOWN_SEC instead of being retried (and refailing) on every
+    single request, and concurrent first-hits for the same key are serialized so two
+    requests never load the same multi-MB Keras model into memory at once."""
+    cache_key = f"{idx_key}_{model_type}"
+    with MODEL_CACHE_LOCK:
+        entry = MODEL_CACHE.get(cache_key)
+        if entry is not None:
+            if entry.get("status") == "failed":
+                if time.time() - entry["ts"] < MODEL_LOAD_RETRY_COOLDOWN_SEC:
+                    return None
+                # cooldown elapsed - fall through and retry the load
+            else:
+                return entry
+
+        model_path, scaler_path, features_path, target_scaler_path = get_model_paths(idx_key, model_type)
+        if os.path.exists(model_path) and os.path.exists(scaler_path):
+            try:
+                logger.info(f"Mounting {model_type} Model for {idx_key} from {model_path}...")
+                if os.path.exists(features_path):
+                    feature_list = joblib.load(features_path)
+                else:
+                    feature_list = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
+
+                # Models now predict a standardized next-bar LOG RETURN, so a StandardScaler
+                # target scaler is required to invert predictions back into a price.
+                # Stale MinMaxScaler target scalers from the old price-level pipeline still
+                # exist on disk, so check the type - not just the path - before trusting it.
+                target_scaler = joblib.load(target_scaler_path) if os.path.exists(target_scaler_path) else None
+                if not isinstance(target_scaler, StandardScaler):
+                    logger.warning(
+                        f"⚠️ {cache_key} has no log-return target scaler (found "
+                        f"{type(target_scaler).__name__}). This artifact predates the return-target "
+                        f"retrain; refusing to serve it. Retrain via run_pipeline.py."
+                    )
+                    MODEL_CACHE[cache_key] = {"status": "failed", "ts": time.time()}
+                    return None
+
+                loaded = {
+                    "model": load_model(model_path, compile=False),
+                    "scaler": joblib.load(scaler_path),
+                    "target_scaler": target_scaler,
+                    "features": feature_list,
+                }
+                MODEL_CACHE[cache_key] = loaded
+                logger.info(f"✅ Architecture successfully mounted for {cache_key}.")
+                return loaded
+            except Exception as e:
+                logger.error(f"❌ Failed to load Neural Network artifacts for {cache_key}: {e}")
+                MODEL_CACHE[cache_key] = {"status": "failed", "ts": time.time()}
+                return None
+        else:
+            logger.warning(f"⚠️ Artifacts missing for {cache_key}. Expected: {model_path}")
+            MODEL_CACHE[cache_key] = {"status": "failed", "ts": time.time()}
+            return None
 
 # --- NEW PYDANTIC MODELS ---
 class InferenceRequest(BaseModel):
@@ -181,10 +258,30 @@ class MonteCarloResponse(BaseModel):
     lower_path: list
 # ---------------------------
 
+MARKET_DATA_CACHE = TTLCache(maxsize=256, ttl=300)  # 5 min: collapses the CSV/yfinance/feature-engineering hot path
+MARKET_DATA_CACHE_LOCK = threading.Lock()
+
 def get_market_data(market_name: str, ticker: str):
+    """Cached wrapper around _fetch_market_data. Returns a copy so callers are free to
+    mutate the frame (e.g. adding an 'Adj Close' column) without corrupting the shared cache
+    entry for concurrent requests."""
+    cache_key = (market_name, ticker)
+    with MARKET_DATA_CACHE_LOCK:
+        cached = MARKET_DATA_CACHE.get(cache_key)
+    if cached is not None:
+        return cached.copy()
+
+    df = _fetch_market_data(market_name, ticker)
+
+    with MARKET_DATA_CACHE_LOCK:
+        MARKET_DATA_CACHE[cache_key] = df
+
+    return df.copy()
+
+def _fetch_market_data(market_name: str, ticker: str):
     if market_name not in MARKET_CONFIG:
         raise HTTPException(status_code=404, detail="Market not found in registry.")
-        
+
     idx_key = MARKET_CONFIG[market_name]["index_key"]
     
     def process_df(data):
@@ -255,63 +352,15 @@ def get_market_data(market_name: str, ticker: str):
 def health_check():
     return {"status": "Operational", "engine": "SQL-Backed Institutional Quant Engine v6.0"}
 
-@app.get("/api/v1/debug")
-def debug_info():
-    import tensorflow as tf
-    import traceback
-    import subprocess
-    pip_list = subprocess.check_output(["pip", "freeze"]).decode("utf-8").split("\n")
-    info = {"tf_version": tf.__version__, "pip": pip_list, "files": {}, "errors": {}}
-    for f in os.listdir(MODEL_DIR):
-        if f.endswith(".keras"):
-            path = os.path.join(MODEL_DIR, f)
-            info["files"][f] = os.path.getsize(path)
-            if "SP500_AdvancedBiLSTM.keras" in f:
-                try:
-                    from tensorflow.keras.models import load_model
-                    load_model(path, compile=False)
-                    info["errors"][f] = "Loaded successfully"
-                except Exception as e:
-                    info["errors"][f] = str(e)
-    return info
-
 @app.post("/api/v1/predict", response_model=InferenceResponse)
 def execute_prediction(req: InferenceRequest):
     try:
         df = get_market_data(req.market_name, req.ticker)
         latest_close = float(df['Close'].iloc[-1])
         idx_key = MARKET_CONFIG[req.market_name]["index_key"]
-        
-        cache_key = f"{idx_key}_{req.model_type}"
-        
-        # Load models into cache with vivid error reporting
-        if cache_key not in MODEL_CACHE or MODEL_CACHE[cache_key] is None:
-            model_path, scaler_path, features_path = get_model_paths(idx_key, req.model_type)
-            if os.path.exists(model_path) and os.path.exists(scaler_path):
-                try:
-                    logger.info(f"Mounting {req.model_type} Model for {idx_key} from {model_path}...")
-                    
-                    # Load feature list if exists, else fallback
-                    if os.path.exists(features_path):
-                        feature_list = joblib.load(features_path)
-                    else:
-                        feature_list = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
-                        
-                    MODEL_CACHE[cache_key] = {
-                        "model": load_model(model_path, compile=False), 
-                        "scaler": joblib.load(scaler_path),
-                        "features": feature_list
-                    }
-                    logger.info(f"✅ Architecture successfully mounted for {cache_key}.")
-                except Exception as e:
-                    logger.error(f"❌ Failed to load Neural Network artifacts: {e}")
-                    MODEL_CACHE[cache_key] = None
-            else:
-                logger.warning(f"⚠️ Artifacts missing for {cache_key}. Expected: {model_path}")
-                MODEL_CACHE[cache_key] = None
-                
-        artifacts = MODEL_CACHE.get(cache_key)
-        
+
+        artifacts = get_cached_model(idx_key, req.model_type)
+
         if artifacts and len(df) >= SEQ_LENGTH:
             features = artifacts["features"]
             try:
@@ -323,17 +372,19 @@ def execute_prediction(req: InferenceRequest):
                 scaled_recent = artifacts["scaler"].transform(data_slice)
                 X_pred = scaled_recent.reshape(1, SEQ_LENGTH, len(features))
                 
-                # 2. Neural Net Prediction
+                # 2. Neural Net Prediction (a standardized next-bar log return)
                 pred = artifacts["model"].predict(X_pred, verbose=0)
-                
-                # 3. Inverse Transform specifically against the Close price dimension
-                # Create a dummy array with same shape as features to inverse transform correctly
-                dummy = np.zeros((1, len(features)))
-                close_idx = features.index('Close')
-                dummy[0, close_idx] = pred[0][0]
-                
-                predicted_price = float(artifacts["scaler"].inverse_transform(dummy)[0][close_idx])
-                
+
+                # 3. Invert the target scaler to recover the raw log return, then compound
+                # it onto the latest close. (Previously the prediction was a scaled price
+                # level inverted via a dummy row through the *feature* scaler.)
+                pred_log_return = float(
+                    artifacts["target_scaler"].inverse_transform(np.array([[float(pred[0][0])]]))[0][0]
+                )
+                # Guard against a runaway model blowing up through exp()
+                pred_log_return = float(np.clip(pred_log_return, -0.5, 0.5))
+                predicted_price = float(latest_close * np.exp(pred_log_return))
+
                 model_type_resp = f"Neural Network ({req.model_type})"
                 
                 # Dynamic Confidence Calculation based on Signal-to-Noise Ratio (SNR)
@@ -366,7 +417,7 @@ def execute_prediction(req: InferenceRequest):
                 change = 0.0
                 
             predicted_price = float(latest_close * (1 + change * 0.3))
-            model_type = "Algorithmic Momentum Synthesis"
+            model_type_resp = "Algorithmic Momentum Synthesis"
             conf = 72.5
             
         # GUARD AGAINST PYDANTIC VALIDATION 500 ERRORS (caused by NaNs)
@@ -421,29 +472,7 @@ def execute_backtest(req: InferenceRequest):
         dates = df.index[-backtest_days:].strftime('%Y-%m-%d').tolist()
         asset_returns = pd.Series(actual_closes).pct_change().fillna(0).values
 
-        cache_key = f"{idx_key}_{req.model_type}"
-        
-        if cache_key not in MODEL_CACHE or MODEL_CACHE[cache_key] is None:
-            model_path, scaler_path, features_path = get_model_paths(idx_key, req.model_type)
-            if os.path.exists(model_path) and os.path.exists(scaler_path):
-                try:
-                    if os.path.exists(features_path):
-                        feature_list = joblib.load(features_path)
-                    else:
-                        feature_list = ['Open', 'High', 'Low', 'Close', 'Volume', 'MA_20', 'MA_50', 'Volatility_20', 'RSI_14']
-                        
-                    MODEL_CACHE[cache_key] = {
-                        "model": load_model(model_path, compile=False), 
-                        "scaler": joblib.load(scaler_path),
-                        "features": feature_list
-                    }
-                except Exception as e:
-                    logger.error(f"❌ Failed to mount model for backtesting: {e}")
-                    MODEL_CACHE[cache_key] = None
-            else:
-                MODEL_CACHE[cache_key] = None
-                
-        artifacts = MODEL_CACHE.get(cache_key)
+        artifacts = get_cached_model(idx_key, req.model_type)
 
         # Vectorized Signal Generation using Neural Network Ensemble
         if artifacts:
@@ -457,56 +486,64 @@ def execute_backtest(req: InferenceRequest):
                 data_slice = df[features].values[-(backtest_days + SEQ_LENGTH):]
                 scaled_data = scaler.transform(data_slice)
                 X_batch = np.array([scaled_data[i:i+SEQ_LENGTH] for i in range(backtest_days)])
-                
+
                 # === HYBRID NEURAL NETWORK + TREND CONVERGENCE ===
-                # Neural networks can be noisy. We combine the NN's short-term directional
-                # prediction with a medium-term trend filter (MA20 > MA50) to create a robust,
-                # profitable institutional strategy.
-                
-                # 1. Get Neural Network Direction (Ensemble or Single)
-                preds_flat = artifacts["model"].predict(X_batch, verbose=0).flatten()
-                nn_direction = np.zeros(backtest_days)
-                nn_direction[1:] = np.sign(preds_flat[1:] - preds_flat[:-1])
-                nn_direction[0] = 1 # Default
-                
-                # 2. Get Trend Filter
-                if 'MA_20' in df.columns and 'MA_50' in df.columns:
-                    ma20 = df['MA_20'].values[-backtest_days:]
-                    ma50 = df['MA_50'].values[-backtest_days:]
-                    trend_bullish = (ma20 > ma50)
-                else:
-                    trend_bullish = np.ones(backtest_days, dtype=bool) # Fallback to long
-                
-                # 3. Hybrid Strategy: Go LONG if Neural Network says UP *OR* Trend is UP.
-                # Go SHORT only if both agree it's going down.
-                # This creates a "Buy the dip in an uptrend, short the rip in a downtrend" dynamic.
-                nn_long = (nn_direction >= 0)
-                hybrid_long = nn_long | trend_bullish
-                
-                signals = np.where(hybrid_long, 1, -1)
-                
+                # The NN supplies a directional view on the next bar's return; a medium-term
+                # trend filter (MA20 > MA50) supplies confirmation. Each leg is lag-aligned
+                # independently BEFORE being combined (see below).
+
+                # 1. NN leg. The model predicts a standardized next-bar log return, so its
+                # sign IS the directional call - no differencing needed. (The old code did
+                # sign(pred_t - pred_{t-1}), which for a price-level model algebraically
+                # cancelled the model out and left lagged realised momentum.)
+                preds_scaled = artifacts["model"].predict(X_batch, verbose=0).flatten()
+                preds_returns = artifacts["target_scaler"].inverse_transform(
+                    preds_scaled.reshape(-1, 1)
+                ).flatten()
+
+                # 2 + 3. Deadband, per-leg lag alignment and graduated position sizing all
+                # live in src/strategy.py so the served strategy is provably identical to
+                # the one validated offline by validate_strategy.py.
+                has_ma = 'MA_20' in df.columns and 'MA_50' in df.columns
+                signals = build_signals(
+                    preds_returns,
+                    ma20=df['MA_20'].values[-backtest_days:] if has_ma else None,
+                    ma50=df['MA_50'].values[-backtest_days:] if has_ma else None,
+                    deadband=BACKTEST_DEADBAND,
+                )
+
                 model_used = f"Hybrid NN-Trend Convergence ({req.model_type})"
             except Exception as e:
                 logger.error(f"❌ Backtest inference failed: {e}")
                 raise e
         else:
-            # Algorithmic Fallback (MACD + EMA Convergence)
+            # Algorithmic Fallback (MACD + EMA Convergence). Same-bar indicators, so the
+            # combined signal is shifted by one bar below.
             macd = df['MACD'].values[-backtest_days:]
             sig = df['Signal_Line'].values[-backtest_days:]
             ma20 = df['MA_20'].values[-backtest_days:]
             ma50 = df['MA_50'].values[-backtest_days:]
-            
-            # Go long if MACD is bullish OR trend is bullish
-            fallback_long = (macd > sig) | (ma20 > ma50)
-            signals = np.where(fallback_long, 1, -1)
+
+            macd_signal = np.where(macd > sig, 1.0, -1.0)
+            trend_signal_fb = np.where(ma20 > ma50, 1.0, -1.0)
+            combined_fb = macd_signal + trend_signal_fb
+            raw_fb = np.select(
+                [combined_fb >= 2, combined_fb <= -2],
+                [1.0, -1.0],
+                default=0.0,  # indicators disagree -> stay flat
+            )
+            signals = np.roll(raw_fb, 1)
+            signals[0] = 0.0
             model_used = "Algorithmic Trend Convergence"
 
-        # Shift signals by 1 to prevent lookahead bias (execute at next day open)
-        trade_signals = np.roll(signals, 1)
-        trade_signals[0] = 0
+        # Each leg was lag-aligned before combination, so no blanket shift here.
+        # (The old code applied np.roll to the already-aligned combined signal, which
+        # left the NN leg two bars stale.)
+        trade_signals = signals
 
-        strategy_returns = trade_signals * asset_returns
-        
+        # Charge transaction costs on the change in position size each bar.
+        strategy_returns = apply_costs(trade_signals, asset_returns, cost_bps=BACKTEST_COST_BPS)
+
         # Equity Curves
         start_capital = 100000.0
         strat_equity = start_capital * np.cumprod(1 + strategy_returns)
@@ -515,10 +552,10 @@ def execute_backtest(req: InferenceRequest):
         # Institutional Metrics
         total_ret = ((strat_equity[-1] - start_capital) / start_capital) * 100
         bh_ret = ((bh_equity[-1] - start_capital) / start_capital) * 100
-        
+
         std_dev = np.std(strategy_returns)
         sharpe = (np.mean(strategy_returns) / std_dev * np.sqrt(252)) if std_dev > 0 else 0.0
-        
+
         roll_max = np.maximum.accumulate(strat_equity)
         drawdowns = strat_equity / roll_max - 1.0
         max_dd = np.min(drawdowns) * 100
@@ -765,38 +802,52 @@ def debug_environment():
 # ----------------------
 
 # --- NEW: WATCHLIST & CORRELATION ENDPOINTS ---
+def _fetch_watchlist_entry(market_name: str, t: str):
+    try:
+        df = get_market_data(market_name, t)
+        if len(df) > 1:
+            latest = float(df['Close'].iloc[-1])
+            prev = float(df['Close'].iloc[-2])
+            pct = ((latest / prev) - 1) * 100 if prev != 0 else 0.0
+            vol = float(df['Volume'].iloc[-1]) if 'Volume' in df.columns else 0.0
+
+            # Defend against NaNs
+            if np.isnan(pct) or np.isinf(pct): pct = 0.0
+
+            return {"ticker": t, "price": latest, "pct_change": pct, "volume": vol}, None
+        return None, None
+    except Exception as e:
+        logger.warning(f"Skipping {t} for watchlist: {e}")
+        return None, f"{t}: {str(e)}"
+
 @app.get("/api/v1/watchlist/{market_name}")
 def get_watchlist(market_name: str):
     try:
         tickers = FALLBACK_TICKERS.get(market_name, [])[:10]
         results = []
         errors = []
-        for t in tickers:
-            try:
-                df = get_market_data(market_name, t)
-                if len(df) > 1:
-                    latest = float(df['Close'].iloc[-1])
-                    prev = float(df['Close'].iloc[-2])
-                    pct = ((latest / prev) - 1) * 100 if prev != 0 else 0.0
-                    vol = float(df['Volume'].iloc[-1]) if 'Volume' in df.columns else 0.0
-                    
-                    # Defend against NaNs
-                    if np.isnan(pct) or np.isinf(pct): pct = 0.0
-                    
-                    results.append({
-                        "ticker": t,
-                        "price": latest,
-                        "pct_change": pct,
-                        "volume": vol
-                    })
-            except Exception as e:
-                errors.append(f"{t}: {str(e)}")
-                logger.warning(f"Skipping {t} for watchlist: {e}")
-                continue
+        # Per-ticker fetches are independent I/O (cache lookups, CSV reads, or yfinance
+        # calls) - run them concurrently instead of one request paying for all 10 serially.
+        with ThreadPoolExecutor(max_workers=len(tickers) or 1) as executor:
+            for entry, err in executor.map(lambda t: _fetch_watchlist_entry(market_name, t), tickers):
+                if entry is not None:
+                    results.append(entry)
+                if err is not None:
+                    errors.append(err)
         return {"watchlist": results, "debug_errors": errors}
     except Exception as e:
         logger.error(f"Watchlist failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate watchlist")
+
+def _fetch_correlation_series(market_name: str, t: str):
+    try:
+        df = get_market_data(market_name, t)
+        df_recent = df.tail(90)  # Use 90 days for stable correlation
+        if len(df_recent) >= 30:
+            return t, df_recent['Close'], None
+        return t, None, None
+    except Exception as e:
+        return t, None, f"{t}: {str(e)}"
 
 @app.get("/api/v1/correlation/{market_name}")
 def get_correlation(market_name: str):
@@ -804,16 +855,13 @@ def get_correlation(market_name: str):
         tickers = FALLBACK_TICKERS.get(market_name, [])[:10]
         series_dict = {}
         errors = []
-        for t in tickers:
-            try:
-                df = get_market_data(market_name, t)
-                df_recent = df.tail(90) # Use 90 days for stable correlation
-                if len(df_recent) >= 30:
-                    series_dict[t] = df_recent['Close']
-            except Exception as e:
-                errors.append(f"{t}: {str(e)}")
-                continue
-                
+        with ThreadPoolExecutor(max_workers=len(tickers) or 1) as executor:
+            for t, series, err in executor.map(lambda t: _fetch_correlation_series(market_name, t), tickers):
+                if series is not None:
+                    series_dict[t] = series
+                if err is not None:
+                    errors.append(err)
+
         if not series_dict:
             return {"tickers": [], "matrix": [], "debug_errors": errors}
             
