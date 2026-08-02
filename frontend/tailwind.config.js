@@ -61,7 +61,11 @@ const config = {
         "DEFAULT": "0.125rem",
         "lg": "0.25rem",
         "xl": "0.5rem",
-        "full": "0.75rem"
+        // "full" was previously overridden to 0.75rem (12px) instead of a true circular
+        // radius. That's invisible on small elements (status dots clamp to half their own
+        // size regardless) but visibly wrong on anything larger - e.g. w-8 h-8 avatar
+        // circles and loading spinners rendered as rounded squares instead of circles.
+        // Omitting the key here restores Tailwind's real default (9999px).
       },
       spacing: {
         "stack-sm": "8px",

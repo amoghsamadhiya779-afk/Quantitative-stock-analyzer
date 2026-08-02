@@ -441,7 +441,10 @@ select {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-cards);
+  /* No border-radius here: every usage already carries its own (rounded-full for the
+     circular avatar placeholder, rounded-md for the text-line placeholders). This rule
+     used to hardcode a card radius that won the cascade over rounded-full, so the
+     avatar's loading skeleton rendered as a rounded square instead of a circle. */
 }
 
 /* ============================================ */
