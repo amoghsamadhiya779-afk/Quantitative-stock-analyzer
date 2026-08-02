@@ -157,6 +157,54 @@ MODEL_LOAD_RETRY_COOLDOWN_SEC = 300  # don't retry a failed model load more than
 BACKTEST_DEADBAND = float(os.getenv("BACKTEST_DEADBAND", "0.001"))
 BACKTEST_COST_BPS = float(os.getenv("BACKTEST_COST_BPS", "5.0"))
 
+# Feature-group membership for the explainability panel. Every trained model uses the
+# same 42-column feature set (src/feature_engineering.py), so this mapping is static.
+FEATURE_GROUPS = {
+    "Momentum (MACD/RSI)": ["MACD", "Signal_Line", "MACD_Hist", "RSI_14", "Stoch_RSI", "ROC_5", "ROC_10", "ROC_20"],
+    "Volatility Profile": ["Volatility_20", "GK_Vol_20", "ATR_14", "ATR_30", "BB_Width"],
+    "Volume Trend": ["Volume", "Volume_MA_20", "Volume_Ratio", "OBV", "PVT", "VWAP_20"],
+    "Mean Reversion": ["Dist_MA_20", "Dist_MA_50", "Dist_MA_200", "BB_Upper", "BB_Lower", "Rolling_Beta"],
+}
+
+def compute_feature_importance(model, X_pred: np.ndarray, features: list, pct_change: float) -> dict:
+    """Gradient x Input saliency, aggregated into the four feature groups shown in the
+    UI. Replaces what was previously np.random.uniform() dressed up as a 'SHAP-Proxy' -
+    this is a real (if simple) attribution method: for each input feature, how much does
+    nudging it change the model's output, scaled by the feature's own value.
+
+    Returns each group's share of the predicted move in percentage points, signed, so
+    they read the same way the fabricated version used to ("this group pushed the
+    forecast up/down by X%") but are now derived from the model's actual gradient."""
+    try:
+        x = tf.convert_to_tensor(X_pred, dtype=tf.float32)
+        with tf.GradientTape() as tape:
+            tape.watch(x)
+            out = model(x, training=False)
+        grads = tape.gradient(out, x)
+        if grads is None:
+            raise ValueError("model is not differentiable w.r.t. its input")
+
+        # Sum gradient*input attribution over the sequence timesteps -> one signed
+        # contribution per feature.
+        contrib = (grads[0].numpy() * x[0].numpy()).sum(axis=0)
+        contrib_by_feature = dict(zip(features, contrib))
+
+        raw_group = {
+            group: float(sum(contrib_by_feature.get(c, 0.0) for c in cols))
+            for group, cols in FEATURE_GROUPS.items()
+        }
+        total_abs = sum(abs(v) for v in raw_group.values())
+        if total_abs < 1e-12:
+            return {g: 0.0 for g in FEATURE_GROUPS}
+
+        # Rescale so the groups sum (in absolute value) to the actual predicted move,
+        # expressing each in the same percentage-point units as pct_change.
+        scale = abs(pct_change) / total_abs
+        return {g: round(v * scale, 3) for g, v in raw_group.items()}
+    except Exception as e:
+        logger.warning(f"Gradient-based feature importance failed: {e}")
+        return {g: 0.0 for g in FEATURE_GROUPS}
+
 def get_cached_model(idx_key: str, model_type: str):
     """Thread-safe cached model load. A failed load is remembered for
     MODEL_LOAD_RETRY_COOLDOWN_SEC instead of being retried (and refailing) on every
@@ -447,15 +495,15 @@ def execute_prediction(req: InferenceRequest):
             pct_change = 0.0
             conf = 0.0
 
-        # --- EXPLAINABILITY ENGINE (SHAP-Proxy) ---
-        # Provide institutional reasoning for the predicted move
-        base_impact = pct_change
-        explainability = {
-            "Momentum (MACD/RSI)": round(base_impact * 0.45 + float(np.random.uniform(-0.5, 0.5)), 2),
-            "Volatility Profile": round(base_impact * -0.15 + float(np.random.uniform(-0.2, 0.2)), 2),
-            "Volume Trend": round(base_impact * 0.30 + float(np.random.uniform(-0.3, 0.3)), 2),
-            "Mean Reversion": round(base_impact * 0.20 + float(np.random.uniform(-0.4, 0.4)), 2)
-        }
+        # --- EXPLAINABILITY: Gradient x Input saliency, grouped by feature family ---
+        # Real attribution derived from the model's own gradient (see
+        # compute_feature_importance) when a neural prediction was actually made;
+        # zeroed out for the algorithmic fallback, which has no gradient to explain.
+        explainability = (
+            compute_feature_importance(artifacts["model"], X_pred, features, pct_change)
+            if artifacts and len(df) >= SEQ_LENGTH
+            else {g: 0.0 for g in FEATURE_GROUPS}
+        )
         
         return InferenceResponse(
             ticker=req.ticker, latest_close=latest_close, predicted_price=predicted_price,
@@ -635,6 +683,62 @@ def execute_monte_carlo(req: MonteCarloRequest):
         logger.error(f"Monte Carlo Engine Failed: {e}")
         raise HTTPException(status_code=500, detail="Simulation Failed")
 
+FUNDAMENTALS_CACHE = TTLCache(maxsize=256, ttl=3600)  # fundamentals move slowly; 1hr is plenty
+FUNDAMENTALS_CACHE_LOCK = threading.Lock()
+
+def _clamp_score(value: float, lo: float, hi: float) -> int:
+    """Linearly map value from [lo, hi] onto a 0-100 score, clamped at the ends."""
+    if hi == lo:
+        return 50
+    pct = (value - lo) / (hi - lo)
+    return int(min(max(pct * 100, 0), 100))
+
+def get_fundamental_scores(ticker: str) -> tuple[int, int, int]:
+    """Quality/Value/Growth scores (0-100) from real yfinance fundamentals. Falls back to
+    a neutral 50 per-factor when a field is missing rather than fabricating a number."""
+    with FUNDAMENTALS_CACHE_LOCK:
+        cached = FUNDAMENTALS_CACHE.get(ticker)
+    if cached is not None:
+        return cached
+
+    quality, value, growth = 50, 50, 50
+    try:
+        info = yf.Ticker(ticker).info
+
+        # Quality: return on equity and profit margin - higher is better.
+        roe = info.get("returnOnEquity")
+        margin = info.get("profitMargins")
+        parts = []
+        if roe is not None:
+            parts.append(_clamp_score(roe, 0.0, 0.30))
+        if margin is not None:
+            parts.append(_clamp_score(margin, 0.0, 0.25))
+        if parts:
+            quality = int(sum(parts) / len(parts))
+
+        # Value: trailing P/E - lower is "cheaper" (higher value score). Inverted scale.
+        pe = info.get("trailingPE")
+        if pe is not None and pe > 0:
+            value = 100 - _clamp_score(pe, 8, 40)
+
+        # Growth: revenue and earnings growth - higher is better.
+        rev_g = info.get("revenueGrowth")
+        earn_g = info.get("earningsGrowth")
+        parts = []
+        if rev_g is not None:
+            parts.append(_clamp_score(rev_g, -0.10, 0.30))
+        if earn_g is not None:
+            parts.append(_clamp_score(earn_g, -0.10, 0.30))
+        if parts:
+            growth = int(sum(parts) / len(parts))
+    except Exception as e:
+        logger.warning(f"Fundamentals lookup failed for {ticker}, using neutral scores: {e}")
+
+    result = (quality, value, growth)
+    with FUNDAMENTALS_CACHE_LOCK:
+        FUNDAMENTALS_CACHE[ticker] = result
+    return result
+
 # --- NEW: REGIME DETECTION & FACTOR EXPOSURE ---
 @app.get("/api/v1/quant-metrics/{market_name}/{ticker}")
 def get_quant_metrics(market_name: str, ticker: str):
@@ -666,12 +770,14 @@ def get_quant_metrics(market_name: str, ticker: str):
         momentum_score = min(max(int((momentum_raw + 0.5) * 100), 0), 100)
 
         vol_score = min(max(int(100 - (volatility_30d * 100)), 0), 100) # Low Volatility factor
-        
-        # In a real environment, Quality/Value require fundamental P/E data. 
-        # Using sophisticated proxies or constrained bounds for the research tool:
-        quality_score = int(np.random.uniform(40, 90)) 
-        value_score = int(np.random.uniform(30, 80))
-        growth_score = int(np.random.uniform(40, 85))
+
+        # Quality/Value/Growth need fundamentals (P/E, ROE, revenue growth), which aren't
+        # in this app's price/volume pipeline. These used to be np.random.uniform() -
+        # plausible-looking numbers with no relationship to the ticker. Fetch real
+        # fundamentals from yfinance where available; report a neutral 50 (not a random
+        # number) when a field is genuinely missing, which is common for several of the
+        # non-US tickers this app covers.
+        quality_score, value_score, growth_score = get_fundamental_scores(ticker)
 
         return {
             "regime": regime,

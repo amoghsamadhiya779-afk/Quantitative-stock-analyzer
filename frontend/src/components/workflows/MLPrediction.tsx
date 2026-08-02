@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Line, ComposedChart, ReferenceLine } from "recharts";
 import { Cpu, Server, TrendingUp } from "lucide-react";
+import type { StockData, PredictionResult } from "@/lib/api";
 
 interface DataPoint {
   index: number;
@@ -14,74 +15,65 @@ interface DataPoint {
   ciUpper?: number;
 }
 
-const MODELS = {
-  "Quantum CNN-Attention": {
-    name: "Quantum CNN-Attention Engine",
-    rmse: 0.84,
-    direction: "87.4%",
-    latency: "14ms",
-    predMultiplier: 1.05,
-    ciWidth: 3.5,
-  },
-  "Temporal Transformer": {
-    name: "Temporal Time-Series Transformer",
-    rmse: 0.92,
-    direction: "84.2%",
-    latency: "28ms",
-    predMultiplier: 0.96,
-    ciWidth: 5.8,
-  },
-  "Deep BiLSTM": {
-    name: "Multi-layer LSTM Neural Network",
-    rmse: 1.15,
-    direction: "79.8%",
-    latency: "9ms",
-    predMultiplier: 1.01,
-    ciWidth: 7.2,
-  },
-};
+interface Props {
+  stockData?: StockData | null;
+  prediction?: PredictionResult | null;
+}
 
-export default function MLPrediction() {
-  const [selectedModel, setSelectedModel] = useState<keyof typeof MODELS>("Quantum CNN-Attention");
-  const modelInfo = MODELS[selectedModel];
+const HISTORY_DAYS = 30;
 
+export default function MLPrediction({ stockData, prediction }: Props) {
   const data: DataPoint[] = useMemo(() => {
-    const list: DataPoint[] = [];
-    let price = 180.0;
-    
-    // Historical data (30 days)
-    for (let i = 0; i < 30; i++) {
-      const change = (Math.sin(i / 3) + (Math.random() - 0.45)) * 1.5;
-      price += change;
-      list.push({
-        index: i,
-        label: `T - ${30 - i}d`,
-        actual: parseFloat(price.toFixed(2)),
-      });
-    }
+    if (!stockData || !stockData.closes || stockData.closes.length === 0) return [];
 
-    // Future predictions (10 days)
-    let predPrice = price;
-    const mult = modelInfo.predMultiplier;
-    const ci = modelInfo.ciWidth;
+    const closes = stockData.closes.slice(-HISTORY_DAYS);
+    const dates = (stockData.dates || []).slice(-HISTORY_DAYS);
+    const list: DataPoint[] = closes.map((price, i) => ({
+      index: i,
+      label: dates[i] || `T-${closes.length - i}`,
+      actual: price,
+    }));
 
-    for (let i = 1; i <= 10; i++) {
-      const baseTrend = (i / 3) * (mult > 1 ? 1.2 : -0.8);
-      const prediction = predPrice + baseTrend + (Math.sin(i / 1.5) * 1.0);
-      const ciLower = prediction - (i * 0.4 + ci);
-      const ciUpper = prediction + (i * 0.4 + ci);
+    if (prediction && list.length > 0) {
+      // The model is a single next-bar (1-day-ahead) predictor - it has no genuine
+      // multi-day forecasting capability, so this shows exactly one forecast point
+      // instead of a fabricated 10-day curve. The CI comes from the ticker's own
+      // realized volatility (annualized %, converted back to a 1-day sigma), not a
+      // hardcoded per-model width.
+      const dailySigma = ((stockData.volatility || 0) / 100) / Math.sqrt(252);
+      const band = prediction.predicted_price * dailySigma * 1.96; // ~95% CI, 1 day ahead
 
       list.push({
-        index: 29 + i,
-        label: `T + ${i}d`,
-        prediction: parseFloat(prediction.toFixed(2)),
-        ciLower: parseFloat(ciLower.toFixed(2)),
-        ciUpper: parseFloat(ciUpper.toFixed(2)),
+        index: list.length,
+        label: "T+1",
+        prediction: prediction.predicted_price,
+        ciLower: prediction.predicted_price - band,
+        ciUpper: prediction.predicted_price + band,
       });
+      // Connects the historical line to the forecast point so the chart doesn't show a gap.
+      list[list.length - 2] = { ...list[list.length - 2], prediction: list[list.length - 2].actual };
     }
 
     return list;
-  }, [selectedModel]);
+  }, [stockData, prediction]);
+
+  if (!stockData || !prediction) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="w-full flex flex-col gap-6"
+      >
+        <div className="rounded border border-outline-variant/30 bg-[#08080a] p-stack-xl flex items-center justify-center h-[400px] font-label-sm text-[11px] uppercase tracking-widest text-outline">
+          Waiting for live market data...
+        </div>
+      </motion.div>
+    );
+  }
+
+  const confidenceLabel = `${prediction.confidence.toFixed(1)}%`;
+  const rmseEstimate = ((stockData.volatility || 0) / 100) / Math.sqrt(252) * stockData.latest_close;
 
   return (
     <motion.div
@@ -90,50 +82,39 @@ export default function MLPrediction() {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="w-full flex flex-col gap-6"
     >
-      {/* Model Selection and Stats */}
+      {/* Live Model Stats - all derived from the actual prediction response, not
+          per-architecture constants. */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-stack-sm">
-        {/* Model swapper */}
         <div className="rounded border border-outline-variant/30 bg-[#08080a] p-stack-sm flex flex-col gap-3 lg:col-span-1">
-          <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">AI Architectures</span>
-          <div className="flex flex-col gap-2">
-            {(Object.keys(MODELS) as Array<keyof typeof MODELS>).map((key) => (
-              <button
-                key={key}
-                onClick={() => setSelectedModel(key)}
-                className={`w-full text-left p-3 rounded border font-label-sm text-[11px] uppercase tracking-wider transition-all duration-200 ${
-                  selectedModel === key
-                    ? "border-secondary/30 bg-secondary/10 text-on-surface font-bold"
-                    : "border-outline-variant/30 bg-surface-variant text-on-surface-variant hover:border-outline-variant hover:bg-surface-container-highest"
-                }`}
-              >
-                {key}
-              </button>
-            ))}
+          <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Active Engine</span>
+          <div className="p-3 rounded border border-secondary/30 bg-secondary/10 text-on-surface font-label-sm text-[11px] font-bold">
+            {prediction.model_type}
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-stack-sm">
           <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex items-center justify-between">
             <div>
-              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Directional Accuracy</span>
-              <div className="font-headline-lg font-mono text-emerald-400 mt-1">{modelInfo.direction}</div>
+              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Confidence</span>
+              <div className="font-headline-lg font-mono text-emerald-400 mt-1">{confidenceLabel}</div>
             </div>
             <TrendingUp className="w-8 h-8 text-emerald-500 opacity-80" />
           </div>
 
           <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex items-center justify-between">
             <div>
-              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Prediction RMSE</span>
-              <div className="font-headline-lg font-mono text-on-surface mt-1">{modelInfo.rmse} <span className="font-label-sm text-[11px] text-outline">USD</span></div>
+              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">1-Day Vol Estimate</span>
+              <div className="font-headline-lg font-mono text-on-surface mt-1">{rmseEstimate.toFixed(2)} <span className="font-label-sm text-[11px] text-outline">{stockData.currency}</span></div>
             </div>
             <Server className="w-8 h-8 text-secondary opacity-80" />
           </div>
 
           <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex items-center justify-between">
             <div>
-              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">inference latency</span>
-              <div className="font-headline-lg font-mono text-on-surface mt-1">{modelInfo.latency}</div>
+              <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Predicted Move</span>
+              <div className={`font-headline-lg font-mono mt-1 ${prediction.pct_change >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {prediction.pct_change >= 0 ? "+" : ""}{prediction.pct_change.toFixed(2)}%
+              </div>
             </div>
             <Cpu className="w-8 h-8 text-secondary opacity-80" />
           </div>
@@ -143,8 +124,10 @@ export default function MLPrediction() {
       {/* Main Chart Panel */}
       <div className="rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
         <div>
-          <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">95% Confidence Interval Forecast</h2>
-          <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Overlaying historical price data against neural network confidence predictions.</p>
+          <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Next-Bar Forecast (95% CI)</h2>
+          <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">
+            {HISTORY_DAYS}-day realized price against the model&apos;s single next-bar forecast.
+          </p>
         </div>
 
         <div className="w-full h-[400px]">
@@ -160,7 +143,7 @@ export default function MLPrediction() {
                   <stop offset="95%" stopColor="#f97316" stopOpacity={0.01}/>
                 </linearGradient>
               </defs>
-              
+
               <XAxis
                 dataKey="label"
                 stroke="rgba(255,255,255,0.08)"
@@ -182,74 +165,23 @@ export default function MLPrediction() {
                 itemStyle={{ color: "#fff" }}
               />
 
-              {/* Confidence Interval Shaded Area */}
-              <Area
-                type="monotone"
-                dataKey="ciUpper"
-                stroke="none"
-                fill="url(#ciArea)"
-                name="95% CI Upper"
-              />
-              <Area
-                type="monotone"
-                dataKey="ciLower"
-                stroke="none"
-                fill="#0a0a0a" // Masks the bottom area below CI
-                name="95% CI Lower"
-              />
+              <Area type="monotone" dataKey="ciUpper" stroke="none" fill="url(#ciArea)" name="95% CI Upper" />
+              <Area type="monotone" dataKey="ciLower" stroke="none" fill="#0a0a0a" name="95% CI Lower" />
 
-              {/* CI Boundary Lines */}
-              <Line
-                type="monotone"
-                dataKey="ciUpper"
-                stroke="#ea580c"
-                strokeDasharray="3 3"
-                strokeWidth={1}
-                dot={false}
-                opacity={0.3}
-                name="CI Upper Boundary"
-              />
-              <Line
-                type="monotone"
-                dataKey="ciLower"
-                stroke="#ea580c"
-                strokeDasharray="3 3"
-                strokeWidth={1}
-                dot={false}
-                opacity={0.3}
-                name="CI Lower Boundary"
-              />
+              <Line type="monotone" dataKey="ciUpper" stroke="#ea580c" strokeDasharray="3 3" strokeWidth={1} dot={false} opacity={0.3} name="CI Upper Boundary" />
+              <Line type="monotone" dataKey="ciLower" stroke="#ea580c" strokeDasharray="3 3" strokeWidth={1} dot={false} opacity={0.3} name="CI Lower Boundary" />
 
-              {/* Historical Price */}
-              <Line
-                type="monotone"
-                dataKey="actual"
-                stroke="#ffffff"
-                strokeWidth={2}
-                dot={false}
-                name="Historical Price"
-              />
+              <Line type="monotone" dataKey="actual" stroke="#ffffff" strokeWidth={2} dot={false} name="Historical Price" />
+              <Line type="monotone" dataKey="prediction" stroke="#ea580c" strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 4, fill: "#ea580c" }} name="Forecast" />
 
-              {/* ML Prediction Path */}
-              <Line
-                type="monotone"
-                dataKey="prediction"
-                stroke="#ea580c"
-                strokeWidth={2.5}
-                strokeDasharray="5 5"
-                dot={{ r: 3, fill: "#ea580c" }}
-                name="Prediction Path"
-              />
-
-              {/* Reference line separating history & prediction */}
-              <ReferenceLine x="T - 1d" stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" label={{ value: "Forecast Horizon", fill: "rgba(255,255,255,0.4)", fontSize: 9, position: "top" }} />
+              <ReferenceLine x={data.length > 1 ? data[data.length - 2].label : undefined} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" label={{ value: "Forecast Horizon", fill: "rgba(255,255,255,0.4)", fontSize: 9, position: "top" }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
 
         <div className="flex justify-between font-label-sm text-[10px] font-mono tracking-widest text-outline mt-2 border-t border-outline-variant/30 pt-4">
-          <span>Active Model: {modelInfo.name}</span>
-          <span>Horizon: +10 Trading Days</span>
+          <span>{prediction.model_type}</span>
+          <span>Horizon: +1 Trading Day</span>
         </div>
       </div>
     </motion.div>

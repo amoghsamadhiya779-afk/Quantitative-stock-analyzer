@@ -71,6 +71,7 @@ export default function LandingPage() {
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [apiLatencyMs, setApiLatencyMs] = useState<number | null>(null);
   const [activeTerminalTab, setActiveTerminalTab] = useState("Market data ingestion");
 
   const [booting, setBooting] = useState(false);
@@ -216,6 +217,7 @@ export default function LandingPage() {
     let active = true;
 
     const fetchData = () => {
+      const startedAt = performance.now();
       Promise.all([
         fetchStockData(selectedMarket, selectedTicker).catch(() => null),
         fetchPrediction(selectedMarket, selectedTicker, ALGO_MAP[selectedAlgo]).catch(() => null),
@@ -223,6 +225,7 @@ export default function LandingPage() {
         if (!active) return;
         if (sd) setStockData(sd);
         if (pred) setPrediction(pred);
+        setApiLatencyMs(Math.round(performance.now() - startedAt));
         setLoading(false);
       });
     };
@@ -285,7 +288,7 @@ export default function LandingPage() {
       case "Technical indicators":
         return <TechnicalIndicators />;
       case "ML prediction":
-        return <MLPrediction />;
+        return <MLPrediction stockData={stockData} prediction={prediction} />;
       case "Portfolio optimization":
         return <PortfolioOptimization tickers={tickers} />;
       case "Risk analytics":
@@ -528,13 +531,18 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <div className="p-stack-lg rounded-[10px] border border-outline-variant bg-surface-container/80 backdrop-blur-md">
-                  <h3 className="font-headline-lg text-headline-lg text-on-surface mb-stack-sm">Latest Whitepaper Abstract</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed italic border-l-2 border-outline-variant pl-stack-sm">
-                    "By decoupling temporal feature learning from directional attention networks, we
-                    show a 12% improvement in Sharpe ratio on out-of-sample backtests. The neural
-                    framework incorporates real-time liquidity imbalance vectors to form dynamic
-                    pricing thresholds."
+                <div className="p-stack-lg rounded-[10px] border border-outline-variant bg-surface-container/80">
+                  <h3 className="font-headline-lg text-headline-lg text-on-surface mb-stack-sm">Measured Model Performance</h3>
+                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                    Walk-forward validation on held-out data puts out-of-sample directional accuracy
+                    at roughly <span className="text-on-surface font-semibold">51&ndash;52%</span> against
+                    a 50% coin-flip baseline. Daily single-name direction is close to efficient, so the
+                    edge is thin and we report it rather than round it up.
+                  </p>
+                  <p className="font-label-sm text-[12px] text-outline mt-stack-sm leading-relaxed">
+                    Backtests are net of transaction costs, use a per-leg execution lag, and hold a flat
+                    position when signals disagree. Past performance does not indicate future results;
+                    nothing here is investment advice.
                   </p>
                 </div>
               </div>
@@ -729,8 +737,8 @@ export default function LandingPage() {
                       </span>
                     </div>
                     <div className="flex justify-between font-label-sm text-[10px] text-on-surface-variant font-mono">
-                      <span>LAT: 12ms</span>
-                      <span>GPU: A100</span>
+                      <span>LAT: {apiLatencyMs !== null ? `${apiLatencyMs}ms` : "—"}</span>
+                      <span>CPU</span>
                     </div>
                   </div>
                 </div>

@@ -125,6 +125,7 @@ export default function TerminalPage() {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [allPredictions, setAllPredictions] = useState<PredictionResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiLatencyMs, setApiLatencyMs] = useState<number | null>(null);
   const [logoError, setLogoError] = useState(false);
 
   // API Loaders
@@ -183,6 +184,7 @@ export default function TerminalPage() {
       // exactly once (was fetching the selected one twice: once here explicitly, again
       // inside the algoKeys map) and pick the primary out of the shared results.
       const algoKeys = Object.values(ALGO_MAP);
+      const startedAt = performance.now();
       Promise.all([
         fetchStockData(selectedMarket, selectedTicker).catch(() => null),
         ...algoKeys.map(algo => fetchPrediction(selectedMarket, selectedTicker, algo).catch(() => null))
@@ -194,6 +196,7 @@ export default function TerminalPage() {
         const primaryIndex = algoKeys.indexOf(ALGO_MAP[selectedAlgo]);
         const primaryPr = primaryIndex >= 0 ? allPrs[primaryIndex] : null;
         if (primaryPr) setPrediction(primaryPr as any);
+        setApiLatencyMs(Math.round(performance.now() - startedAt));
         setLoading(false);
       });
     };
@@ -311,8 +314,8 @@ export default function TerminalPage() {
                 <span className="font-label-sm text-[10px] tracking-wider uppercase text-outline">{loading ? "Syncing Network..." : "Compute Online"}</span>
               </div>
               <div className="flex justify-between font-label-sm text-[10px] font-mono text-on-surface-variant">
-                <span>LAT: {loading ? "..." : "12ms"}</span>
-                <span>GPU: A100</span>
+                <span>LAT: {loading || apiLatencyMs === null ? "..." : `${apiLatencyMs}ms`}</span>
+                <span>CPU</span>
               </div>
             </div>
           </div>
@@ -353,7 +356,7 @@ export default function TerminalPage() {
             >
               {activePage === "overview" && <MarketDataIngestion />}
               {activePage === "technical" && <TechnicalIndicators />}
-              {activePage === "ml-prediction" && <MLPrediction />}
+              {activePage === "ml-prediction" && <MLPrediction stockData={stockData} prediction={prediction} />}
               {activePage === "portfolio" && <PortfolioOptimization tickers={tickers} />}
               {activePage === "risk" && <RiskAnalytics tickers={tickers} selectedMarket={selectedMarket} />}
               {activePage === "backtesting" && <Backtesting selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}

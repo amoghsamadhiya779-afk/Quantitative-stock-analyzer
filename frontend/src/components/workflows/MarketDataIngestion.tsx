@@ -118,10 +118,10 @@ export default function MarketDataIngestion() {
 
         <div className="p-stack-sm transition-all duration-300 rounded bg-[#08080a] border border-outline-variant/30 flex items-center justify-between">
           <div>
-            <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Database Status</span>
-            <div className="font-headline-lg font-mono text-emerald-400 mt-1">CONNECTED</div>
+            <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline">Feed Mode</span>
+            <div className="font-headline-lg font-mono text-amber-400 mt-1">SIMULATED</div>
           </div>
-          <Database className="w-8 h-8 text-emerald-500 opacity-80" />
+          <Database className="w-8 h-8 text-amber-500 opacity-80" />
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export default function MarketDataIngestion() {
             <span className="w-3 h-3 rounded-full bg-red-500/80"></span>
             <span className="w-3 h-3 rounded-full bg-yellow-500/80"></span>
             <span className="w-3 h-3 rounded-full bg-emerald-500/80"></span>
-            <span className="font-label-sm text-[11px] font-mono text-outline ml-2 uppercase tracking-widest">Real-time Stream Ingestion Feed</span>
+            <span className="font-label-sm text-[11px] font-mono text-outline ml-2 uppercase tracking-widest">Simulated Stream Ingestion Feed</span>
           </div>
           <div className="flex items-center gap-2">
             <button

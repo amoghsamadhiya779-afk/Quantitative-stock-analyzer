@@ -73,10 +73,11 @@ export default function SotaBenchmarking({ stockData, prediction, currency, sele
         <div className="flex-[2] p-8 ventriloc-card transition-all duration-500 hover:-translate-y-1">
           <span className="text-[10px] tracking-widest text-[var(--color-slate)] uppercase font-semibold">Algorithm Selection</span>
           <div className="font-display font-bold text-2xl mt-4 text-[var(--color-carbon)]">{selectedAlgo}</div>
+          {/* Only architecture is stated here. Loss/epochs used to be hardcoded
+              ("0.0142 MSE", "250") and were unrelated to any actual training run. */}
           <div className="mt-6 flex flex-wrap gap-6 text-[11px] font-mono text-[var(--color-graphite)] bg-[var(--color-fog)] p-4 rounded-card">
-            <span>Loss: <strong className="text-[var(--accent)]">0.0142 MSE</strong></span>
-            <span>Epochs: <strong className="text-[var(--color-carbon)]">250</strong></span>
-            <span>Arch: <strong className="text-[var(--color-carbon)]">BiLSTM x2</strong></span>
+            <span>Target: <strong className="text-[var(--color-carbon)]">next-bar log return</strong></span>
+            <span>Validation: <strong className="text-[var(--color-carbon)]">walk-forward</strong></span>
           </div>
         </div>
         <div className="flex-1 p-8 ventriloc-card transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-white to-[var(--color-mist)]">
