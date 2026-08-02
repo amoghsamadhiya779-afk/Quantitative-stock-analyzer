@@ -1,5 +1,5 @@
 # Dockerfile for Hugging Face Spaces
-FROM python:3.9
+FROM python:3.9-slim
 
 # Create user to avoid running as root (Hugging Face Spaces requirement)
 RUN useradd -m -u 1000 user

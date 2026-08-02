@@ -1,9 +1,7 @@
-streamlit
 pandas
 numpy
-plotly
 scikit-learn
-tensorflow>=2.16.1
+tensorflow-cpu==2.16.1
 yfinance
 joblib
 fastapi
@@ -11,4 +9,4 @@ uvicorn
 requests
 vaderSentiment
 feedparser
-optuna
+cachetools

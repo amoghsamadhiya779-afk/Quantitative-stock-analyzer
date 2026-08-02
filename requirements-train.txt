@@ -1,0 +1,7 @@
+# Extra dependencies needed for local training / the Streamlit dashboard (app.py)
+# and hyperparameter search (src/optuna_optimizer.py). Not installed into the served
+# API image (requirements.txt) to keep it slim and to avoid dead weight in prod.
+-r requirements.txt
+streamlit
+plotly
+optuna
