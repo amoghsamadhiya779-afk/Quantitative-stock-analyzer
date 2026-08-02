@@ -226,7 +226,7 @@ export default function TerminalPage() {
 
       <main data-lenis-prevent="true" className="flex-1 min-w-0 h-full flex flex-col relative z-10 hide-scrollbar bg-transparent pb-[80px] md:pb-0">
         {/* Top Header */}
-        <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
+        <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/90 border-b border-outline-variant/30 z-50 scroll-surface">
           <div className="max-w-[1200px] mx-auto flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50 backdrop-blur-md shadow-xl hover:scale-105 transition-transform pointer-events-auto z-50 relative">
@@ -254,7 +254,7 @@ export default function TerminalPage() {
           animate="visible"
           className="w-full overflow-hidden py-unit border-b border-outline-variant/30 bg-[#08080a] z-40 relative shrink-0"
         >
-          <div className="flex w-max animate-marquee">
+          <div className="flex w-max animate-marquee marquee-track">
             {[0, 1].map((copy) => (
               <div key={copy} className="flex gap-gutter px-gutter font-label-sm text-[11px] font-mono tracking-widest text-outline uppercase">
                 {tickerKeys.map((ticker, i) => {

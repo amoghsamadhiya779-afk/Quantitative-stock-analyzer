@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["dev-launcher.js", "dev"],
+      "port": 3000
+    }
+  ]
+}

@@ -20,7 +20,7 @@ export const RightRail: React.FC<RightRailProps> = ({ children, defaultExpanded 
           opacity: isExpanded ? 1 : 0,
         }}
         className={`
-          relative hidden lg:flex flex-col h-full bg-surface-container/50 backdrop-blur-xl border-l border-outline-variant/30
+          relative hidden lg:flex flex-col h-full bg-surface-container/90 border-l border-outline-variant/30 scroll-surface
           transition-all duration-300 ease-in-out z-20 shrink-0 shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.5)]
         `}
       >

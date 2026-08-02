@@ -18,9 +18,11 @@ class Particle {
     this.radius = Math.random() * 1.5 + 0.5;
   }
 
-  update(width: number, height: number) {
-    this.x += this.vx;
-    this.y += this.vy;
+  // `step` is elapsed time normalized to a 60fps frame, so drift speed is identical
+  // whether we're painting at 30, 60 or 120fps.
+  update(width: number, height: number, step: number) {
+    this.x += this.vx * step;
+    this.y += this.vy * step;
 
     if (this.x < 0 || this.x > width) this.vx *= -1;
     if (this.y < 0 || this.y > height) this.vy *= -1;
@@ -30,6 +32,12 @@ class Particle {
 const LINK_DIST_SQ = 15000;
 const LINK_DIST = Math.sqrt(LINK_DIST_SQ); // ~122.47
 const WIDTH_BUCKETS = 6; // quantized line-width buckets so we batch draw calls into a handful of paths
+
+// This is a decorative background. Repainting a full-viewport canvas at the display's
+// full refresh rate steals main-thread time from scrolling for no visual benefit on a
+// slow-drifting particle field, so cap it and let scroll have the remaining frames.
+const TARGET_FPS = 30;
+const FRAME_BUDGET_MS = 1000 / TARGET_FPS;
 
 export default function ParticlePhysicsBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -67,9 +75,19 @@ export default function ParticlePhysicsBackground() {
     );
 
     let animationFrameId: number;
+    let lastPaint = 0;
 
-    const render = () => {
-      if (!document.hidden) {
+    const render = (now: number) => {
+      const elapsed = now - lastPaint;
+
+      // Skip the frame entirely if we're ahead of the target rate. The rAF callback
+      // itself is cheap; the canvas work it guards is not.
+      if (!document.hidden && elapsed >= FRAME_BUDGET_MS) {
+        // Normalize to a 60fps-equivalent step, clamped so a long stall (tab restore,
+        // GC pause) doesn't teleport every particle across the screen.
+        const step = Math.min(elapsed / (1000 / 60), 3);
+        lastPaint = now;
+
         ctx.clearRect(0, 0, width, height);
 
         ctx.fillStyle = "rgba(255, 181, 154, 0.5)"; // primary color
@@ -79,7 +97,7 @@ export default function ParticlePhysicsBackground() {
 
         for (let i = 0; i < particles.length; i++) {
           const p1 = particles[i];
-          p1.update(width, height);
+          p1.update(width, height, step);
 
           ctx.beginPath();
           ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
@@ -117,7 +135,7 @@ export default function ParticlePhysicsBackground() {
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    animationFrameId = requestAnimationFrame(render);
 
     let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
     const handleResize = () => {

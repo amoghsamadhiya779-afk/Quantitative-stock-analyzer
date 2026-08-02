@@ -314,6 +314,7 @@ export default function LandingPage() {
   if (!mounted) return null;
 
   return (
+    <>
       <div className="relative bg-background text-on-background overflow-x-hidden min-h-screen font-body-md">
         <ParticlePhysicsBackground />
 
@@ -351,7 +352,7 @@ export default function LandingPage() {
         </AnimatePresence>
 
         {/* Header navigation element */}
-        <header className="sticky top-0 z-50 w-full bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop h-16">
+        <header className="sticky top-0 z-50 w-full bg-surface-container/90 border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop h-16 scroll-surface">
           <div className="flex items-center gap-gutter">
             <span className="font-display-md text-display-md font-bold text-on-surface">
               Nexus Quant
@@ -405,7 +406,7 @@ export default function LandingPage() {
 
             {/* 2. Infinite Partner Marquee */}
             <div className="rounded-[10px] overflow-hidden border border-outline-variant bg-surface-container py-stack-md relative z-10">
-              <div className="flex w-[200%] animate-marquee">
+              <div className="flex w-[200%] animate-marquee marquee-track">
                 <div className="flex justify-around w-1/2 items-center font-body-md font-bold text-on-surface opacity-70 grayscale uppercase">
                   <span>Yahoo Finance</span>
                   <span>Polygon</span>
@@ -465,7 +466,7 @@ export default function LandingPage() {
                   </AnimatePresence>
                   
                   {/* Gradient Blur Overlay (Lower Half) */}
-                  <div className="absolute bottom-0 left-0 w-full h-[200px] md:h-[220px] bg-gradient-to-t from-[#08080a] via-[#08080a]/90 to-transparent backdrop-blur-[2px] flex flex-col justify-end p-stack-md md:p-stack-lg z-10">
+                  <div className="absolute bottom-0 left-0 w-full h-[200px] md:h-[220px] bg-gradient-to-t from-[#08080a] via-[#08080a]/90 to-transparent flex flex-col justify-end p-stack-md md:p-stack-lg z-10">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={`desc-${activeFeature}`}
@@ -502,7 +503,7 @@ export default function LandingPage() {
             </div>
 
             {/* 4. Research Section */}
-            <section id="research" className="py-stack-xl border-t border-outline-variant/30 z-10">
+            <section id="research" className="py-stack-xl border-t border-outline-variant/30 z-10 section-cv">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-lg items-center">
                 <div>
                   <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
@@ -540,7 +541,7 @@ export default function LandingPage() {
             </section>
 
             {/* 5. Technology Section */}
-            <section id="technology" className="py-stack-xl border-t border-outline-variant/30 z-10">
+            <section id="technology" className="py-stack-xl border-t border-outline-variant/30 z-10 section-cv">
               <div className="text-center max-w-3xl mx-auto mb-stack-xl">
                 <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                   Infrastructure Stack
@@ -582,7 +583,7 @@ export default function LandingPage() {
             </section>
 
             {/* 6. Documentation Section */}
-            <section id="documentation" className="py-stack-xl border-t border-outline-variant/30 z-10">
+            <section id="documentation" className="py-stack-xl border-t border-outline-variant/30 z-10 section-cv">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-stack-lg">
                 <div>
                   <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
@@ -615,7 +616,7 @@ export default function LandingPage() {
             </section>
 
             {/* 7. GitHub Section */}
-            <section id="github" className="py-stack-xl border-t border-outline-variant/30 z-10">
+            <section id="github" className="py-stack-xl border-t border-outline-variant/30 z-10 section-cv">
               <div className="p-stack-lg rounded-[10px] border border-outline-variant bg-surface-container flex flex-col md:flex-row justify-between items-center gap-stack-md">
                 <div>
                   <span className="font-label-sm text-[11px] text-outline uppercase tracking-widest">
@@ -659,7 +660,7 @@ export default function LandingPage() {
                 
                 {/* Terminal Tickers Ribbon */}
                 <div className="w-full overflow-hidden py-unit border-b border-outline-variant/30 bg-[#08080a] z-30 relative shrink-0 rounded">
-                  <div className="flex w-max animate-marquee">
+                  <div className="flex w-max animate-marquee marquee-track">
                     {[0, 1].map((copy) => (
                       <div
                         key={copy}
@@ -909,5 +910,6 @@ export default function LandingPage() {
           </div>
         )}
       </AnimatePresence>
+    </>
   );
 }

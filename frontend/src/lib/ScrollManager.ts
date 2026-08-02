@@ -20,16 +20,27 @@ export class ScrollManager {
     this.init();
     if (typeof window === "undefined" || !triggerElement) return null;
 
+    // onUpdate fires on every scroll frame while pinned. Only surface a change when the
+    // quantized step actually changes, otherwise we re-enter React (and its reconciler)
+    // 60-120x/second for a value that changes ~6 times over the whole section.
+    let lastIndex = -1;
+
     return ScrollTrigger.create({
       trigger: triggerElement,
       start: "top top",
       end: `+=${(stepCount - 1) * 100}%`,
       pin: true,
+      // Pinning with `pin: true` reflows on every resize; pinType "transform" keeps the
+      // pinned element on the compositor instead of thrashing layout during scroll.
+      pinType: "transform",
+      anticipatePin: 1,
       scrub: true,
       onUpdate: (self) => {
         const progress = self.progress;
         // Divide progress space equally for steps
         const index = Math.max(0, Math.min(stepCount - 1, Math.floor(progress * stepCount)));
+        if (index === lastIndex) return;
+        lastIndex = index;
         onStepChange(index);
       },
     });

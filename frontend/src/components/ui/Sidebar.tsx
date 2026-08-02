@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabSelect }) => {
       initial={false}
       animate={{ width: isExpanded ? 240 : 64 }}
       className={`
-        relative flex flex-col h-full bg-surface-container/50 backdrop-blur-xl border-r border-outline-variant/30
+        relative flex flex-col h-full bg-surface-container/90 border-r border-outline-variant/30 scroll-surface
         transition-all duration-300 ease-in-out z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]
         hidden md:flex shrink-0
       `}

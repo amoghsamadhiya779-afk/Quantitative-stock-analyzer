@@ -126,12 +126,43 @@ html {
 }
 
 /* ============================================ */
+/* Scroll Performance                            */
+/* ============================================ */
+
+/* Sticky/fixed surfaces that content scrolls underneath. Promoting them to their own
+   compositor layer means scrolling doesn't force the browser to repaint the surface
+   itself every frame, and `contain: paint` stops their descendants from invalidating
+   anything outside their box. */
+.scroll-surface {
+  transform: translateZ(0);
+  contain: paint;
+}
+
+/* Long offscreen sections: let the browser skip layout/paint/style work for anything
+   not near the viewport. The intrinsic-size hint keeps the scrollbar stable so skipping
+   doesn't cause scroll-position jumps as sections come into range. */
+.section-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
+}
+
+/* The infinite marquees animate transform forever, which keeps their compositor layers
+   alive even far offscreen. Containing them lets the browser drop that work when the
+   section is skipped. */
+.marquee-track {
+  will-change: transform;
+  contain: layout paint;
+}
+
+/* ============================================ */
 /* COSMOQ Glass Card System                     */
 /* ============================================ */
+/* No backdrop-filter here: cosmoq-card is used for large full-width containers (one is
+   ~856x1276 = 1.09M px), and blurring that area on every scroll frame is the single most
+   expensive thing on the page. An opaque surface over the dark background is visually
+   near-identical. Small accent surfaces (.glass-card) keep their blur. */
 .cosmoq-card {
-  background: rgba(20, 20, 26, 0.72);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(20, 20, 26, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
