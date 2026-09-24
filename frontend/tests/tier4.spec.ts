@@ -11,7 +11,7 @@ test.describe("Tier 4: Real-World Application Scenarios (5 Tests)", () => {
     await expect(heroHeading).toBeVisible();
     
     // User notices the supporting subtitle
-    const subtitle = page.locator("p", { hasText: /Nexus Quant synthesizes/ });
+    const subtitle = page.locator("p", { hasText: /Quantum Yield synthesizes/ });
     await expect(subtitle).toBeVisible();
     
     // User verifies the integration partner/source marquee is present

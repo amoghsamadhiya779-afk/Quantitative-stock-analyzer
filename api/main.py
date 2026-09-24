@@ -48,7 +48,7 @@ from src.config import MARKET_CONFIG
 
 # Configure Enterprise Logging for visibility
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - API ENGINE - %(levelname)s - %(message)s')
-logger = logging.getLogger("NexusAPI")
+logger = logging.getLogger("QuantumYieldAPI")
 
 
 FALLBACK_TICKERS = {
@@ -106,7 +106,7 @@ def get_model_paths(index_key, model_type="CNN_BiLSTM_Attention"):
             
     return model_path, scaler_path, features_path, target_scaler_path
 
-app = FastAPI(title="Nexus Quant Research & Portfolio Analytics Engine", version="6.0.0", description="SQL-Backed Institutional quantitative engine with MLOps logging and Factor Analytics.")
+app = FastAPI(title="Quantum Yield API", version="6.0.0", description="Forecasts, backtests, risk analytics and news sentiment for eight global equity markets.")
 
 def parse_cors_origins(raw_origins: str) -> list[str]:
     return [origin.strip().rstrip("/") for origin in raw_origins.split(",") if origin.strip()]

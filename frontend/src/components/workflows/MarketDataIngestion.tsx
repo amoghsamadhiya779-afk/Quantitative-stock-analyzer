@@ -176,7 +176,7 @@ export default function MarketDataIngestion() {
 
         {/* Console Footer */}
         <div className="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between font-label-sm text-[9px] uppercase font-mono tracking-widest text-outline">
-          <span>Active Feed: WS://live.nexus-quant.com/v1</span>
+          <span>Simulated feed · demo data</span>
           <span>Buffer: {logs.length}/100 packets</span>
         </div>
       </div>

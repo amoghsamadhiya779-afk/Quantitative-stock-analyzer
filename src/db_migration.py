@@ -48,7 +48,7 @@ def migrate_csv_to_sqlite():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_date ON market_data(Date);")
         
         
-    print("\n🎉 MIGRATION COMPLETE! The Nexus system is now running on a Relational Database.")
+    print("\n🎉 MIGRATION COMPLETE! Quantum Yield is now running on a Relational Database.")
 
 if __name__ == "__main__":
     migrate_csv_to_sqlite()

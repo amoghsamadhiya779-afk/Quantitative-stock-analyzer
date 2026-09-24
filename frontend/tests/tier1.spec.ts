@@ -83,7 +83,7 @@ test.describe("Tier 1: Feature Coverage (30 Tests)", () => {
     });
 
     test("T1.F3.3: Verify supporting subtitle is present", async ({ page }) => {
-      const subtitle = page.locator("p", { hasText: /Nexus Quant synthesizes/ });
+      const subtitle = page.locator("p", { hasText: /Quantum Yield synthesizes/ });
       await expect(subtitle).toBeVisible();
     });
 

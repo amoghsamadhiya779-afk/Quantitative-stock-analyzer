@@ -14,8 +14,8 @@ if PROJECT_ROOT not in sys.path:
 from src.config import MARKET_CONFIG
 
 # Configure Enterprise Logger
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - NEXUS DB ENGINE - %(levelname)s - %(message)s')
-logger = logging.getLogger("NexusDBEngine")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - QUANTUM YIELD DB - %(levelname)s - %(message)s')
+logger = logging.getLogger("QuantumYieldDB")
 
 INDEX_TICKER_MAP = {
     "SP500": "^GSPC", "NIFTY50": "^NSEI", "Nikkei225": "^N225", "FTSE100": "^FTSE",

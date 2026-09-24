@@ -334,7 +334,7 @@ export default function LandingPage() {
               <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
                 <div className="max-w-[1200px] mx-auto flex justify-between items-center opacity-50">
                   <div className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50">
-                    <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">NEXUS</span>
+                    <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">QUANTUM YIELD</span>
                   </div>
                   <div className="hidden md:flex items-center gap-unit px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30">
                     <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -358,7 +358,7 @@ export default function LandingPage() {
         <header className="sticky top-0 z-50 w-full bg-surface-container/90 border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop h-16 scroll-surface">
           <div className="flex items-center gap-gutter">
             <span className="font-display-md text-display-md font-bold text-on-surface">
-              Nexus Quant
+              Quantum Yield
             </span>
             <nav className="hidden md:flex gap-gutter ml-stack-lg">
               {/* Top nav links removed to clear dead ends per QA */}
@@ -389,7 +389,7 @@ export default function LandingPage() {
                 Intelligence
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant max-w-3xl leading-relaxed mb-stack-xl">
-                Nexus Quant synthesizes raw market ticks, systemic beta variables, and custom directional neural networks into a microsecond-synchronized platform.
+                Quantum Yield synthesizes market data, technical factors, and deep-learning forecasts across eight global markets, and reports how every model performs out-of-sample.
               </p>
               <div className="flex gap-stack-md">
                 <button
@@ -597,10 +597,10 @@ export default function LandingPage() {
                   <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                     Developer API
                   </span>
-                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-md mt-stack-xs">Documentation & SDK</h2>
+                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-md mt-stack-xs">API Documentation</h2>
                   <p className="font-body-md text-body-md text-on-surface-variant">
-                    Access terminal stats and prediction results programmatically. Import the Nexus
-                    SDK or call standard REST endpoints.
+                    Access predictions, backtests and risk metrics programmatically through the REST API.
+                    Interactive OpenAPI docs are served at /docs.
                   </p>
                 </div>
                 <div className="p-stack-md rounded-[10px] border border-outline-variant bg-surface-container lg:col-span-2 font-mono text-[13px] overflow-x-auto text-on-surface-variant">
@@ -608,7 +608,7 @@ export default function LandingPage() {
                     <span className="text-outline">API Endpoint Reference</span>
                     <span className="text-secondary">POST</span>
                   </div>
-                  <div className="text-on-surface">https://api.nexusquant.app/v1/predict</div>
+                  <div className="text-on-surface">https://1amogh212-quant-modeling.hf.space/api/v1/predict</div>
                   <div className="mt-stack-sm text-[11px] text-outline">
                     Header: Content-Type: application/json
                   </div>
@@ -631,16 +631,16 @@ export default function LandingPage() {
                     Open Source Collaboration
                   </span>
                   <h2 className="font-display-md text-display-md text-on-surface mb-stack-xs">
-                    Contribute to the Nexus SDK
+                    Contribute on GitHub
                   </h2>
                   <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-                    The core model structures, indicators, and client libraries are open source.
+                    The models, indicators, backtester and frontend are open source.
                     Explore our GitHub repositories, report bugs, or submit pull requests.
                   </p>
                 </div>
                 <div>
                   <a
-                    href="https://github.com"
+                    href="https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-unit bg-primary-container text-white px-stack-md py-stack-sm rounded uppercase font-label-sm text-[12px] hover:opacity-90 transition-opacity"
@@ -860,7 +860,7 @@ export default function LandingPage() {
               className="flex flex-col items-start font-mono text-cyan-400 text-lg sm:text-2xl gap-4 max-w-3xl w-[90%] z-10 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
             >
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                $ nexus-core --boot
+                $ quantum-yield --boot
               </motion.div>
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
                 {">"} Loading Neural Weights... [OK]

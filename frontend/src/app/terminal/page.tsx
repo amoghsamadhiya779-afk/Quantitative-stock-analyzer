@@ -234,7 +234,7 @@ export default function TerminalPage() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50 backdrop-blur-md shadow-xl hover:scale-105 transition-transform pointer-events-auto z-50 relative">
               <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">
-                NEXUS
+                QUANTUM YIELD
               </span>
             </Link>
             {/* Navigation Links */}
@@ -295,7 +295,7 @@ export default function TerminalPage() {
                 Institutional Quantitative Intelligence
               </h2>
               <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
-                Nexus Quant synthesizes global macroeconomic data, real-time liquidity flow, and state-of-the-art neural networks into a singular, highly responsive interface.
+                Quantum Yield synthesizes market data, technical factors, and deep-learning forecasts into a single research terminal.
               </p>
             </div>
           )}
