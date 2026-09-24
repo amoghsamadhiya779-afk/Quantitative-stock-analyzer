@@ -77,11 +77,14 @@ quantum-yield/
 │   ├── main.py                     # FastAPI routes, RSS parsing, and ML inference
 │   └── ...                         
 ├── src/                            # Machine Learning & Feature Engineering
-│   ├── config.py                   # Market configurations and parameters
+│   ├── config.py                   # Market registry (single source of truth)
 │   ├── feature_engineering.py      # Technical indicators (RSI, VWAP, Bollinger Bands)
-│   ├── data_ingestion.py           # SQL DB loader
-│   ├── model.py                    # BiLSTM architecture
-│   └── train.py                    # Neural network training loop
+│   ├── advanced_models.py          # CNN-BiLSTM-Attention, Transformer, BiLSTM
+│   ├── strategy.py                 # Signal construction + backtest metrics (shared by API and validation)
+│   └── optuna_optimizer.py         # Hyperparameter search
+├── tests/                          # pytest suite (strategy, models, API smoke tests)
+├── run_pipeline.py                 # Trains all three models for every market
+├── validate_strategy.py            # Walk-forward out-of-sample validation
 ├── frontend/                       # Client web app
 │   ├── src/
 │   │   ├── app/                    # Next.js App Router pages and CSS
@@ -90,11 +93,14 @@ quantum-yield/
 │   ├── package.json                # Frontend package manifest
 │   └── tsconfig.json               # TypeScript configuration
 ├── mlops_artifacts/                # Model Registry
-│   └── models/                     # Saved weights (.h5) and scalers (.pkl)
-├── Dockerfile.api                  # Backend container configuration
-├── Dockerfile.ui                   # Frontend container configuration
-├── docker-compose.yml              # Multi-container orchestrator
-└── requirements.txt                # Backend dependencies manifest
+│   └── models/                     # Saved weights (.keras) and scalers (.pkl), via Git LFS
+├── Dockerfile                      # Hugging Face Spaces image (API + models)
+├── Dockerfile.api                  # Backend container for docker-compose
+├── Dockerfile.ui                   # Next.js frontend container
+├── docker-compose.yml              # Runs API + frontend locally
+├── requirements.txt                # API runtime dependencies
+├── requirements-dev.txt            # + pytest, ruff
+└── requirements-train.txt          # + optuna, for training
 ```
 
 ---
@@ -107,11 +113,12 @@ Create a virtual environment and install dependencies:
 py -m venv venv
 venv\Scripts\activate      # On Windows
 source venv/bin/activate    # On Unix
-pip install -r requirements.txt
+git lfs pull                # fetch the trained models
+pip install -r requirements-dev.txt
 ```
 Run the FastAPI development server:
 ```bash
-py api/main.py
+uvicorn api.main:app --reload --port 7860
 ```
 The API Swagger documentation will be accessible at `http://localhost:7860/docs`.
 
@@ -127,8 +134,16 @@ The platform interface will be accessible at `http://localhost:3000`.
 ### 3. Containerized Orchestration (Docker Compose)
 Run the complete decoupled environment using Docker:
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
+The API is served on `http://localhost:7860` and the UI on `http://localhost:3000`.
+
+### 4. Tests and Lint
+```bash
+pytest            # strategy, model-architecture and API smoke tests
+ruff check .
+```
+CI runs both on every pull request, plus a TypeScript check and production build of the frontend.
 
 ---
 
@@ -139,10 +154,7 @@ The platform is designed to be deployed using a fully decoupled cloud strategy:
 ### 1. Backend Deployment (Hugging Face Spaces)
 Hugging Face Spaces provides a free container hosting environment suitable for python analytical services:
 1. Create a new Space on [Hugging Face](https://huggingface.co/) and select **Docker** as the SDK (with the Blank template).
-2. Copy `Dockerfile.hf` to `Dockerfile` to configure the container to run the FastAPI analytical endpoint on port 7860:
-   ```bash
-   cp Dockerfile.hf Dockerfile
-   ```
+2. The root `Dockerfile` builds the FastAPI service on port 7860 with the trained models baked in.
 3. Commit and push the repository to your Hugging Face Space git remote. Hugging Face will build the container and serve the API.
 
 ### 2. Frontend Deployment (Vercel)

@@ -12,21 +12,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from src.feature_engineering import FeatureEngineering
 from src.advanced_models import ModelFactory
+from src.config import MARKET_FILES
 
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-MARKET_REGISTRY = {
-    "SP500": "SP500_DATASET.csv",
-    "NIFTY50": "NIFTY50_India.csv",
-    "Nikkei225": "Nikkei225_Japan.csv",
-    "FTSE100": "FTSE100_UK.csv",
-    "DAX40": "DAX40_Germany.csv",
-    "BIST100": "BIST100_Turkey.csv",
-    "Bovespa": "Bovespa_Brazil.csv",
-    "IDX": "IDX_Indonesia.csv"
-}
-
 SEQ_LENGTH = 60
 MODEL_DIR = os.path.join("mlops_artifacts", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -155,6 +145,6 @@ def train_market(index_key, filename):
             print(f"[ERROR] Training {model_name} for {index_key} failed: {e}")
 
 if __name__ == "__main__":
-    for key, filename in MARKET_REGISTRY.items():
+    for key, filename in MARKET_FILES.items():
         train_market(key, filename)
     print("\n[DONE] ALL MARKETS TRAINED SUCCESSFULLY!")

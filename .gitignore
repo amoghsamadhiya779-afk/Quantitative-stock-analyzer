@@ -1,6 +1,5 @@
-#Python / Virtual Environments
-
-pycache/
+# Python / virtual environments
+__pycache__/
 *.py[cod]
 *$py.class
 venv/
@@ -8,45 +7,36 @@ venv/
 env/
 .env
 
-#Jupyter Notebooks
-
+# Jupyter
 .ipynb_checkpoints/
 
-#MLOps Project Artifacts (Models, Logs, Plots)
+# MLOps run output. Trained models (*.keras, *.pkl) ARE committed via Git LFS because
+# the deployed API serves them; logs and plots from local runs are not.
+mlops_artifacts/logs/*
+!mlops_artifacts/logs/.gitkeep
+mlops_artifacts/plots/*
+!mlops_artifacts/plots/.gitkeep
 
-#We ignore these so we don't push heavy model weights or local logs to GitHub
+# Data (too large to commit; the API falls back to a live yfinance fetch)
+data/
 
-mlops_artifacts/models/.h5
-mlops_artifacts/models/.pkl
-mlops_artifacts/logs/.log
-mlops_artifacts/logs/.csv
-mlops_artifacts/plots/*.png
-
-#Data Files (Avoid pushing large datasets)
-
-data/raw/.csv
-data/processed/*.csv
-
-#Streamlit
-
-.streamlit/secrets.toml
-
-#Pytest
-
+# Tooling caches
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
-#OS Generated Files
-
-.DS_Store
-Thumbs.db
-
-data/
+# Frontend
 node_env/
 frontend/node_modules/
 frontend/.next/
+frontend/*.tsbuildinfo
+frontend/test-results/
+frontend/playwright-report/
 
-# Agent Workspaces
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Agent workspaces
 .agents/
-...agents/

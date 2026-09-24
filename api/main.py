@@ -37,39 +37,19 @@ def patched_dense_init(self, *args, **kwargs):
     original_dense_init(self, *args, **kwargs)
 tf.keras.layers.Dense.__init__ = patched_dense_init
 # ----------------------------------------------------------------------
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import StandardScaler
 import uvicorn
 
 # Append root directory to sys.path to resolve 'src' imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.feature_engineering import FeatureEngineering
 from src.strategy import build_signals, apply_costs
+from src.config import MARKET_CONFIG
 
 # Configure Enterprise Logging for visibility
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - API ENGINE - %(levelname)s - %(message)s')
 logger = logging.getLogger("NexusAPI")
 
-MARKET_CONFIG = {
-    "United States (S&P 500)": {"index_key": "SP500", "stock_file": "SP500_DATASET.csv"},
-    "India (NIFTY 50)": {"index_key": "NIFTY50", "stock_file": "NIFTY50_India.csv"},
-    "Japan (Nikkei 225)": {"index_key": "Nikkei225", "stock_file": "Nikkei225_Japan.csv"},
-    "United Kingdom (FTSE 100)": {"index_key": "FTSE100", "stock_file": "FTSE100_UK.csv"},
-    "Germany (DAX 40)": {"index_key": "DAX40", "stock_file": "DAX40_Germany.csv"},
-    "Turkey (BIST 100)": {"index_key": "BIST100", "stock_file": "BIST100_Turkey.csv"},
-    "Brazil (Bovespa)": {"index_key": "Bovespa", "stock_file": "Bovespa_Brazil.csv"},
-    "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv"}
-}
-
-MARKET_META = {
-    "United States (S&P 500)": {"index_key": "SP500", "stock_file": "SP500_DATASET.csv", "region": "North America", "currency": "USD"},
-    "India (NIFTY 50)": {"index_key": "NIFTY50", "stock_file": "NIFTY50_India.csv", "region": "Asia", "currency": "INR"},
-    "Japan (Nikkei 225)": {"index_key": "Nikkei225", "stock_file": "Nikkei225_Japan.csv", "region": "Asia", "currency": "JPY"},
-    "United Kingdom (FTSE 100)": {"index_key": "FTSE100", "stock_file": "FTSE100_UK.csv", "region": "Europe", "currency": "GBP"},
-    "Germany (DAX 40)": {"index_key": "DAX40", "stock_file": "DAX40_Germany.csv", "region": "Europe", "currency": "EUR"},
-    "Turkey (BIST 100)": {"index_key": "BIST100", "stock_file": "BIST100_Turkey.csv", "region": "Europe/Asia", "currency": "TRY"},
-    "Brazil (Bovespa)": {"index_key": "Bovespa", "stock_file": "Bovespa_Brazil.csv", "region": "South America", "currency": "BRL"},
-    "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv", "region": "Asia", "currency": "IDR"}
-}
 
 FALLBACK_TICKERS = {
     "United States (S&P 500)": ["AAPL", "MSFT", "AMZN", "NVDA", "META", "GOOGL", "BRK-B", "JNJ", "JPM", "V"],
@@ -832,7 +812,7 @@ def get_real_time_news(req: NewsRequest):
 
 @app.get("/api/v1/markets")
 def get_markets():
-    return {"markets": MARKET_META}
+    return {"markets": MARKET_CONFIG}
 
 # --- HARDENED TICKER ENDPOINT ---
 @app.get("/api/v1/tickers/{market_name}")
@@ -884,8 +864,8 @@ def get_stock_data(market_name: str, ticker: str):
     result = {
         "ticker": ticker,
         "market": market_name,
-        "currency": MARKET_META.get(market_name, {}).get("currency", "USD"),
-        "region": MARKET_META.get(market_name, {}).get("region", "Global"),
+        "currency": MARKET_CONFIG.get(market_name, {}).get("currency", "USD"),
+        "region": MARKET_CONFIG.get(market_name, {}).get("region", "Global"),
         "latest_close": float(df_recent['Close'].iloc[-1]),
         "prev_close": float(df_recent['Close'].iloc[-2]) if len(df_recent) > 1 else 0.0,
         "price_delta": float(df_recent['Close'].iloc[-1] - df_recent['Close'].iloc[-2]) if len(df_recent) > 1 else 0.0,
@@ -912,6 +892,9 @@ def get_stock_data(market_name: str, ticker: str):
 # --- DEBUG ENDPOINT ---
 @app.get("/api/v1/debug")
 def debug_environment():
+    # Exposes server filesystem paths, so it is off unless explicitly enabled.
+    if os.getenv("ENABLE_DEBUG_ENDPOINT") != "1":
+        raise HTTPException(status_code=404, detail="Not Found")
     raw_dir = os.path.join(PROJECT_ROOT, "data", "raw")
     return {
         "project_root": PROJECT_ROOT,

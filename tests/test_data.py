@@ -1,6 +1,5 @@
 import pytest
 import pandas as pd
-import os
 from src.data_ingestion import DataIngestion
 
 def test_fetch_data_success(tmp_path):

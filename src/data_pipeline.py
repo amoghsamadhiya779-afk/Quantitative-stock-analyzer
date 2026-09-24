@@ -92,7 +92,6 @@ class SQLDataPipeline:
             new_data_frames = []
             
             for index_key, yf_ticker in INDEX_TICKER_MAP.items():
-                query = f"SELECT MAX(Date) as max_date FROM macro_indices WHERE Index_Col='{index_key}'"
                 # Handle edge case where column name might be "Index" or "Index_Col" based on pandas parsing
                 try: date_df = pd.read_sql(f"SELECT MAX(Date) as max_date FROM macro_indices WHERE \"Index\"='{index_key}'", conn)
                 except: date_df = pd.DataFrame([{'max_date': None}])

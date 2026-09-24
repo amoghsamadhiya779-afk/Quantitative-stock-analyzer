@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Input, Dense, Dropout, Bidirectional, LSTM, 
     Conv1D, BatchNormalization, MultiHeadAttention, 
-    LayerNormalization, Add, Flatten, GlobalAveragePooling1D,
+    LayerNormalization, Add, GlobalAveragePooling1D,
     SpatialDropout1D
 )
 from tensorflow.keras.regularizers import l2

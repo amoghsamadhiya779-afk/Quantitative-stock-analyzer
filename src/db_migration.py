@@ -20,7 +20,7 @@ def migrate_csv_to_sqlite():
         # Migrate Macro Indices
         index_file = os.path.join(PROJECT_ROOT, "data", "raw", "Index_Levels.csv")
         if os.path.exists(index_file):
-            print(f"📊 Migrating Macro Indices...")
+            print("📊 Migrating Macro Indices...")
             df_index = pd.read_csv(index_file)
             df_index.to_sql("macro_indices", conn, if_exists="replace", index=False)
             print(f"   ✅ Inserted {len(df_index)} index records.")
