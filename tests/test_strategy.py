@@ -28,15 +28,27 @@ def test_trend_leg_is_lagged_one_bar():
     preds = np.zeros(5)  # NN leg neutral, so position comes from trend alone
     ma20 = np.array([1, 1, 3, 3, 3])
     ma50 = np.array([2, 2, 2, 2, 2])
-    signals = build_signals(preds, ma20, ma50)
+    signals = build_signals(preds, ma20, ma50, long_only=False)
     # Crossover happens at bar 2, so it shows up at bar 3.
     np.testing.assert_array_equal(signals, [0.0, -0.5, -0.5, 0.5, 0.5])
 
 
 def test_deadband_keeps_small_forecasts_flat():
     preds = np.array([0.0005, -0.0005, 0.002, -0.002])
-    signals = build_signals(preds)
+    signals = build_signals(preds, long_only=False)
     np.testing.assert_array_equal(signals, [0.0, 0.0, 0.5, -0.5])
+
+
+def test_long_only_is_default_and_never_shorts():
+    rng = np.random.default_rng(1)
+    preds = rng.normal(0, 0.005, 300)
+    ma20 = 100 + rng.normal(0, 1, 300).cumsum()
+    ma50 = 100 + rng.normal(0, 1, 300).cumsum()
+
+    long_short = build_signals(preds, ma20, ma50, long_only=False)
+    default = build_signals(preds, ma20, ma50)
+    assert (long_short < 0).any()
+    np.testing.assert_array_equal(default, np.maximum(long_short, 0.0))
 
 
 def test_costs_charge_position_changes():

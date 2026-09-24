@@ -140,6 +140,7 @@ MODEL_LOAD_RETRY_COOLDOWN_SEC = 300  # don't retry a failed model load more than
 # frictionless backtest; 5bps is a realistic retail-ish round-trip assumption per side.
 BACKTEST_DEADBAND = float(os.getenv("BACKTEST_DEADBAND", "0.001"))
 BACKTEST_COST_BPS = float(os.getenv("BACKTEST_COST_BPS", "5.0"))
+BACKTEST_LONG_ONLY = os.getenv("BACKTEST_LONG_ONLY", "1") == "1"
 
 # Feature-group membership for the explainability panel. Every trained model uses the
 # same 42-column feature set (src/feature_engineering.py), so this mapping is static.
@@ -552,6 +553,7 @@ def execute_backtest(req: InferenceRequest):
                     ma20=df['MA_20'].values[-backtest_days:] if has_ma else None,
                     ma50=df['MA_50'].values[-backtest_days:] if has_ma else None,
                     deadband=BACKTEST_DEADBAND,
+                    long_only=BACKTEST_LONG_ONLY,
                 )
 
                 model_used = f"Hybrid NN-Trend Convergence ({req.model_type})"
@@ -574,6 +576,8 @@ def execute_backtest(req: InferenceRequest):
                 [1.0, -1.0],
                 default=0.0,  # indicators disagree -> stay flat
             )
+            if BACKTEST_LONG_ONLY:
+                raw_fb = np.maximum(raw_fb, 0.0)
             signals = np.roll(raw_fb, 1)
             signals[0] = 0.0
             model_used = "Algorithmic Trend Convergence"
@@ -582,6 +586,8 @@ def execute_backtest(req: InferenceRequest):
         # (The old code applied np.roll to the already-aligned combined signal, which
         # left the NN leg two bars stale.)
         trade_signals = signals
+
+        model_used += " · long/flat" if BACKTEST_LONG_ONLY else " · long/short"
 
         # Charge transaction costs on the change in position size each bar.
         strategy_returns = apply_costs(trade_signals, asset_returns, cost_bps=BACKTEST_COST_BPS)

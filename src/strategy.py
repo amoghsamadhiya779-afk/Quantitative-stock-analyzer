@@ -15,9 +15,17 @@ DEFAULT_DEADBAND = 0.001
 # turn and is charged as such.
 DEFAULT_COST_BPS = 5.0
 
+# Long or flat by default. Walk-forward tests on S&P 500 (2009-2018) and GOOG (2008-2013)
+# showed the short leg is where the old long/short strategy lost money: single stocks and
+# indices drift upward, so the trend filter's long trades earned a Sharpe of ~0.4-0.5
+# while its short trades lost ~0.5-1.0. No forecaster showed enough directional skill to
+# overcome that drift.
+DEFAULT_LONG_ONLY = True
 
-def build_signals(preds_returns, ma20=None, ma50=None, deadband=DEFAULT_DEADBAND):
-    """Build per-bar target positions in [-1, 1] from predicted next-bar log returns.
+
+def build_signals(preds_returns, ma20=None, ma50=None, deadband=DEFAULT_DEADBAND, long_only=DEFAULT_LONG_ONLY):
+    """Build per-bar target positions from predicted next-bar log returns: in [0, 1] when
+    `long_only` (the default), otherwise in [-1, 1].
 
     `preds_returns[i]` must be the model's forecast for bar `i`, produced using only data
     through bar `i-1` (i.e. already lag-correct - it is NOT shifted again here).
@@ -46,11 +54,13 @@ def build_signals(preds_returns, ma20=None, ma50=None, deadband=DEFAULT_DEADBAND
     # Graduated combination: both legs agree -> full size; one leg neutral -> half size;
     # legs disagree -> flat.
     combined = nn_signal + trend_signal
-    return np.select(
+    positions = np.select(
         [combined >= 2, combined <= -2, combined == 1, combined == -1],
         [1.0, -1.0, 0.5, -0.5],
         default=0.0,
     )
+    # Bearish agreement means "stay out", not "go short".
+    return np.maximum(positions, 0.0) if long_only else positions
 
 
 def apply_costs(signals, asset_returns, cost_bps=DEFAULT_COST_BPS):
