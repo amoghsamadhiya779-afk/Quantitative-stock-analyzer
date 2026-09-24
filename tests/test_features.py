@@ -1,5 +1,4 @@
 """Pytest checks for feature engineering logic."""
-import pytest
 import pandas as pd
 import numpy as np
 from src.feature_engineering import FeatureEngineering

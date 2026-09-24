@@ -100,6 +100,7 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, onTab
                   { id: 'portfolio', label: 'Portfolio Opt' },
                   { id: 'risk', label: 'Risk Analytics' },
                   { id: 'backtesting', label: 'Backtesting' },
+                  { id: 'report-card', label: 'Report Card' },
                   { id: 'news-macro', label: 'News-Macro' },
                 ].map((item) => (
                   <button

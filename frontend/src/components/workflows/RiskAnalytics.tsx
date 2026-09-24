@@ -2,127 +2,43 @@
 
 import { useState, Fragment, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, AlertTriangle, ShieldCheck, Activity } from "lucide-react";
-
-interface Sector {
-  name: string;
-  volatility: number;
-  beta: number;
-  varValue: number;
-  constituents: Array<{ name: string; weight: number; beta: number }>;
-}
+import { AlertTriangle, ShieldCheck, Activity } from "lucide-react";
+import { useAssetStats, historicalVar95, maxDrawdown } from "@/lib/assetStats";
 
 interface RiskProps {
   tickers?: string[];
   selectedMarket?: string;
 }
 
-// Helper to generate deterministic pseudo-random numbers
-const pseudoRandom = (seed: string) => {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = Math.imul(31, hash) + seed.charCodeAt(i) | 0;
-  }
-  return (Math.abs(hash) % 1000) / 1000;
-};
-
-// Generates dynamic sector names based on the selected market
-const getDynamicSectors = (market: string) => {
-  if (market.toLowerCase().includes("crypto")) return ["Layer 1s", "DeFi", "Infrastructure", "Exchange Tokens"];
-  if (market.toLowerCase().includes("india")) return ["Financial Services", "IT", "Oil & Gas", "Consumer Goods"];
-  return ["Technology", "Financials", "Healthcare", "Energy", "Utilities"];
-};
+const PORTFOLIO_VALUE = 100_000;
 
 export default function RiskAnalytics({ tickers = [], selectedMarket = "United States (S&P 500)" }: RiskProps) {
   const [hoveredCell, setHoveredCell] = useState<{ i: number; j: number } | null>(null);
-  const [expandedSector, setExpandedSector] = useState<string | null>(null);
 
-  // Dynamic Data Generation
-  const activeTickers = useMemo(() => {
-    const list = tickers.length > 0 ? tickers : ["AAPL", "MSFT", "NVDA", "AMZN", "META"];
-    return list.slice(0, 5);
-  }, [tickers]);
+  // Everything below is computed from about a year of real daily closes for the market's
+  // top five tickers, held in equal weights.
+  const { stats, loading } = useAssetStats(selectedMarket, tickers);
+  const activeTickers = useMemo(() => stats?.assets.map((a) => a.ticker) ?? [], [stats]);
+  const correlationMatrix = stats?.correlation ?? [];
 
-  const correlationMatrix = useMemo(() => {
-    const matrix: number[][] = Array(activeTickers.length).fill(0).map(() => Array(activeTickers.length).fill(1.0));
-    for (let i = 0; i < activeTickers.length; i++) {
-      for (let j = i + 1; j < activeTickers.length; j++) {
-        const t1 = activeTickers[i];
-        const t2 = activeTickers[j];
-        // Generate correlation between -0.4 and 0.95
-        const corr = -0.4 + pseudoRandom(t1 + t2 + "risk_corr") * 1.35;
-        matrix[i][j] = corr;
-        matrix[j][i] = corr;
-      }
-    }
-    return matrix;
-  }, [activeTickers]);
+  const portfolio = useMemo(() => {
+    if (!stats) return null;
+    const r = stats.equalWeightReturns;
+    const m = r.reduce((a, b) => a + b, 0) / r.length;
+    const vol = Math.sqrt(r.reduce((a, b) => a + (b - m) ** 2, 0) / (r.length - 1)) * Math.sqrt(252) * 100;
+    const avgStockVol = stats.assets.reduce((a, s) => a + s.annualVol, 0) / stats.assets.length;
+    return { vol, avgStockVol, var95: historicalVar95(r), maxDd: maxDrawdown(r) };
+  }, [stats]);
 
-  const sectorsData = useMemo(() => {
-    const sectorNames = getDynamicSectors(selectedMarket);
-    let totalVarRemaining = 5000000; // Simulated $5M Total Value at Risk
+  // Score = annualised portfolio volatility on a 0-40% scale; the bands are stated in the UI.
+  const riskScore = portfolio ? Math.min(100, (portfolio.vol / 40) * 100) : 0;
+  let riskCategory = { label: "Low", color: "text-emerald-500", bg: "bg-emerald-500", stroke: "#10b981", icon: ShieldCheck, desc: "Realised volatility under 15% a year." };
+  if (portfolio && portfolio.vol >= 15) riskCategory = { label: "Moderate", color: "text-yellow-500", bg: "bg-yellow-500", stroke: "#eab308", icon: Activity, desc: "Realised volatility of 15-25% a year, typical for a small equity basket." };
+  if (portfolio && portfolio.vol >= 25) riskCategory = { label: "High", color: "text-orange-500", bg: "bg-orange-500", stroke: "#f97316", icon: AlertTriangle, desc: "Realised volatility of 25-35% a year." };
+  if (portfolio && portfolio.vol >= 35) riskCategory = { label: "Extreme", color: "text-red-500", bg: "bg-red-500", stroke: "#ef4444", icon: AlertTriangle, desc: "Realised volatility above 35% a year." };
 
-    return sectorNames.map((name, idx) => {
-      const isLast = idx === sectorNames.length - 1;
-      const sectorBeta = 0.5 + pseudoRandom(name + selectedMarket + "beta") * 1.2;
-      const sectorVol = 12 + pseudoRandom(name + selectedMarket + "vol") * 25;
-      
-      const varAlloc = isLast ? totalVarRemaining : totalVarRemaining * (0.2 + pseudoRandom(name + "var") * 0.3);
-      totalVarRemaining -= varAlloc;
-
-      // Generate 3-5 random constituents from the market
-      const numConst = 3 + Math.floor(pseudoRandom(name + "count") * 3);
-      const constituents = [];
-      let totalWeight = 0;
-      
-      for (let i=0; i<numConst; i++) {
-        const cTicker = tickers[i + (idx * 3)] || `SYM${i}`;
-        const weight = 10 + pseudoRandom(cTicker + "weight") * 40;
-        totalWeight += weight;
-        constituents.push({
-          name: cTicker,
-          weight: weight,
-          beta: sectorBeta * (0.8 + pseudoRandom(cTicker + "cbeta") * 0.4)
-        });
-      }
-
-      // Normalize weights to 100%
-      constituents.forEach(c => c.weight = (c.weight / totalWeight) * 100);
-
-      return {
-        name,
-        volatility: parseFloat(sectorVol.toFixed(1)),
-        beta: parseFloat(sectorBeta.toFixed(2)),
-        varValue: varAlloc,
-        constituents: constituents.map(c => ({...c, weight: parseFloat(c.weight.toFixed(1)), beta: parseFloat(c.beta.toFixed(2))}))
-      };
-    });
-  }, [selectedMarket, tickers]);
-
-  // Systemic Risk Calculations
-  const averageBeta = useMemo(() => sectorsData.reduce((acc, s) => acc + s.beta, 0) / sectorsData.length, [sectorsData]);
-  const averageVol = useMemo(() => sectorsData.reduce((acc, s) => acc + s.volatility, 0) / sectorsData.length, [sectorsData]);
-  const totalVaR = useMemo(() => sectorsData.reduce((acc, s) => acc + s.varValue, 0), [sectorsData]);
-  
-  // Calculate a 0-100 score where 100 is max risk (high beta + high vol)
-  const riskScore = Math.min(100, Math.max(0, ((averageBeta - 0.5) / 1.5) * 50 + (averageVol / 40) * 50));
-
-  let riskCategory = { label: "Low Risk", color: "text-emerald-500", bg: "bg-emerald-500", stroke: "#10b981", icon: ShieldCheck, desc: "Market conditions are stable. Assets are showing historically low volatility." };
-  if (riskScore > 40) riskCategory = { label: "Moderate", color: "text-yellow-500", bg: "bg-yellow-500", stroke: "#eab308", icon: Activity, desc: "Normal market fluctuations. Standard risk management applies." };
-  if (riskScore > 65) riskCategory = { label: "High Risk", color: "text-orange-500", bg: "bg-orange-500", stroke: "#f97316", icon: AlertTriangle, desc: "Elevated volatility detected. Sector correlations are tightening." };
-  if (riskScore > 85) riskCategory = { label: "Extreme", color: "text-red-500", bg: "bg-red-500", stroke: "#ef4444", icon: AlertTriangle, desc: "Market is experiencing severe stress. Capital preservation recommended." };
-
-  const formatCurrency = (val: number) => {
-    if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`;
-    return `$${(val / 1000).toFixed(0)}K`;
-  };
-
-  const getHeatmapColor = (beta: number) => {
-    if (beta > 1.3) return "bg-red-500/20 border-red-500/40 text-red-400";
-    if (beta > 1.0) return "bg-orange-500/20 border-orange-500/40 text-orange-400";
-    if (beta > 0.8) return "bg-yellow-500/20 border-yellow-500/40 text-yellow-400";
-    return "bg-emerald-500/20 border-emerald-500/40 text-emerald-400";
-  };
+  const formatCurrency = (val: number) => `$${Math.round(val).toLocaleString()}`;
+  const maxVar = stats ? Math.max(...stats.assets.map((a) => a.var95)) : 1;
 
   const getMatrixCellColor = (val: number) => {
     if (val === 1.0) return "bg-white/10 text-white"; // Self
@@ -141,6 +57,14 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
     if (val > -0.3) return "Slight Hedge: Mild tendency to move in opposite directions.";
     return "Strong Hedge: Moves in opposite directions, actively protecting your portfolio.";
   };
+
+  if (!stats || !portfolio) {
+    return (
+      <div className="p-6 rounded-[10px] border border-outline-variant/30 bg-surface-container/90 font-body-md text-[13px] text-on-surface-variant">
+        {loading || tickers.length === 0 ? "Loading a year of prices for the market's top tickers…" : "Not enough shared price history to compute risk for this market."}
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -171,7 +95,7 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
           </svg>
           <div className="absolute flex flex-col items-center justify-center text-center">
             <span className="text-3xl font-display font-bold text-white">{Math.round(riskScore)}</span>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Risk Score</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Vol score</span>
           </div>
         </div>
 
@@ -184,19 +108,21 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
             </span>
           </div>
           
-          <h2 className="text-2xl font-display text-white">Systemic Market Risk</h2>
+          <h2 className="text-2xl font-display text-white">Equal-weighted basket risk</h2>
           <p className="text-sm text-neutral-400 max-w-lg leading-relaxed">
-            {riskCategory.desc} Your simulated portfolio currently has a base Value at Risk (VaR) of <span className="text-white font-bold">{formatCurrency(totalVaR)}</span> assuming standard capital allocation.
+            {riskCategory.desc} Held in equal weights, a {formatCurrency(PORTFOLIO_VALUE)} portfolio of {activeTickers.join(", ")} had a
+            one-day 95% historical VaR of <span className="text-white font-bold">{formatCurrency(PORTFOLIO_VALUE * portfolio.var95 / 100)}</span> ({portfolio.var95.toFixed(2)}%)
+            and a worst drawdown of <span className="text-white font-bold">{portfolio.maxDd.toFixed(1)}%</span> between {stats.start} and {stats.end}.
           </p>
 
           <div className="flex gap-6 mt-2">
             <div>
-              <div className="text-[10px] uppercase font-mono tracking-widest text-neutral-500 mb-1">Avg Market Beta</div>
-              <div className="text-lg font-bold text-white">{averageBeta.toFixed(2)}x</div>
+              <div className="text-[10px] uppercase font-mono tracking-widest text-neutral-500 mb-1">Basket volatility</div>
+              <div className="text-lg font-bold text-white">{portfolio.vol.toFixed(1)}%</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase font-mono tracking-widest text-neutral-500 mb-1">Avg Volatility</div>
-              <div className="text-lg font-bold text-white">{averageVol.toFixed(1)}%</div>
+              <div className="text-[10px] uppercase font-mono tracking-widest text-neutral-500 mb-1">Avg stock volatility</div>
+              <div className="text-lg font-bold text-white">{portfolio.avgStockVol.toFixed(1)}%</div>
             </div>
           </div>
         </div>
@@ -209,11 +135,11 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
         <div className="lg:col-span-6 ventriloc-card rounded-[24px] bg-[#0a0a0a]/60 border border-luxury-glass backdrop-blur-md p-6 flex flex-col relative overflow-hidden">
           <div className="mb-6">
             <h3 className="text-sm font-bold font-display uppercase tracking-widest text-white">Asset Relationship Map</h3>
-            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Hover over any square to see how these assets interact.</p>
+            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Correlation of daily returns, {stats.start} to {stats.end}. Hover a square for details.</p>
           </div>
 
           <div className="relative flex-1 flex flex-col items-center justify-center py-4">
-            <div className="grid grid-cols-6 gap-1.5 w-full max-w-[420px] font-mono text-[10px] select-none">
+            <div className="grid gap-1.5 w-fit max-w-full font-mono text-[10px] select-none" style={{ gridTemplateColumns: `repeat(${activeTickers.length + 1}, 2.5rem)` }}>
               
               {/* Header corner */}
               <div className="h-10 w-10 flex items-center justify-center text-neutral-600 border-b border-r border-white/5">Asset</div>
@@ -286,97 +212,37 @@ export default function RiskAnalytics({ tickers = [], selectedMarket = "United S
           </div>
         </div>
 
-        {/* 3. Visual VaR Sector Heatmap */}
+        {/* 3. Per-stock risk */}
         <div className="lg:col-span-6 rounded border border-outline-variant/30 bg-[#08080a]/60 backdrop-blur-md p-stack-md flex flex-col gap-stack-sm">
           <div>
-            <h3 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Sector Capital Exposure</h3>
-            <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Visual breakdown of where your capital is at risk.</p>
+            <h3 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Risk by stock</h3>
+            <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Realised over the same window. Bar = one-day 95% VaR.</p>
           </div>
-
-          <div className="flex flex-col gap-3 mt-2 overflow-y-auto pr-2 custom-scrollbar max-h-[500px]">
-            {sectorsData.map((sector) => {
-              const isExpanded = expandedSector === sector.name;
-              const varPercentage = (sector.varValue / totalVaR) * 100;
-
-              return (
-                <div
-                  key={sector.name}
-                  className={`rounded border transition-all duration-300 overflow-hidden ${
-                    isExpanded ? "bg-surface-variant border-outline-variant/30" : "bg-[#050505] border-outline-variant/30 hover:bg-surface-container-highest"
-                  }`}
-                >
-                  {/* Sector Header Trigger */}
-                  <button
-                    onClick={() => setExpandedSector(isExpanded ? null : sector.name)}
-                    className="w-full p-4 flex flex-col gap-3 text-left"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="font-label-sm text-[11px] uppercase font-bold tracking-wider text-on-surface">{sector.name}</div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold border uppercase ${getHeatmapColor(sector.beta)}`}>
-                          Vol: {sector.volatility}%
-                        </span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
-                      </div>
-                    </div>
-
-                    {/* VaR Progress Bar */}
-                    <div className="w-full flex flex-col gap-1.5">
-                      <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
-                        <span>Capital at Risk</span>
-                        <span className="text-on-surface font-bold">{formatCurrency(sector.varValue)} ({varPercentage.toFixed(1)}%)</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-outline-variant/30 rounded overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${varPercentage}%` }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                          className={`h-full rounded-full ${getHeatmapColor(sector.beta).split(' ')[0]}`} // Extracts just the bg color
-                        />
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Constituent details panel */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="overflow-hidden border-t border-outline-variant/30 bg-[#000000]"
-                      >
-                        <div className="p-stack-sm flex flex-col gap-2 font-mono text-[10px]">
-                          <div className="grid grid-cols-3 text-outline uppercase tracking-wider pb-1.5 border-b border-outline-variant/30">
-                            <span>Asset</span>
-                            <span className="text-center">Allocation</span>
-                            <span className="text-right">Risk (Beta)</span>
-                          </div>
-                          {sector.constituents.map((item) => (
-                            <div key={item.name} className="grid grid-cols-3 text-on-surface-variant py-1.5 items-center">
-                              <span className="font-bold text-on-surface">{item.name}</span>
-                              
-                              {/* Mini allocation bar */}
-                              <div className="flex items-center gap-2 justify-center">
-                                <span className="w-8 text-right">{item.weight}%</span>
-                                <div className="w-12 h-1 bg-outline-variant/30 rounded-full overflow-hidden">
-                                  <div className="h-full bg-outline" style={{ width: `${item.weight}%` }} />
-                                </div>
-                              </div>
-                              
-                              <span className={`text-right font-bold ${item.beta > 1 ? 'text-orange-400' : 'text-emerald-400'}`}>
-                                {item.beta.toFixed(2)}x
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+          <div className="flex flex-col gap-3 mt-2">
+            {stats.assets.map((a) => (
+              <div key={a.ticker} className="rounded border border-outline-variant/30 bg-[#050505] p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-label-sm text-[11px] uppercase font-bold tracking-wider text-on-surface">{a.ticker}</span>
+                  <span className="font-mono text-[10px] text-on-surface-variant">
+                    Vol {a.annualVol.toFixed(1)}% · Max DD {a.maxDrawdown.toFixed(1)}%
+                  </span>
                 </div>
-              );
-            })}
+                <div className="w-full flex flex-col gap-1.5">
+                  <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
+                    <span>1-day VaR (95%)</span>
+                    <span className="text-on-surface font-bold">{a.var95.toFixed(2)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-outline-variant/30 rounded overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(a.var95 / maxVar) * 100}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className="h-full rounded-full bg-on-surface-variant"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

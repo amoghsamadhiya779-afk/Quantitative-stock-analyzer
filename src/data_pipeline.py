@@ -14,8 +14,8 @@ if PROJECT_ROOT not in sys.path:
 from src.config import MARKET_CONFIG
 
 # Configure Enterprise Logger
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - NEXUS DB ENGINE - %(levelname)s - %(message)s')
-logger = logging.getLogger("NexusDBEngine")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - QUANTUM YIELD DB - %(levelname)s - %(message)s')
+logger = logging.getLogger("QuantumYieldDB")
 
 INDEX_TICKER_MAP = {
     "SP500": "^GSPC", "NIFTY50": "^NSEI", "Nikkei225": "^N225", "FTSE100": "^FTSE",
@@ -92,7 +92,6 @@ class SQLDataPipeline:
             new_data_frames = []
             
             for index_key, yf_ticker in INDEX_TICKER_MAP.items():
-                query = f"SELECT MAX(Date) as max_date FROM macro_indices WHERE Index_Col='{index_key}'"
                 # Handle edge case where column name might be "Index" or "Index_Col" based on pandas parsing
                 try: date_df = pd.read_sql(f"SELECT MAX(Date) as max_date FROM macro_indices WHERE \"Index\"='{index_key}'", conn)
                 except: date_df = pd.DataFrame([{'max_date': None}])

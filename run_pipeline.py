@@ -1,3 +1,4 @@
+import argparse
 import os
 import pandas as pd
 import numpy as np
@@ -12,21 +13,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from src.feature_engineering import FeatureEngineering
 from src.advanced_models import ModelFactory
+from src.config import MARKET_FILES
+from src.walkforward import create_sequences
 
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-MARKET_REGISTRY = {
-    "SP500": "SP500_DATASET.csv",
-    "NIFTY50": "NIFTY50_India.csv",
-    "Nikkei225": "Nikkei225_Japan.csv",
-    "FTSE100": "FTSE100_UK.csv",
-    "DAX40": "DAX40_Germany.csv",
-    "BIST100": "BIST100_Turkey.csv",
-    "Bovespa": "Bovespa_Brazil.csv",
-    "IDX": "IDX_Indonesia.csv"
-}
-
 SEQ_LENGTH = 60
 MODEL_DIR = os.path.join("mlops_artifacts", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -38,14 +30,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # 2. CORE TRAINING LOGIC
 # ==========================================
 
-def create_sequences(data, target, seq_length):
-    xs, ys = [], []
-    for i in range(len(data) - seq_length):
-        xs.append(data[i:(i + seq_length)])
-        ys.append(target[i + seq_length])
-    return np.array(xs), np.array(ys)
-
-def train_market(index_key, filename):
+def train_market(index_key, filename, force=False):
     print(f"\n{'='*50}\n INITIATING TRAINING FOR: {index_key}\n{'='*50}")
     
     file_path = os.path.join("data", "raw", filename)
@@ -97,11 +82,18 @@ def train_market(index_key, filename):
     # 4. Prepare Sequences
     X, y = create_sequences(scaled_features, scaled_target, SEQ_LENGTH)
 
-    # create_sequences shortens the array by SEQ_LENGTH, so re-anchor the split in
-    # sequence-space to the same point in time the scalers were fit up to (zero leakage).
-    seq_split_idx = split_idx - SEQ_LENGTH
+    # Window j ends at row j + SEQ_LENGTH - 1 and is labelled with that row's next-bar
+    # return, so windows ending before split_idx are training data.
+    seq_split_idx = split_idx - SEQ_LENGTH + 1
     X_train, X_test = X[:seq_split_idx], X[seq_split_idx:]
     y_train, y_test = y[:seq_split_idx], y[seq_split_idx:]
+
+    # Early stopping and checkpointing watch the tail of the TRAINING window. Using the
+    # test split here (as before) picked each model by its test score, so the test loss
+    # no longer measured anything out-of-sample.
+    val_cut = int(len(X_train) * 0.9)
+    X_fit, y_fit = X_train[:val_cut], y_train[:val_cut]
+    X_val, y_val = X_train[val_cut:], y_train[val_cut:]
 
     input_shape = (SEQ_LENGTH, len(features))
 
@@ -128,7 +120,7 @@ def train_market(index_key, filename):
     for model_name, build_model in model_builders.items():
         model_save_path = os.path.join(MODEL_DIR, f"{index_key}_{model_name}.keras")
 
-        if os.path.exists(model_save_path):
+        if os.path.exists(model_save_path) and not force:
             print(f"\n[SKIP] {model_name} for {index_key} already trained at {model_save_path}")
             continue
 
@@ -143,18 +135,24 @@ def train_market(index_key, filename):
 
         try:
             model.fit(
-                X_train, y_train,
-                validation_data=(X_test, y_test),
+                X_fit, y_fit,
+                validation_data=(X_val, y_val),
                 epochs=50,
                 batch_size=64,
                 callbacks=callbacks,
                 verbose=2
             )
-            print(f"[SUCCESS] {model_name} saved for {index_key}!")
+            test_loss = model.evaluate(X_test, y_test, verbose=0, return_dict=True)["loss"]
+            print(f"[SUCCESS] {model_name} saved for {index_key} (held-out test loss {test_loss:.4f})")
         except Exception as e:
             print(f"[ERROR] Training {model_name} for {index_key} failed: {e}")
 
 if __name__ == "__main__":
-    for key, filename in MARKET_REGISTRY.items():
-        train_market(key, filename)
+    parser = argparse.ArgumentParser(description="Train every architecture for every market.")
+    parser.add_argument("--markets", nargs="+", default=list(MARKET_FILES), choices=list(MARKET_FILES))
+    parser.add_argument("--force", action="store_true",
+                        help="retrain even when a model file already exists")
+    args = parser.parse_args()
+    for key in args.markets:
+        train_market(key, MARKET_FILES[key], force=args.force)
     print("\n[DONE] ALL MARKETS TRAINED SUCCESSFULLY!")

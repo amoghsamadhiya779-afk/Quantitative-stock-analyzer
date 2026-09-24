@@ -11,7 +11,7 @@ test.describe("Tier 4: Real-World Application Scenarios (5 Tests)", () => {
     await expect(heroHeading).toBeVisible();
     
     // User notices the supporting subtitle
-    const subtitle = page.locator("p", { hasText: /Nexus Quant synthesizes/ });
+    const subtitle = page.locator("p", { hasText: /Quantum Yield synthesizes/ });
     await expect(subtitle).toBeVisible();
     
     // User verifies the integration partner/source marquee is present
@@ -25,7 +25,7 @@ test.describe("Tier 4: Real-World Application Scenarios (5 Tests)", () => {
     await page.waitForTimeout(800);
     
     // User reads and interacts with workflow buttons
-    const initialTab = page.locator("button", { hasText: /^Market data ingestion$/ });
+    const initialTab = page.locator("button", { hasText: /^Market data$/ });
     await expect(initialTab).toBeVisible();
     
     const indicatorsTab = page.locator("button", { hasText: /^Technical indicators$/ });
@@ -157,7 +157,7 @@ test.describe("Tier 4: Real-World Application Scenarios (5 Tests)", () => {
     expect(flexWrap).not.toBe("wrap");
     
     // Clicks/swipes mockups (toggles workflow tabs)
-    const initialTab = page.locator("button", { hasText: /^Market data ingestion$/ });
+    const initialTab = page.locator("button", { hasText: /^Market data$/ });
     const analyticsTab = page.locator("button", { hasText: /^Risk analytics$/ });
     
     await expect(initialTab).toBeVisible();

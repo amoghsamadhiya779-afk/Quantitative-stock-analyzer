@@ -112,8 +112,8 @@ test.describe("Tier 5: Adversarial Hardening (Challenger 2)", () => {
     // Wait for the slow request timeout window
     await page.waitForTimeout(2500);
 
-    // Verify that the UI displays MSFT's valuation, not AAPL's, proving race condition resolution
-    const valuationBlock = page.locator("span", { hasText: "Valuation" }).locator("..");
+    // Verify that the UI displays MSFT's last close, not AAPL's, proving race condition resolution
+    const valuationBlock = page.locator("span", { hasText: "Last close" }).locator("..");
     await expect(valuationBlock).toContainText("420.00");
   });
 
@@ -203,7 +203,7 @@ test.describe("Tier 5: Adversarial Hardening (Challenger 2)", () => {
     await page.waitForTimeout(1000);
 
     // Assert that the page did not crash and displays a fallback for the missing values
-    const valuationBlock = page.locator("span", { hasText: "Valuation" }).locator("..");
+    const valuationBlock = page.locator("span", { hasText: "Last close" }).locator("..");
     await expect(valuationBlock).toContainText("800.00");
   });
 

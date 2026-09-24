@@ -20,7 +20,7 @@ def migrate_csv_to_sqlite():
         # Migrate Macro Indices
         index_file = os.path.join(PROJECT_ROOT, "data", "raw", "Index_Levels.csv")
         if os.path.exists(index_file):
-            print(f"📊 Migrating Macro Indices...")
+            print("📊 Migrating Macro Indices...")
             df_index = pd.read_csv(index_file)
             df_index.to_sql("macro_indices", conn, if_exists="replace", index=False)
             print(f"   ✅ Inserted {len(df_index)} index records.")
@@ -48,7 +48,7 @@ def migrate_csv_to_sqlite():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_date ON market_data(Date);")
         
         
-    print("\n🎉 MIGRATION COMPLETE! The Nexus system is now running on a Relational Database.")
+    print("\n🎉 MIGRATION COMPLETE! Quantum Yield is now running on a Relational Database.")
 
 if __name__ == "__main__":
     migrate_csv_to_sqlite()

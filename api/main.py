@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cachetools import TTLCache
 import yfinance as yf
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import json
 import logging
 
 warnings.filterwarnings('ignore')
@@ -37,39 +38,19 @@ def patched_dense_init(self, *args, **kwargs):
     original_dense_init(self, *args, **kwargs)
 tf.keras.layers.Dense.__init__ = patched_dense_init
 # ----------------------------------------------------------------------
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import StandardScaler
 import uvicorn
 
 # Append root directory to sys.path to resolve 'src' imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.feature_engineering import FeatureEngineering
 from src.strategy import build_signals, apply_costs
+from src.config import MARKET_CONFIG
 
 # Configure Enterprise Logging for visibility
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - API ENGINE - %(levelname)s - %(message)s')
-logger = logging.getLogger("NexusAPI")
+logger = logging.getLogger("QuantumYieldAPI")
 
-MARKET_CONFIG = {
-    "United States (S&P 500)": {"index_key": "SP500", "stock_file": "SP500_DATASET.csv"},
-    "India (NIFTY 50)": {"index_key": "NIFTY50", "stock_file": "NIFTY50_India.csv"},
-    "Japan (Nikkei 225)": {"index_key": "Nikkei225", "stock_file": "Nikkei225_Japan.csv"},
-    "United Kingdom (FTSE 100)": {"index_key": "FTSE100", "stock_file": "FTSE100_UK.csv"},
-    "Germany (DAX 40)": {"index_key": "DAX40", "stock_file": "DAX40_Germany.csv"},
-    "Turkey (BIST 100)": {"index_key": "BIST100", "stock_file": "BIST100_Turkey.csv"},
-    "Brazil (Bovespa)": {"index_key": "Bovespa", "stock_file": "Bovespa_Brazil.csv"},
-    "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv"}
-}
-
-MARKET_META = {
-    "United States (S&P 500)": {"index_key": "SP500", "stock_file": "SP500_DATASET.csv", "region": "North America", "currency": "USD"},
-    "India (NIFTY 50)": {"index_key": "NIFTY50", "stock_file": "NIFTY50_India.csv", "region": "Asia", "currency": "INR"},
-    "Japan (Nikkei 225)": {"index_key": "Nikkei225", "stock_file": "Nikkei225_Japan.csv", "region": "Asia", "currency": "JPY"},
-    "United Kingdom (FTSE 100)": {"index_key": "FTSE100", "stock_file": "FTSE100_UK.csv", "region": "Europe", "currency": "GBP"},
-    "Germany (DAX 40)": {"index_key": "DAX40", "stock_file": "DAX40_Germany.csv", "region": "Europe", "currency": "EUR"},
-    "Turkey (BIST 100)": {"index_key": "BIST100", "stock_file": "BIST100_Turkey.csv", "region": "Europe/Asia", "currency": "TRY"},
-    "Brazil (Bovespa)": {"index_key": "Bovespa", "stock_file": "Bovespa_Brazil.csv", "region": "South America", "currency": "BRL"},
-    "Indonesia (IDX)": {"index_key": "IDX", "stock_file": "IDX_Indonesia.csv", "region": "Asia", "currency": "IDR"}
-}
 
 FALLBACK_TICKERS = {
     "United States (S&P 500)": ["AAPL", "MSFT", "AMZN", "NVDA", "META", "GOOGL", "BRK-B", "JNJ", "JPM", "V"],
@@ -126,7 +107,7 @@ def get_model_paths(index_key, model_type="CNN_BiLSTM_Attention"):
             
     return model_path, scaler_path, features_path, target_scaler_path
 
-app = FastAPI(title="Nexus Quant Research & Portfolio Analytics Engine", version="6.0.0", description="SQL-Backed Institutional quantitative engine with MLOps logging and Factor Analytics.")
+app = FastAPI(title="Quantum Yield API", version="6.0.0", description="Forecasts, backtests, risk analytics and news sentiment for eight global equity markets.")
 
 def parse_cors_origins(raw_origins: str) -> list[str]:
     return [origin.strip().rstrip("/") for origin in raw_origins.split(",") if origin.strip()]
@@ -159,6 +140,7 @@ MODEL_LOAD_RETRY_COOLDOWN_SEC = 300  # don't retry a failed model load more than
 # frictionless backtest; 5bps is a realistic retail-ish round-trip assumption per side.
 BACKTEST_DEADBAND = float(os.getenv("BACKTEST_DEADBAND", "0.001"))
 BACKTEST_COST_BPS = float(os.getenv("BACKTEST_COST_BPS", "5.0"))
+BACKTEST_LONG_ONLY = os.getenv("BACKTEST_LONG_ONLY", "1") == "1"
 
 # Feature-group membership for the explainability panel. Every trained model uses the
 # same 42-column feature set (src/feature_engineering.py), so this mapping is static.
@@ -571,6 +553,7 @@ def execute_backtest(req: InferenceRequest):
                     ma20=df['MA_20'].values[-backtest_days:] if has_ma else None,
                     ma50=df['MA_50'].values[-backtest_days:] if has_ma else None,
                     deadband=BACKTEST_DEADBAND,
+                    long_only=BACKTEST_LONG_ONLY,
                 )
 
                 model_used = f"Hybrid NN-Trend Convergence ({req.model_type})"
@@ -593,6 +576,8 @@ def execute_backtest(req: InferenceRequest):
                 [1.0, -1.0],
                 default=0.0,  # indicators disagree -> stay flat
             )
+            if BACKTEST_LONG_ONLY:
+                raw_fb = np.maximum(raw_fb, 0.0)
             signals = np.roll(raw_fb, 1)
             signals[0] = 0.0
             model_used = "Algorithmic Trend Convergence"
@@ -601,6 +586,8 @@ def execute_backtest(req: InferenceRequest):
         # (The old code applied np.roll to the already-aligned combined signal, which
         # left the NN leg two bars stale.)
         trade_signals = signals
+
+        model_used += " · long/flat" if BACKTEST_LONG_ONLY else " · long/short"
 
         # Charge transaction costs on the change in position size each bar.
         strategy_returns = apply_costs(trade_signals, asset_returns, cost_bps=BACKTEST_COST_BPS)
@@ -824,15 +811,81 @@ def get_real_time_news(req: NewsRequest):
             elif compound <= -0.15: sentiment, color = "BEARISH", "#ef4444"
             else: sentiment, color = "NEUTRAL", "#3b82f6"
                 
-            processed_news.append({"title": title, "source": publisher, "link": link, "tag": f"NLP SENTIMENT: {sentiment}", "color": color})
+            processed_news.append({"title": title, "source": publisher, "link": link, "tag": f"NLP SENTIMENT: {sentiment}",
+                                   "color": color, "score": round(float(compound), 3)})
         return {"news": processed_news}
     except Exception as e: 
         logger.error(f"News fetch failed: {e}")
         return {"news": []}
 
+# Continuous front-month futures (and the dollar index) from Yahoo Finance.
+COMMODITY_SYMBOLS = {
+    "Gold": "GC=F",
+    "Silver": "SI=F",
+    "Crude Oil (WTI)": "CL=F",
+    "Brent": "BZ=F",
+    "Natural Gas": "NG=F",
+    "US Dollar Index": "DX-Y.NYB",
+}
+COMMODITIES_CACHE = TTLCache(maxsize=1, ttl=900)
+_commodities_lock = threading.Lock()
+
+
+def _fetch_commodity_history(period="1y"):
+    raw = yf.download(list(COMMODITY_SYMBOLS.values()), period=period, auto_adjust=True,
+                      progress=False, group_by="column")
+    closes = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]]
+    out = {}
+    for name, symbol in COMMODITY_SYMBOLS.items():
+        if symbol not in closes.columns:
+            continue
+        series = closes[symbol].dropna()
+        if len(series) < 2:
+            continue
+        out[name] = {
+            "symbol": symbol,
+            "dates": series.index.strftime("%Y-%m-%d").tolist(),
+            "closes": [round(float(v), 4) for v in series.values],
+            "price": float(series.iloc[-1]),
+            "pct_change": float((series.iloc[-1] / series.iloc[-2] - 1) * 100),
+        }
+    return out
+
+
+@app.get("/api/v1/commodities")
+def get_commodities():
+    """One year of daily closes for major commodities, cached for 15 minutes."""
+    with _commodities_lock:
+        cached = COMMODITIES_CACHE.get("all")
+        if cached is not None:
+            return cached
+        try:
+            data = _fetch_commodity_history()
+        except Exception as e:
+            logger.error(f"Commodity fetch failed: {e}")
+            data = {}
+        if not data:
+            raise HTTPException(status_code=503, detail="Commodity prices are unavailable right now.")
+        result = {"source": "Yahoo Finance", "commodities": data}
+        COMMODITIES_CACHE["all"] = result
+        return result
+
+
+REPORT_CARD_PATH = os.path.join(PROJECT_ROOT, "reports", "report_card.json")
+
+
+@app.get("/api/v1/report-card")
+def get_report_card():
+    """Out-of-sample model report card produced offline by build_report_card.py."""
+    if not os.path.exists(REPORT_CARD_PATH):
+        raise HTTPException(status_code=404, detail="Report card has not been generated yet.")
+    with open(REPORT_CARD_PATH) as f:
+        return json.load(f)
+
+
 @app.get("/api/v1/markets")
 def get_markets():
-    return {"markets": MARKET_META}
+    return {"markets": MARKET_CONFIG}
 
 # --- HARDENED TICKER ENDPOINT ---
 @app.get("/api/v1/tickers/{market_name}")
@@ -884,8 +937,8 @@ def get_stock_data(market_name: str, ticker: str):
     result = {
         "ticker": ticker,
         "market": market_name,
-        "currency": MARKET_META.get(market_name, {}).get("currency", "USD"),
-        "region": MARKET_META.get(market_name, {}).get("region", "Global"),
+        "currency": MARKET_CONFIG.get(market_name, {}).get("currency", "USD"),
+        "region": MARKET_CONFIG.get(market_name, {}).get("region", "Global"),
         "latest_close": float(df_recent['Close'].iloc[-1]),
         "prev_close": float(df_recent['Close'].iloc[-2]) if len(df_recent) > 1 else 0.0,
         "price_delta": float(df_recent['Close'].iloc[-1] - df_recent['Close'].iloc[-2]) if len(df_recent) > 1 else 0.0,
@@ -912,6 +965,9 @@ def get_stock_data(market_name: str, ticker: str):
 # --- DEBUG ENDPOINT ---
 @app.get("/api/v1/debug")
 def debug_environment():
+    # Exposes server filesystem paths, so it is off unless explicitly enabled.
+    if os.getenv("ENABLE_DEBUG_ENDPOINT") != "1":
+        raise HTTPException(status_code=404, detail="Not Found")
     raw_dir = os.path.join(PROJECT_ROOT, "data", "raw")
     return {
         "project_root": PROJECT_ROOT,

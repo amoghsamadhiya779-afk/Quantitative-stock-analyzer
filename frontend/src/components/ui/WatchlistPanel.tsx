@@ -3,12 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { fetchWatchlist, WatchlistItem, getLogoUrl, getFallbackLogo } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAllPrices } from "@/lib/priceStore";
 
 export default function WatchlistPanel({ marketName }: { marketName: string }) {
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const allPrices = useAllPrices();
 
   useEffect(() => {
     if (!marketName) return;
@@ -30,9 +28,8 @@ export default function WatchlistPanel({ marketName }: { marketName: string }) {
     <div className="ventriloc-card rounded-[24px] p-6 h-full flex flex-col min-h-[400px]">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-display text-lg font-bold text-[var(--color-carbon)]">Active Watchlist</h3>
-        <span className="text-[9px] uppercase tracking-widest text-[var(--profit)] font-bold live-indicator flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-[var(--profit)]" />
-          Live
+        <span className="text-[9px] uppercase tracking-widest text-[var(--color-slate)] font-bold flex items-center gap-1.5">
+          Daily close
         </span>
       </div>
 
@@ -58,7 +55,7 @@ export default function WatchlistPanel({ marketName }: { marketName: string }) {
             </motion.div>
           ) : (
             items.map((item, i) => {
-                const priceData = allPrices[item.ticker] || { price: item.price, pct_change: item.pct_change };
+                const priceData = { price: item.price, pct_change: item.pct_change };
                 
                 return (
                   <motion.div 

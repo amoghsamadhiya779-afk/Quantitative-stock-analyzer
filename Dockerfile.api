@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the actual application code
 COPY api/ ./api/
 COPY src/ ./src/
+COPY reports/ ./reports/
 
 # We will mount data/ and mlops_artifacts/ at runtime via docker-compose
 

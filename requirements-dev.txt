@@ -1,0 +1,5 @@
+# Test and lint tooling used locally and in CI.
+-r requirements.txt
+pytest
+httpx
+ruff

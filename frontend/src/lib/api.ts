@@ -80,6 +80,8 @@ export interface NewsItem {
   link: string;
   tag: string;
   color: string;
+  /** VADER compound sentiment of the headline, -1 to 1. */
+  score?: number;
 }
 
 export interface WatchlistItem {
@@ -92,6 +94,92 @@ export interface WatchlistItem {
 export interface CorrelationMatrix {
   tickers: string[];
   matrix: number[][];
+}
+
+export interface ReportCardModel {
+  directional_accuracy: number | null;
+  directional_bars: number;
+  directional_p_value: number | null;
+  oos_r2_vs_random_walk: number | null;
+  dm_stat_vs_random_walk: number | null;
+  dm_p_value_vs_random_walk: number | null;
+  sharpe: number | null;
+  sharpe_ci_95: [number | null, number | null];
+  total_return: number | null;
+  max_drawdown: number | null;
+  exposure: number | null;
+  psr: number | null;
+  dsr: number | null;
+  forecast_skill: boolean;
+  strategy_edge: boolean;
+}
+
+export interface ReportCardMarket {
+  index_key: string;
+  ticker: string;
+  source: string;
+  start: string;
+  end: string;
+  n_test_bars: number;
+  n_trials: number;
+  models: Record<string, ReportCardModel>;
+  buy_and_hold: {
+    sharpe: number | null;
+    sharpe_ci_95: [number | null, number | null];
+    total_return: number | null;
+    max_drawdown: number | null;
+  };
+}
+
+export interface ReportCardSummary {
+  markets: number;
+  markets_with_forecast_skill: number;
+  markets_with_strategy_edge: number;
+  markets_beating_buy_and_hold: number;
+  median_sharpe: number | null;
+  median_directional_accuracy: number | null;
+}
+
+export interface ReportCard {
+  version: number;
+  generated_at: string;
+  config: { n_folds: number; epochs: number; seq_length: number; deadband: number; cost_bps: number; models: string[] };
+  markets: Record<string, ReportCardMarket>;
+  summary: Record<string, ReportCardSummary>;
+}
+
+/** Resolves to null when the report has not been generated yet (API returns 404). */
+export async function fetchReportCard(): Promise<ReportCard | null> {
+  const res = await fetch(`${API_URL}/api/v1/report-card`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API request failed (${res.status})`);
+  return res.json();
+}
+
+export interface CommoditySeries {
+  symbol: string;
+  dates: string[];
+  closes: number[];
+  price: number;
+  pct_change: number;
+}
+
+let commoditiesPromise: { at: number; promise: Promise<Record<string, CommoditySeries> | null> } | null = null;
+
+/** One year of daily commodity closes, or null when the API can't reach its data source.
+ * Shared across components and cached for 15 minutes, matching the API's own cache. */
+export function fetchCommodities(): Promise<Record<string, CommoditySeries> | null> {
+  if (!commoditiesPromise || Date.now() - commoditiesPromise.at > 15 * 60_000) {
+    const promise = apiFetch("/api/v1/commodities")
+      .then((res) => res.json())
+      .then((data) => data.commodities as Record<string, CommoditySeries>)
+      .catch(() => {
+        commoditiesPromise = null; // retry on the next call instead of caching the failure
+        return null;
+      });
+    commoditiesPromise = { at: Date.now(), promise };
+  }
+  return commoditiesPromise.promise;
 }
 
 export async function fetchMarkets(): Promise<Record<string, MarketInfo>> {

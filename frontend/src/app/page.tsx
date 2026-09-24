@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollManager } from "@/lib/ScrollManager";
 
 // Live Workflow components for the Terminal Section
-import MarketDataIngestion from "@/components/workflows/MarketDataIngestion";
+import PriceOverview from "@/components/workflows/PriceOverview";
 import TechnicalIndicators from "@/components/workflows/TechnicalIndicators";
 import MLPrediction from "@/components/workflows/MLPrediction";
 import PortfolioOptimization from "@/components/workflows/PortfolioOptimization";
@@ -28,12 +28,12 @@ import {
   type PredictionResult,
 } from "@/lib/api";
 
-import { useAllPrices } from "@/lib/priceStore";
+import { useMarketQuotes } from "@/lib/priceStore";
 
 const ALGO_MAP: Record<string, string> = {
-  "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
-  "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
-  "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM",
+  "CNN-BiLSTM-Attention": "CNN_BiLSTM_Attention",
+  "Transformer": "TimeSeriesTransformer",
+  "BiLSTM": "AdvancedBiLSTM",
 };
 
 const algos = Object.keys(ALGO_MAP);
@@ -42,7 +42,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const prefersReducedMotion = useReducedMotion();
-  const allPrices = useAllPrices();
+  const allPrices = useMarketQuotes("United States (S&P 500)");
   const tickerKeys = Object.keys(allPrices);
 
   // Walkthrough State
@@ -72,7 +72,7 @@ export default function LandingPage() {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [apiLatencyMs, setApiLatencyMs] = useState<number | null>(null);
-  const [activeTerminalTab, setActiveTerminalTab] = useState("Market data ingestion");
+  const [activeTerminalTab, setActiveTerminalTab] = useState("Market data");
 
   const [booting, setBooting] = useState(false);
   const [revealing, setRevealing] = useState(false);
@@ -81,10 +81,10 @@ export default function LandingPage() {
     () => [
       {
         id: 0,
-        name: "Market data ingestion",
-        title: "Market Data Ingestion",
+        name: "Market data",
+        title: "Market Data",
         description:
-          "Ingest and parse raw trade ticks, order book dynamics, and liquidity updates instantly from global nodes with microsecond precision.",
+          "Daily price history for eight global markets from Yahoo Finance, with a local-dataset fallback, feature-engineered into 40+ technical factors.",
       },
       {
         id: 1,
@@ -127,7 +127,7 @@ export default function LandingPage() {
 
   const tabs = useMemo(
     () => [
-      "Market data ingestion",
+      "Market data",
       "Technical indicators",
       "ML prediction",
       "Portfolio optimization",
@@ -283,14 +283,14 @@ export default function LandingPage() {
 
   const renderActiveWorkflow = () => {
     switch (activeTerminalTab) {
-      case "Market data ingestion":
-        return <MarketDataIngestion />;
+      case "Market data":
+        return <PriceOverview stockData={stockData} currency={currency} />;
       case "Technical indicators":
-        return <TechnicalIndicators />;
+        return <TechnicalIndicators stockData={stockData} />;
       case "ML prediction":
         return <MLPrediction stockData={stockData} prediction={prediction} />;
       case "Portfolio optimization":
-        return <PortfolioOptimization tickers={tickers} />;
+        return <PortfolioOptimization tickers={tickers} selectedMarket={selectedMarket} />;
       case "Risk analytics":
         return <RiskAnalytics tickers={tickers} selectedMarket={selectedMarket} />;
       case "Backtesting":
@@ -302,7 +302,7 @@ export default function LandingPage() {
           />
         );
       default:
-        return <MarketDataIngestion />;
+        return <PriceOverview stockData={stockData} currency={currency} />;
     }
   };
 
@@ -312,7 +312,7 @@ export default function LandingPage() {
   const latestClose = stockData && typeof stockData.latest_close === "number" ? stockData.latest_close : 0;
   const volatility = stockData && typeof stockData.volatility === "number" ? stockData.volatility : 0;
   const vwap = stockData && typeof stockData.vwap === "number" ? stockData.vwap : 0;
-  const imbalance = stockData ? Math.min(85, Math.max(30, 50 + pctChange * 10)) : 50;
+  const rsi = stockData && typeof stockData.rsi === "number" && !isNaN(stockData.rsi) ? stockData.rsi : null;
 
   if (!mounted) return null;
 
@@ -334,7 +334,7 @@ export default function LandingPage() {
               <header className="shrink-0 w-full px-4 md:px-8 pt-4 pb-2 bg-surface-container/50 backdrop-blur-xl border-b border-outline-variant/30 z-50">
                 <div className="max-w-[1200px] mx-auto flex justify-between items-center opacity-50">
                   <div className="flex items-center gap-stack-sm px-4 py-2 bg-surface-container rounded border border-outline-variant/50">
-                    <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">NEXUS</span>
+                    <span className="font-display-md font-bold text-xl tracking-tight text-on-surface">QUANTUM YIELD</span>
                   </div>
                   <div className="hidden md:flex items-center gap-unit px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30">
                     <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -358,7 +358,7 @@ export default function LandingPage() {
         <header className="sticky top-0 z-50 w-full bg-surface-container/90 border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop h-16 scroll-surface">
           <div className="flex items-center gap-gutter">
             <span className="font-display-md text-display-md font-bold text-on-surface">
-              Nexus Quant
+              Quantum Yield
             </span>
             <nav className="hidden md:flex gap-gutter ml-stack-lg">
               {/* Top nav links removed to clear dead ends per QA */}
@@ -389,7 +389,7 @@ export default function LandingPage() {
                 Intelligence
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant max-w-3xl leading-relaxed mb-stack-xl">
-                Nexus Quant synthesizes raw market ticks, systemic beta variables, and custom directional neural networks into a microsecond-synchronized platform.
+                Quantum Yield synthesizes market data, technical factors, and deep-learning forecasts across eight global markets, and reports how every model performs out-of-sample.
               </p>
               <div className="flex gap-stack-md">
                 <button
@@ -597,10 +597,10 @@ export default function LandingPage() {
                   <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest">
                     Developer API
                   </span>
-                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-md mt-stack-xs">Documentation & SDK</h2>
+                  <h2 className="font-display-md text-display-md text-on-surface mb-stack-md mt-stack-xs">API Documentation</h2>
                   <p className="font-body-md text-body-md text-on-surface-variant">
-                    Access terminal stats and prediction results programmatically. Import the Nexus
-                    SDK or call standard REST endpoints.
+                    Access predictions, backtests and risk metrics programmatically through the REST API.
+                    Interactive OpenAPI docs are served at /docs.
                   </p>
                 </div>
                 <div className="p-stack-md rounded-[10px] border border-outline-variant bg-surface-container lg:col-span-2 font-mono text-[13px] overflow-x-auto text-on-surface-variant">
@@ -608,7 +608,7 @@ export default function LandingPage() {
                     <span className="text-outline">API Endpoint Reference</span>
                     <span className="text-secondary">POST</span>
                   </div>
-                  <div className="text-on-surface">https://api.nexusquant.app/v1/predict</div>
+                  <div className="text-on-surface">https://1amogh212-quant-modeling.hf.space/api/v1/predict</div>
                   <div className="mt-stack-sm text-[11px] text-outline">
                     Header: Content-Type: application/json
                   </div>
@@ -631,16 +631,16 @@ export default function LandingPage() {
                     Open Source Collaboration
                   </span>
                   <h2 className="font-display-md text-display-md text-on-surface mb-stack-xs">
-                    Contribute to the Nexus SDK
+                    Contribute on GitHub
                   </h2>
                   <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-                    The core model structures, indicators, and client libraries are open source.
+                    The models, indicators, backtester and frontend are open source.
                     Explore our GitHub repositories, report bugs, or submit pull requests.
                   </p>
                 </div>
                 <div>
                   <a
-                    href="https://github.com"
+                    href="https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-unit bg-primary-container text-white px-stack-md py-stack-sm rounded uppercase font-label-sm text-[12px] hover:opacity-90 transition-opacity"
@@ -704,7 +704,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Dropdowns controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-stack-sm relative z-40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-stack-sm relative z-40">
                   <CustomSelect
                     label="Global Node"
                     value={selectedMarket}
@@ -718,16 +718,10 @@ export default function LandingPage() {
                     onChange={(v) => setSelectedTicker(v)}
                   />
                   <CustomSelect
-                    label="AI Architecture"
+                    label="Model"
                     value={selectedAlgo}
                     options={algos}
                     onChange={(v) => setSelectedAlgo(v)}
-                  />
-                  <CustomSelect
-                    label="Execution Routing"
-                    value="Dark Pool Aggregator"
-                    options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]}
-                    onChange={() => {}}
                   />
                   <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
                     <div className="flex items-center gap-unit mb-1">
@@ -747,7 +741,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-stack-sm w-full">
                   <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
                     <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-1">
-                      Valuation
+                      Last close
                     </span>
                     <div className="font-headline-lg text-headline-lg font-mono text-on-surface">
                       {stockData
@@ -775,7 +769,7 @@ export default function LandingPage() {
                       {stockData ? `${volatility.toFixed(2)}%` : "—"}
                     </div>
                     <span className="font-label-sm text-[10px] font-mono text-outline mt-1">
-                      {stockData ? `Beta: ${(volatility / 15).toFixed(2)}` : ""}
+                      {stockData ? "20d, annualised" : ""}
                     </span>
                   </div>
 
@@ -795,19 +789,14 @@ export default function LandingPage() {
 
                   <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
                     <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-2">
-                      Imbalance
+                      RSI (14)
                     </span>
                     <div className="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden mb-1 relative">
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ${
-                          imbalance > 50 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"
-                        }`}
-                        style={{ width: `${imbalance}%` }}
-                      />
+                      <div className="h-full rounded-full bg-on-surface-variant transition-all duration-700" style={{ width: `${rsi ?? 0}%` }} />
                     </div>
-                    <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
-                      <span>BID {Math.round(imbalance)}%</span>
-                      <span>ASK {Math.round(100 - imbalance)}%</span>
+                    <div className="font-label-sm text-[10px] font-mono text-outline">
+                      {rsi === null ? "—" : rsi.toFixed(1)}
+                      {rsi !== null && (rsi >= 70 ? " · overbought" : rsi <= 30 ? " · oversold" : "")}
                     </div>
                   </div>
                 </div>
@@ -860,7 +849,7 @@ export default function LandingPage() {
               className="flex flex-col items-start font-mono text-cyan-400 text-lg sm:text-2xl gap-4 max-w-3xl w-[90%] z-10 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
             >
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                $ nexus-core --boot
+                $ quantum-yield --boot
               </motion.div>
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
                 {">"} Loading Neural Weights... [OK]

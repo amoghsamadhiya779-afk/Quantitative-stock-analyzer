@@ -80,42 +80,11 @@ test.describe("Tier 5: Adversarial E2E Tests - Challenger 1", () => {
     expect(count).toBe(0);
   });
 
-  test("T5.CH1.4: Verify Market Data Ingestion console pause and clear state behavior", async ({ page }) => {
-    // Switch to Market data ingestion workflow
-    await page.locator("button", { hasText: /^Market data ingestion$/ }).click();
-
-    // Ensure logs are active
-    const logConsole = page.locator("div.overflow-y-auto");
-    await expect(logConsole).toBeVisible();
-
-    // Locate play/pause button and trash/clear button
-    const pauseBtn = page.locator("div.flex.items-center.gap-2 button").first();
-    const clearBtn = page.locator("div.flex.items-center.gap-2 button").nth(1);
-
-    // Pause the feed
-    await pauseBtn.click();
-    await page.waitForTimeout(100);
-
-    // Clear the logs
-    await clearBtn.click();
-
-    // Verify it displays the waiting fallback message
-    const fallbackMessage = page.locator("text=Waiting for data streams...");
-    await expect(fallbackMessage).toBeVisible();
-
-    // Wait 1 second to ensure no new logs arrive (since we are paused)
-    await page.waitForTimeout(1000);
-    await expect(fallbackMessage).toBeVisible();
-
-    // Resume streaming
-    await pauseBtn.click();
-
-    // Verify logs resume and the fallback message disappears
-    await expect(fallbackMessage).not.toBeVisible();
-    
-    // Verify there is at least one log row now
-    const logRow = logConsole.locator("div").first();
-    await expect(logRow).toBeVisible();
+  test("T5.CH1.4: Market data tab shows the selected stock's price history", async ({ page }) => {
+    await page.locator("button", { hasText: /^Market data$/ }).click();
+    // Either the chart for the selected ticker or its loading state - never a simulated feed.
+    await expect(page.getByText(/daily close|Loading price history/).first()).toBeVisible();
+    await expect(page.getByText("Simulated feed")).toHaveCount(0);
   });
 
   test("T5.CH1.5: Verify Technical Indicators SVG path coordinates robustness", async ({ page }) => {

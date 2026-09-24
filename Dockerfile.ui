@@ -1,35 +1,18 @@
-# Use official Python lightweight image
-FROM python:3.10-slim
-
-#Set the working directory inside the container
-
+# Next.js frontend. The API URL is inlined into the client bundle at build time, so it
+# is a build arg rather than a runtime env var.
+FROM node:20-alpine AS build
 WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+ARG NEXT_PUBLIC_API_URL=http://localhost:7860
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_TELEMETRY_DISABLED=1
+RUN npm run build && npm prune --omit=dev
 
-# Prevent Python form writing .pyc files and buffer stdout 
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies required for ML packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy dependencies and install (includes streamlit/plotly, not shipped in the API image)
-COPY requirements.txt requirements-train.txt .
-RUN pip install --no-cache-dir -r requirements-train.txt
-
-#Copy the actual application code 
-
-COPY app.py .
-COPY src/ /src/
-
-# We will moun data. at runtime via docker-compose
-
-#Expose Streamlit Port 
-EXPOSE 8501
-
-#Command to run the UI
-CMD ["streamlit","run","app.py","--server.port=8501","--server.address=0.0.0.0"]
-  
-  
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+COPY --from=build /app ./
+EXPOSE 3000
+CMD ["npm", "start"]

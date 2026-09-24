@@ -1,40 +1,25 @@
-version: '3.8'
-
 services:
-  nexus-api:
+  api:
     build:
       context: .
       dockerfile: Dockerfile.api
-    container_name: nexus-backend-api
     ports:
       - "7860:7860"
     volumes:
-      # Mount local data and artifacts so the API has access to live CSVs and trained models
+      # Local datasets and trained models (run `git lfs pull` first for the models)
       - ./data:/app/data
       - ./mlops_artifacts:/app/mlops_artifacts
     restart: unless-stopped
-    networks:
-      - nexus-net
 
-  nexus-ui:
+  ui:
     build:
       context: .
       dockerfile: Dockerfile.ui
-    container_name: nexus-frontend-ui
+      args:
+        # Called from the user's browser, not from inside the Docker network
+        NEXT_PUBLIC_API_URL: http://localhost:7860
     ports:
-      - "8501:8501"
-    environment:
-      # Tells the Streamlit container how to find the API container over the Docker network
-      - NEXUS_API_URL=http://nexus-api:7860
-    volumes:
-      # Mount local data so UI can generate drop-downs and charts
-      - ./data:/app/data
+      - "3000:3000"
     depends_on:
-      - nexus-api
+      - api
     restart: unless-stopped
-    networks:
-      - nexus-net
-
-networks:
-  nexus-net:
-    driver: bridge

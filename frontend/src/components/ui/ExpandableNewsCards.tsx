@@ -107,10 +107,10 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                     className="text-[var(--color-graphite)] text-sm leading-relaxed h-40 md:h-fit pb-4 flex flex-col items-start gap-4 overflow-auto [mask:linear-gradient(to_bottom,white,white,transparent)] [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch]"
                   >
                     <p>
-                      This article from <strong>{active.source}</strong> provides key insights into macroeconomic shifts and corporate developments that may impact asset valuation.
+                      Headline from <strong>{active.source}</strong> via Google News. Open the article for the full story.
                     </p>
                     <div className="p-4 rounded-xl border border-[var(--border)] bg-surface w-full">
-                      <h4 className="text-[10px] font-bold tracking-widest uppercase mb-2 text-[var(--color-slate)]">AI Impact Assessment</h4>
+                      <h4 className="text-[10px] font-bold tracking-widest uppercase mb-2 text-[var(--color-slate)]">Headline sentiment</h4>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1 border sentiment-crossfade" style={{ backgroundColor: `${active.color}15`, borderColor: `${active.color}30`, color: active.color }}>
                           {active.tag.includes("BULLISH") ? <TrendingUp className="w-3 h-3" /> : active.tag.includes("BEARISH") ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
@@ -118,7 +118,8 @@ export default function ExpandableNewsCards({ news }: { news: NewsItem[] }) {
                         </span>
                       </div>
                       <p className="text-xs font-mono text-[var(--foreground)]/60">
-                        NLP analysis detects strong {active.tag.toLowerCase()} sentiment vectors affecting current market pricing matrices. Consider adjusting exposure based on these momentum shifts.
+                        {typeof active.score === "number" ? `VADER compound score ${active.score >= 0 ? "+" : ""}${active.score.toFixed(2)} on a -1 to +1 scale; ±0.15 is the cut-off for bullish or bearish. ` : ""}
+                        Scored from the headline text only, so treat it as a rough tone reading, not a trading signal.
                       </p>
                     </div>
                   </motion.div>

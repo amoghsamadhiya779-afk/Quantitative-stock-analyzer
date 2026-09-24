@@ -2,7 +2,7 @@ import pandas as pd
 import logging
 import os
 
-logger = logging.getLogger("SP500_MLOps")
+logger = logging.getLogger("QuantumYield")
 
 class DataIngestion:
     def __init__(self, data_path):
