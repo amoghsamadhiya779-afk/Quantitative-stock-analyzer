@@ -7,204 +7,195 @@ sdk: docker
 pinned: false
 ---
 
-# Quantum Yield: Quantitative Research and MLOps Platform
+# Quantum Yield
 
-Quantum Yield is a containerized, full-stack Machine Learning Operations (MLOps) platform designed for algorithmic capital allocation. It features a decoupled microservices architecture, linking a deep learning inference engine with a low-latency, immersive Next.js 14 user interface.
+**A quantitative research terminal that tests its own deep-learning forecasts and shows how they performed out-of-sample, even when the answer is "no better than a coin flip".**
 
-The platform demonstrates quantitative system design with a self-hydrating data pipeline, out-of-sample model evaluation, and WebGL-based visualization interfaces. Every price and statistic in the terminal is computed from real market data; when a source is unavailable the UI says so instead of filling the gap.
+[![CI](https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer/actions/workflows/ci.yml)
+![Python 3.10](https://img.shields.io/badge/python-3.10-blue)
+![Next.js 14](https://img.shields.io/badge/Next.js-14-black)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16-orange)
 
----
+Quantum Yield covers eight equity markets (US, India, Japan, UK, Germany, Turkey, Brazil, Indonesia). A FastAPI backend serves three deep-learning architectures, a backtester, risk analytics and news sentiment. A Next.js terminal presents them, and a walk-forward **Model Report Card** checks every model against simple baselines with proper significance tests.
 
-## Architectural Topography and Technical Innovations
-
-### 1. Decoupled Microservice Topology
-The platform segregates computational workload into two independent layers:
-* **Analytical Backend (FastAPI)**: Runs high-performance inference loops over pre-trained Bidirectional LSTM models and executes VADER (Valence Aware Dictionary and Sentiment Reasoner) sentiment analysis.
-* **Interactive Client (Next.js 14)**: A low-latency web application utilizing React Three Fiber, GSAP, and Framer Motion for high-fidelity interactive graphics.
-
-### 2. Self-Hydrating Data Pipeline & Fault Tolerance
-To mitigate issues with rate-limited data providers or offline states, the backend employs a hierarchical fallback pipeline:
-1. **Local Relational Layer**: Queries local SQLite databases for indexed market history.
-2. **Local Static Layer**: Cascades to compressed CSV datasets if the database is unpopulated.
-3. **Cloud Hydration Layer**: Queries Yahoo Finance APIs to fetch live delta updates.
-4. **Honest failure**: if no source has data for a ticker, the API returns an error and the UI shows an unavailable state rather than synthetic prices.
-
-### 3. Machine Learning Subsystem
-* **Neural Network Topology**: Bidirectional Long Short-Term Memory (BiLSTM) network.
-* **Temporal Integration**: Processes a 60-day historical sequence window to capture complex momentum indicators and temporal correlations.
-* **Context Retention**: Processes sequences in both forward and backward directions to extract deep structural features and mitigate vanishing gradient issues associated with standard recurrent networks.
+**Live API:** [1amogh212-quant-modeling.hf.space/docs](https://1amogh212-quant-modeling.hf.space/docs)
 
 ---
 
-## Quantitative Analytics & WebGL Visualization
+## Why this project is different
 
-### 1. Interactive 3D Globe Widget
-Re-engineered using Three.js and React Three Fiber (R3F) to display real-time global node statuses:
-* **Mesh Raycasting**: Leverages GPU-level raycasting to calculate pointer collisions directly on 3D meshes, enabling native hover state changes and node selection click events.
-* **Physics-based Camera Damping**: Implements OrbitControls with inertia and friction parameters, allowing users to spin, rotate, and interact with the globe.
-* **Visual Topography**: Includes a wireframe sphere, horizontal coordinate rings, and dual-axis rotating orbital rings representing analytical traffic.
+Most stock-prediction projects report an impressive backtest and stop there. This one treats the model as a hypothesis and tries to break it:
 
-### 2. Live Sentiment Engine (Google News RSS)
-* **Feed Aggregation**: Backend utilizes Python's feedparser to capture Google News RSS headlines filtered dynamically by the active market node.
-* **Natural Language Processing**: Computes compound polarity scores for headlines using VADER, classifying real-time geopolitical news into Bullish, Bearish, or Neutral sentiments.
+- **Every model is scored against baselines.** A random walk, the historical mean, 20-day momentum, ridge regression and gradient boosting run on the same out-of-sample days as the neural networks.
+- **Results carry significance tests.** A binomial test on directional accuracy, a Diebold-Mariano test against the random walk, block-bootstrap confidence intervals on Sharpe, and the **Deflated Sharpe Ratio** to correct for trying many models on the same data.
+- **Leakage is tested, not assumed.** The test suite rewrites future prices and asserts that no feature or forecast before that point changes. It also checks that the evaluation finds a planted edge in synthetic autocorrelated returns and finds none in a random walk.
+- **Every price and statistic in the UI is real.** When a data source is down, the terminal says "unavailable" rather than filling the gap.
 
-### 3. Unified Comparative Commodities Graph
-* **Baseline Normalization**: Displays S&P 500, NIFTY 50, Nikkei 225, FTSE 100, DAX 40, BIST 100, Bovespa, or IDX against Gold, Silver, and Crude Oil (WTI).
-* **Formula**: Scales all series to a 100% baseline starting point:
-  
-  Normalized Value_t = ( Price_t / Price_0 ) * 100
-  
-* **Precision Rendering**: Prevents scale distortion between assets of widely differing nominal values, showing raw prices in local currencies only within custom HTML tooltip elements.
+## What the research found
+
+Measured with the walk-forward evaluation on public daily data: the S&P 500 index from 2009 to 2018 (2,515 out-of-sample days) and Google from 2008 to 2013 (1,074 days).
+
+**1. The neural networks have no reliable directional edge on daily returns.** Directional accuracy was 48–53% for every model. The retrained CNN-BiLSTM-Attention scored 50.2% and 50.6% (p = 0.44 and 0.36 against a coin flip). This matches the academic consensus on daily equity returns and is reported, not hidden.
+
+**2. The original backtest lost money because of its short side, not its forecasts.** Splitting the MA20/MA50 trend filter into its two sides:
+
+| Strategy Sharpe (net of 5 bps costs) | Long side only | Short side only | Long + short (original) |
+|---|---|---|---|
+| S&P 500, 2009–2018 | **+0.44** | −0.52 | −0.05 |
+| Google, 2008–2013 | **+0.53** | −1.00 | −0.26 |
+
+Equities drift upward, so shorting on a bearish signal fights that drift. Switching the served strategy to **long or flat** raised every model's out-of-sample Sharpe from between −0.26 and 0.01 to between +0.25 and +0.70, and cut the worst drawdown from 24–38% to 8–25%. It still trails buy-and-hold on total return; the benefit is a much shallower drawdown.
+
+**3. Two training bugs were found and fixed.**
+- **Off-by-one target.** Training labelled the 60-day window ending on day *t* with the return from *t+1* to *t+2*, while the API served the model as a *t* → *t+1* forecast.
+- **Test-set leakage.** Early stopping and checkpointing watched the test split, so the reported test loss was not really out-of-sample.
+
+The full per-market results are generated by `build_report_card.py` and shown on the terminal's **Model Report Card** page.
 
 ---
 
-## Model Report Card
+## Architecture
 
-Daily stock returns are close to unpredictable, so a model is only interesting if it beats simple
-baselines by more than luck would. `build_report_card.py` measures exactly that. For each market it runs
-an expanding-window walk-forward and scores every model on the **same** out-of-sample bars:
+```mermaid
+flowchart LR
+    subgraph Data
+        SQL[(SQLite)] --> CSV[CSV datasets] --> YF[Yahoo Finance]
+    end
+    subgraph "Backend (FastAPI · Hugging Face Spaces)"
+        FE[Feature engineering<br/>41 technical factors]
+        M[CNN-BiLSTM-Attention<br/>Transformer · BiLSTM]
+        S[Shared strategy module<br/>signals · costs · metrics]
+        RC[(report_card.json)]
+    end
+    subgraph "Offline research"
+        WF[Walk-forward engine<br/>baselines + deep models]
+        ST[Significance tests<br/>DM · bootstrap · DSR]
+    end
+    UI[Next.js terminal · Vercel]
 
-| Baselines | Deep models (retrained per fold) |
-| :--- | :--- |
-| Random walk (zero forecast), historical mean, 20-day momentum, ridge regression, gradient boosting | CNN-BiLSTM-Attention, Transformer, BiLSTM |
-
-Each forecast is tested twice:
-
-* **As a forecast**: directional accuracy with a binomial test against a coin flip, out-of-sample R², and a
-  Diebold-Mariano test against the random walk.
-* **As the strategy the API serves** (same deadband, trend filter and transaction costs): Sharpe ratio with a
-  block-bootstrap 95% confidence interval, return, drawdown, and the **Deflated Sharpe Ratio**, which
-  corrects for having tried every model on the same data.
-
-```bash
-python build_report_card.py --baselines-only   # a few minutes
-python build_report_card.py                    # all models; hours on a CPU
+    Data --> FE --> M --> S --> UI
+    Data --> WF --> ST --> RC --> UI
 ```
 
-Results are written to `reports/REPORT_CARD.md` (readable on GitHub) and `reports/report_card.json`, which the
-API serves at `GET /api/v1/report-card`. Data comes from `data/raw/` when present and otherwise from Yahoo Finance.
+- **One strategy implementation.** The API's backtest, the offline validation and the report card all call `src/strategy.py`, so what is validated is exactly what is served.
+- **One market registry.** `src/config.py` defines the eight markets for every component.
+- **Data fallback.** Each request tries SQLite, then the CSV datasets, then a live Yahoo Finance download, and fails with an explicit error rather than synthetic data.
 
-Leakage is tested rather than assumed: the test suite rewrites future prices and checks that no feature or
-forecast before that point changes, and checks that the pipeline finds a planted edge in autocorrelated
-synthetic returns and none in a random walk.
+## The terminal
+
+| View | What it shows |
+|---|---|
+| **Overview** | One year of daily closes with 20/50-day moving averages, period return, high/low and max drawdown |
+| **Technical Indicators** | Candlesticks with EMA(20), Bollinger Bands and MACD, computed on real bars |
+| **ML Prediction** | Next-day forecast from the selected architecture, with a volatility-based 95% band and gradient-based feature attribution |
+| **Portfolio Optimization** | Efficient frontier from realised returns, volatilities and correlations of the market's top five stocks, with adjustable weights |
+| **Risk Analytics** | Correlation map, equal-weighted basket volatility, 1-day 95% historical VaR and drawdown, per-stock risk |
+| **Backtesting** | The served long/flat strategy over the last year against buy-and-hold, net of costs |
+| **Model Report Card** | Every model's out-of-sample Sharpe with 95% CI against buy-and-hold, with significance tests |
+| **News-Driven Macro** | Google News headlines with VADER sentiment, the stock against gold, silver and WTI crude, and a 3D market globe |
+
+## Models
+
+| Model | Architecture |
+|---|---|
+| CNN-BiLSTM-Attention | Conv1D feature extractor → bidirectional LSTM → multi-head self-attention |
+| Transformer | Stacked transformer encoder blocks over the 60-day window |
+| BiLSTM | Two bidirectional LSTM layers |
+
+All three predict the next day's log return from a 60-day window of 41 engineered features: returns, moving averages and distances, MACD, RSI, stochastic RSI, Bollinger width, ATR, Garman-Klass volatility, volume ratios, OBV, PVT, VWAP and a rolling beta proxy. They are trained per market with Huber loss, and scalers are fit on training data only.
+
+## Tech stack
+
+| Layer | Tools |
+|---|---|
+| Machine learning | TensorFlow / Keras, scikit-learn, SciPy, pandas, NumPy, Optuna |
+| Backend | FastAPI, Uvicorn, yfinance, SQLite, feedparser, VADER |
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Recharts, React Three Fiber, Framer Motion |
+| Quality | pytest, ruff, Playwright, GitHub Actions |
+| Deployment | Docker, Hugging Face Spaces (API), Vercel (frontend) |
 
 ---
 
-## Technical Stack
+## Getting started
 
-| Domain | Technology Components |
-| :--- | :--- |
-| **Quantitative ML** | TensorFlow, Keras, Scikit-Learn, Pandas, NumPy, Joblib |
-| **Backend API Service** | FastAPI, Uvicorn, SQLite3, Feedparser, VADER Sentiment |
-| **Interactive Frontend** | Next.js 14, React 18, React Three Fiber, Drei, Recharts, Framer Motion |
-| **Infrastructure / DevOps** | Docker, Docker Compose, Hugging Face Spaces, Git |
+**Prerequisites:** Python 3.10+, Node 20+, Git LFS (the trained models are stored with LFS).
 
----
+```bash
+git clone https://github.com/amoghsamadhiya779-afk/Quantitative-stock-analyzer.git
+cd Quantitative-stock-analyzer
+git lfs pull
 
-## Project Directory Tree
+make install      # Python dev dependencies + frontend packages
+make api          # FastAPI on http://localhost:7860  (docs at /docs)
+make ui           # Next.js on http://localhost:3000   (in a second terminal)
+```
+
+Or run both with Docker:
+
+```bash
+docker compose up --build    # API on :7860, UI on :3000
+```
+
+Without the raw datasets in `data/raw/`, the API downloads prices from Yahoo Finance on demand.
+
+### Research workflow
+
+```bash
+make train                                   # train all three models for every market
+python run_pipeline.py --markets SP500 --force   # retrain one market
+python build_report_card.py --baselines-only # report card, baselines only (minutes)
+python build_report_card.py                  # full report card (hours on CPU)
+python validate_strategy.py --market DAX40   # per-fold view of one model
+```
+
+`build_report_card.py` writes `reports/REPORT_CARD.md` and `reports/report_card.json`. Commit the JSON and redeploy the API to update the terminal's report card page.
+
+### Tests
+
+```bash
+make test    # pytest: strategy, lookahead, statistics, report card, API
+make lint    # ruff
+```
+
+CI runs lint and tests on Python 3.10, plus a TypeScript check and production build of the frontend, on every pull request.
+
+## Project layout
 
 ```text
-quantum-yield/
-├── api/                            # Backend API Service
-│   ├── main.py                     # FastAPI routes, RSS parsing, and ML inference
-│   └── ...                         
-├── src/                            # Machine Learning & Feature Engineering
-│   ├── config.py                   # Market registry (single source of truth)
-│   ├── feature_engineering.py      # Technical indicators (RSI, VWAP, Bollinger Bands)
-│   ├── advanced_models.py          # CNN-BiLSTM-Attention, Transformer, BiLSTM
-│   ├── strategy.py                 # Signal construction + backtest metrics (shared by API and validation)
-│   ├── walkforward.py              # Walk-forward folds, data loading, baseline + deep forecasters
-│   ├── significance.py             # DM test, bootstrap Sharpe CI, Probabilistic/Deflated Sharpe
-│   ├── report_card.py              # Scores every model on every market, renders the report
-│   └── optuna_optimizer.py         # Hyperparameter search
-├── tests/                          # pytest suite (strategy, models, API smoke tests)
-├── run_pipeline.py                 # Trains all three models for every market
-├── validate_strategy.py            # Per-fold walk-forward view of one model
-├── build_report_card.py            # Generates reports/report_card.json and REPORT_CARD.md
-├── frontend/                       # Client web app
-│   ├── src/
-│   │   ├── app/                    # Next.js App Router pages and CSS
-│   │   ├── components/             # Reusable UI features (TradingDesk, Backtesting)
-│   │   └── lib/                    # API wrappers and client interfaces
-│   ├── package.json                # Frontend package manifest
-│   └── tsconfig.json               # TypeScript configuration
-├── mlops_artifacts/                # Model Registry
-│   └── models/                     # Saved weights (.keras) and scalers (.pkl), via Git LFS
-├── Dockerfile                      # Hugging Face Spaces image (API + models)
-├── Dockerfile.api                  # Backend container for docker-compose
-├── Dockerfile.ui                   # Next.js frontend container
-├── docker-compose.yml              # Runs API + frontend locally
-├── requirements.txt                # API runtime dependencies
-├── requirements-dev.txt            # + pytest, ruff
-└── requirements-train.txt          # + optuna, for training
+api/main.py                  FastAPI service: prediction, backtest, risk, news, commodities, report card
+src/
+  config.py                  Market registry (single source of truth)
+  feature_engineering.py     41 technical factors
+  advanced_models.py         The three neural architectures
+  strategy.py                Signals, costs and metrics shared by API and research
+  walkforward.py             Walk-forward folds, data loading, baseline and deep forecasters
+  significance.py            Diebold-Mariano, bootstrap Sharpe CI, Probabilistic/Deflated Sharpe
+  report_card.py             Scores every model per market and renders the report
+run_pipeline.py              Trains all models for every market
+build_report_card.py         Generates the model report card
+validate_strategy.py         Per-fold validation of one model
+tests/                       pytest suite
+frontend/src/
+  app/terminal/              The research terminal
+  components/workflows/      One component per terminal view
+  lib/                       API client, price store, risk statistics
+mlops_artifacts/models/      Trained models and scalers (Git LFS)
+reports/                     Generated report card
 ```
 
----
+## Deployment
 
-## Local Setup & Deployment
+- **API (Hugging Face Spaces).** The root `Dockerfile` builds the FastAPI service with the trained models and report card on port 7860. Pushing to the Space's git remote redeploys it.
+- **Frontend (Vercel).** Import the repository, set the root directory to `frontend`, and set `NEXT_PUBLIC_API_URL` to the API's URL. The API accepts Vercel preview and production domains via `FRONTEND_ORIGIN_REGEX`; set `FRONTEND_ORIGINS` for custom domains.
 
-### 1. Backend API Server Setup
-Create a virtual environment and install dependencies:
-```bash
-py -m venv venv
-venv\Scripts\activate      # On Windows
-source venv/bin/activate    # On Unix
-git lfs pull                # fetch the trained models
-pip install -r requirements-dev.txt
-```
-Run the FastAPI development server:
-```bash
-uvicorn api.main:app --reload --port 7860
-```
-The API Swagger documentation will be accessible at `http://localhost:7860/docs`.
+## Limitations
 
-### 2. Frontend Development Server Setup
-Install Node.js packages and launch the Next.js dev server:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-The platform interface will be accessible at `http://localhost:3000`.
+- Forecasts show no statistically significant directional skill on the data evaluated. Treat the ML Prediction view as a demonstration of the pipeline, not a trading signal.
+- The deployed models predate the training-alignment fix and should be retrained with `python run_pipeline.py --force`.
+- Each market's models are trained on a single, highly liquid stock and applied to the others in that market.
+- Prices are daily closes, not intraday. Backtests assume trades at the close with a flat 5 bps cost and no slippage model.
+- Commodity and live price data depend on Yahoo Finance being reachable from the API host.
 
-### 3. Containerized Orchestration (Docker Compose)
-Run the complete decoupled environment using Docker:
-```bash
-docker compose up --build -d
-```
-The API is served on `http://localhost:7860` and the UI on `http://localhost:3000`.
+## Disclaimer
 
-### 4. Tests and Lint
-```bash
-pytest            # strategy, model-architecture and API smoke tests
-ruff check .
-```
-CI runs both on every pull request, plus a TypeScript check and production build of the frontend.
-
----
-
-## Production Cloud Deployment
-
-The platform is designed to be deployed using a fully decoupled cloud strategy:
-
-### 1. Backend Deployment (Hugging Face Spaces)
-Hugging Face Spaces provides a free container hosting environment suitable for python analytical services:
-1. Create a new Space on [Hugging Face](https://huggingface.co/) and select **Docker** as the SDK (with the Blank template).
-2. The root `Dockerfile` builds the FastAPI service on port 7860 with the trained models baked in.
-3. Commit and push the repository to your Hugging Face Space git remote. Hugging Face will build the container and serve the API.
-
-### 2. Frontend Deployment (Vercel)
-Vercel is the recommended hosting platform for Next.js 14 frontend clients:
-1. Import your GitHub repository into [Vercel](https://vercel.com/).
-2. Set the **Root Directory** to `frontend`.
-3. Configure the environment variable:
-   * `NEXT_PUBLIC_API_URL`: The URL of your Hugging Face Space API (currently `https://1amogh212-quant-modeling.hf.space`).
-4. Click **Deploy**. Vercel will build the Next.js static and edge routines and serve the UI.
-
-The API allows local frontend origins by default and matches Vercel preview/production domains with `FRONTEND_ORIGIN_REGEX`. For a custom frontend domain, set `FRONTEND_ORIGINS` on the API host to a comma-separated list of exact origins.
-
----
-
-## Financial and Academic Disclaimer
-
-Quantum Yield is a technical demonstration of Machine Learning Operations (MLOps), data pipelines, and high-density interface design. It is not financial advice. The models, Monte Carlo simulations, and order book matrices are simulations intended for educational and research demonstration purposes. Past performance is not indicative of future results.
+This is an educational and research project. Nothing here is financial advice, and past performance does not predict future results.
