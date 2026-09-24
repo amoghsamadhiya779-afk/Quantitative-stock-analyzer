@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cachetools import TTLCache
 import yfinance as yf
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import json
 import logging
 
 warnings.filterwarnings('ignore')
@@ -809,6 +810,18 @@ def get_real_time_news(req: NewsRequest):
     except Exception as e: 
         logger.error(f"News fetch failed: {e}")
         return {"news": []}
+
+REPORT_CARD_PATH = os.path.join(PROJECT_ROOT, "reports", "report_card.json")
+
+
+@app.get("/api/v1/report-card")
+def get_report_card():
+    """Out-of-sample model report card produced offline by build_report_card.py."""
+    if not os.path.exists(REPORT_CARD_PATH):
+        raise HTTPException(status_code=404, detail="Report card has not been generated yet.")
+    with open(REPORT_CARD_PATH) as f:
+        return json.load(f)
+
 
 @app.get("/api/v1/markets")
 def get_markets():

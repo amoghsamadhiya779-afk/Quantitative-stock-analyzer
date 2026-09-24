@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 # context fails the build outright, which is what broke this Space previously.
 COPY --chown=user api/ ./api/
 COPY --chown=user src/ ./src/
+COPY --chown=user reports/ ./reports/
 COPY --chown=user mlops_artifacts/ ./mlops_artifacts/
 
 # Hugging Face Spaces expose port 7860 by default

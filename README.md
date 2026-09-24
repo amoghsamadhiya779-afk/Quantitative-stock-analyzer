@@ -58,6 +58,38 @@ Re-engineered using Three.js and React Three Fiber (R3F) to display real-time gl
 
 ---
 
+## Model Report Card
+
+Daily stock returns are close to unpredictable, so a model is only interesting if it beats simple
+baselines by more than luck would. `build_report_card.py` measures exactly that. For each market it runs
+an expanding-window walk-forward and scores every model on the **same** out-of-sample bars:
+
+| Baselines | Deep models (retrained per fold) |
+| :--- | :--- |
+| Random walk (zero forecast), historical mean, 20-day momentum, ridge regression, gradient boosting | CNN-BiLSTM-Attention, Transformer, BiLSTM |
+
+Each forecast is tested twice:
+
+* **As a forecast**: directional accuracy with a binomial test against a coin flip, out-of-sample R², and a
+  Diebold-Mariano test against the random walk.
+* **As the strategy the API serves** (same deadband, trend filter and transaction costs): Sharpe ratio with a
+  block-bootstrap 95% confidence interval, return, drawdown, and the **Deflated Sharpe Ratio**, which
+  corrects for having tried every model on the same data.
+
+```bash
+python build_report_card.py --baselines-only   # a few minutes
+python build_report_card.py                    # all models; hours on a CPU
+```
+
+Results are written to `reports/REPORT_CARD.md` (readable on GitHub) and `reports/report_card.json`, which the
+API serves at `GET /api/v1/report-card`. Data comes from `data/raw/` when present and otherwise from Yahoo Finance.
+
+Leakage is tested rather than assumed: the test suite rewrites future prices and checks that no feature or
+forecast before that point changes, and checks that the pipeline finds a planted edge in autocorrelated
+synthetic returns and none in a random walk.
+
+---
+
 ## Technical Stack
 
 | Domain | Technology Components |
@@ -81,10 +113,14 @@ quantum-yield/
 │   ├── feature_engineering.py      # Technical indicators (RSI, VWAP, Bollinger Bands)
 │   ├── advanced_models.py          # CNN-BiLSTM-Attention, Transformer, BiLSTM
 │   ├── strategy.py                 # Signal construction + backtest metrics (shared by API and validation)
+│   ├── walkforward.py              # Walk-forward folds, data loading, baseline + deep forecasters
+│   ├── significance.py             # DM test, bootstrap Sharpe CI, Probabilistic/Deflated Sharpe
+│   ├── report_card.py              # Scores every model on every market, renders the report
 │   └── optuna_optimizer.py         # Hyperparameter search
 ├── tests/                          # pytest suite (strategy, models, API smoke tests)
 ├── run_pipeline.py                 # Trains all three models for every market
-├── validate_strategy.py            # Walk-forward out-of-sample validation
+├── validate_strategy.py            # Per-fold walk-forward view of one model
+├── build_report_card.py            # Generates reports/report_card.json and REPORT_CARD.md
 ├── frontend/                       # Client web app
 │   ├── src/
 │   │   ├── app/                    # Next.js App Router pages and CSS

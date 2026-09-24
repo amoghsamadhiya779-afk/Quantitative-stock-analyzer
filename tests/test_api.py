@@ -27,3 +27,16 @@ def test_debug_endpoint_disabled_by_default(monkeypatch):
     monkeypatch.delenv("ENABLE_DEBUG_ENDPOINT", raising=False)
     r = client.get("/api/v1/debug")
     assert r.status_code == 404
+
+
+def test_report_card_endpoint(tmp_path, monkeypatch):
+    import api.main as main
+
+    monkeypatch.setattr(main, "REPORT_CARD_PATH", str(tmp_path / "missing.json"))
+    assert client.get("/api/v1/report-card").status_code == 404
+
+    path = tmp_path / "report_card.json"
+    path.write_text('{"version": 1, "markets": {}}')
+    monkeypatch.setattr(main, "REPORT_CARD_PATH", str(path))
+    r = client.get("/api/v1/report-card")
+    assert r.status_code == 200 and r.json()["version"] == 1

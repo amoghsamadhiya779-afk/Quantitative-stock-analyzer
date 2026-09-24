@@ -1,4 +1,4 @@
-.PHONY: install api ui test lint train validate
+.PHONY: install api ui test lint train validate report report-quick
 
 install:
 	pip install -r requirements-dev.txt
@@ -22,3 +22,9 @@ train:
 
 validate:
 	python validate_strategy.py
+
+report:
+	python build_report_card.py
+
+report-quick:
+	python build_report_card.py --baselines-only
