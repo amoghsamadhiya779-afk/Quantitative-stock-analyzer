@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollManager } from "@/lib/ScrollManager";
 
 // Live Workflow components for the Terminal Section
-import MarketDataIngestion from "@/components/workflows/MarketDataIngestion";
+import PriceOverview from "@/components/workflows/PriceOverview";
 import TechnicalIndicators from "@/components/workflows/TechnicalIndicators";
 import MLPrediction from "@/components/workflows/MLPrediction";
 import PortfolioOptimization from "@/components/workflows/PortfolioOptimization";
@@ -28,12 +28,12 @@ import {
   type PredictionResult,
 } from "@/lib/api";
 
-import { useAllPrices } from "@/lib/priceStore";
+import { useMarketQuotes } from "@/lib/priceStore";
 
 const ALGO_MAP: Record<string, string> = {
-  "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
-  "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
-  "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM",
+  "CNN-BiLSTM-Attention": "CNN_BiLSTM_Attention",
+  "Transformer": "TimeSeriesTransformer",
+  "BiLSTM": "AdvancedBiLSTM",
 };
 
 const algos = Object.keys(ALGO_MAP);
@@ -42,7 +42,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const prefersReducedMotion = useReducedMotion();
-  const allPrices = useAllPrices();
+  const allPrices = useMarketQuotes("United States (S&P 500)");
   const tickerKeys = Object.keys(allPrices);
 
   // Walkthrough State
@@ -72,7 +72,7 @@ export default function LandingPage() {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [apiLatencyMs, setApiLatencyMs] = useState<number | null>(null);
-  const [activeTerminalTab, setActiveTerminalTab] = useState("Market data ingestion");
+  const [activeTerminalTab, setActiveTerminalTab] = useState("Market data");
 
   const [booting, setBooting] = useState(false);
   const [revealing, setRevealing] = useState(false);
@@ -81,10 +81,10 @@ export default function LandingPage() {
     () => [
       {
         id: 0,
-        name: "Market data ingestion",
-        title: "Market Data Ingestion",
+        name: "Market data",
+        title: "Market Data",
         description:
-          "Ingest and parse raw trade ticks, order book dynamics, and liquidity updates instantly from global nodes with microsecond precision.",
+          "Daily price history for eight global markets from Yahoo Finance, with a local-dataset fallback, feature-engineered into 40+ technical factors.",
       },
       {
         id: 1,
@@ -127,7 +127,7 @@ export default function LandingPage() {
 
   const tabs = useMemo(
     () => [
-      "Market data ingestion",
+      "Market data",
       "Technical indicators",
       "ML prediction",
       "Portfolio optimization",
@@ -283,14 +283,14 @@ export default function LandingPage() {
 
   const renderActiveWorkflow = () => {
     switch (activeTerminalTab) {
-      case "Market data ingestion":
-        return <MarketDataIngestion />;
+      case "Market data":
+        return <PriceOverview stockData={stockData} currency={currency} />;
       case "Technical indicators":
-        return <TechnicalIndicators />;
+        return <TechnicalIndicators stockData={stockData} />;
       case "ML prediction":
         return <MLPrediction stockData={stockData} prediction={prediction} />;
       case "Portfolio optimization":
-        return <PortfolioOptimization tickers={tickers} />;
+        return <PortfolioOptimization tickers={tickers} selectedMarket={selectedMarket} />;
       case "Risk analytics":
         return <RiskAnalytics tickers={tickers} selectedMarket={selectedMarket} />;
       case "Backtesting":
@@ -302,7 +302,7 @@ export default function LandingPage() {
           />
         );
       default:
-        return <MarketDataIngestion />;
+        return <PriceOverview stockData={stockData} currency={currency} />;
     }
   };
 
@@ -312,7 +312,7 @@ export default function LandingPage() {
   const latestClose = stockData && typeof stockData.latest_close === "number" ? stockData.latest_close : 0;
   const volatility = stockData && typeof stockData.volatility === "number" ? stockData.volatility : 0;
   const vwap = stockData && typeof stockData.vwap === "number" ? stockData.vwap : 0;
-  const imbalance = stockData ? Math.min(85, Math.max(30, 50 + pctChange * 10)) : 50;
+  const rsi = stockData && typeof stockData.rsi === "number" && !isNaN(stockData.rsi) ? stockData.rsi : null;
 
   if (!mounted) return null;
 
@@ -704,7 +704,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Dropdowns controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-stack-sm relative z-40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-stack-sm relative z-40">
                   <CustomSelect
                     label="Global Node"
                     value={selectedMarket}
@@ -718,16 +718,10 @@ export default function LandingPage() {
                     onChange={(v) => setSelectedTicker(v)}
                   />
                   <CustomSelect
-                    label="AI Architecture"
+                    label="Model"
                     value={selectedAlgo}
                     options={algos}
                     onChange={(v) => setSelectedAlgo(v)}
-                  />
-                  <CustomSelect
-                    label="Execution Routing"
-                    value="Dark Pool Aggregator"
-                    options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]}
-                    onChange={() => {}}
                   />
                   <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
                     <div className="flex items-center gap-unit mb-1">
@@ -747,7 +741,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-stack-sm w-full">
                   <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
                     <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-1">
-                      Valuation
+                      Last close
                     </span>
                     <div className="font-headline-lg text-headline-lg font-mono text-on-surface">
                       {stockData
@@ -775,7 +769,7 @@ export default function LandingPage() {
                       {stockData ? `${volatility.toFixed(2)}%` : "—"}
                     </div>
                     <span className="font-label-sm text-[10px] font-mono text-outline mt-1">
-                      {stockData ? `Beta: ${(volatility / 15).toFixed(2)}` : ""}
+                      {stockData ? "20d, annualised" : ""}
                     </span>
                   </div>
 
@@ -795,19 +789,14 @@ export default function LandingPage() {
 
                   <div className="p-stack-sm border border-outline-variant/30 bg-[#08080a] rounded flex flex-col justify-center">
                     <span className="font-label-sm text-[10px] text-outline tracking-widest uppercase mb-2">
-                      Imbalance
+                      RSI (14)
                     </span>
                     <div className="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden mb-1 relative">
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ${
-                          imbalance > 50 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"
-                        }`}
-                        style={{ width: `${imbalance}%` }}
-                      />
+                      <div className="h-full rounded-full bg-on-surface-variant transition-all duration-700" style={{ width: `${rsi ?? 0}%` }} />
                     </div>
-                    <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
-                      <span>BID {Math.round(imbalance)}%</span>
-                      <span>ASK {Math.round(100 - imbalance)}%</span>
+                    <div className="font-label-sm text-[10px] font-mono text-outline">
+                      {rsi === null ? "—" : rsi.toFixed(1)}
+                      {rsi !== null && (rsi >= 70 ? " · overbought" : rsi <= 30 ? " · oversold" : "")}
                     </div>
                   </div>
                 </div>

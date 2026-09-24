@@ -7,9 +7,9 @@ import { Play, RotateCcw, BarChart4 } from "lucide-react";
 import { fetchBacktest, BacktestResult } from "@/lib/api";
 
 const ALGO_MAP: Record<string, string> = {
-  "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
-  "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
-  "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM",
+  "CNN-BiLSTM-Attention": "CNN_BiLSTM_Attention",
+  "Transformer": "TimeSeriesTransformer",
+  "BiLSTM": "AdvancedBiLSTM",
 };
 const algos = Object.keys(ALGO_MAP);
 

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import type { StockData } from "@/lib/api";
 
 interface Candle {
   date: string;
@@ -20,28 +21,21 @@ interface Candle {
   hist?: number;
 }
 
-// Generate high-fidelity simulated OHLC data
-const generateSimulatedData = (): Candle[] => {
-  const data: Candle[] = [];
-  let currentPrice = 150.0;
-  const dates = Array.from({ length: 40 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (40 - i));
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  });
+const LOOKBACK = 60;
 
-  // Basic random walk with some trend
-  dates.forEach((date, index) => {
-    const change = (Math.random() - 0.45) * 5; // Slight upward bias
-    const open = currentPrice;
-    const close = currentPrice + change;
-    const high = Math.max(open, close) + Math.random() * 2.5;
-    const low = Math.min(open, close) - Math.random() * 2.5;
-    const volume = Math.floor(Math.random() * 800000) + 200000;
-
-    data.push({ date, open, high, low, close, volume });
-    currentPrice = close;
-  });
+// Real daily bars for the selected ticker. Indicators are computed over the full history
+// the API returns (about a year) and only the last LOOKBACK bars are drawn, so EMA, the
+// Bollinger basis and MACD are warmed up rather than seeded from the first visible bar.
+const buildCandles = (stock: StockData): Candle[] => {
+  const data: Candle[] = stock.closes.map((close, i) => ({
+    date: new Date(stock.dates[i] + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    open: stock.opens[i],
+    high: stock.highs[i],
+    low: stock.lows[i],
+    close,
+    volume: stock.volumes[i],
+  }));
+  if (data.length === 0) return data;
 
   // Calculate EMA 12, EMA 26, MACD, Signal, EMA 20, BB
   // EMA 20
@@ -68,9 +62,9 @@ const generateSimulatedData = (): Candle[] => {
       data[i].bbUpper = mean + 2 * stdDev;
       data[i].bbLower = mean - 2 * stdDev;
     } else {
-      data[i].bbBasis = data[i].close;
-      data[i].bbUpper = data[i].close + 4;
-      data[i].bbLower = data[i].close - 4;
+      data[i].bbBasis = undefined;
+      data[i].bbUpper = undefined;
+      data[i].bbLower = undefined;
     }
   }
 
@@ -100,17 +94,17 @@ const generateSimulatedData = (): Candle[] => {
     data[i].hist = (data[i].macd || 0) - signalVal;
   }
 
-  return data;
+  return data.slice(-LOOKBACK);
 };
 
-export default function TechnicalIndicators() {
+export default function TechnicalIndicators({ stockData }: { stockData: StockData | null }) {
   const [overlays, setOverlays] = useState({
     ema: true,
     bb: true,
     macd: false,
   });
 
-  const data = useMemo(() => generateSimulatedData(), []);
+  const data = useMemo(() => (stockData ? buildCandles(stockData) : []), [stockData]);
 
   // Compute SVG dimensions and limits
   const width = 800;
@@ -205,6 +199,14 @@ export default function TechnicalIndicators() {
     return data.map((c, i) => `${i === 0 ? "M" : "L"} ${getX(i)} ${getMacdY(c.signal || 0)}`).join(" ");
   }, [data, macdMax]);
 
+  if (data.length === 0) {
+    return (
+      <div className="p-6 rounded-[10px] border border-outline-variant/30 bg-surface-container/90 font-body-md text-[13px] text-on-surface-variant">
+        Loading price history…
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -252,8 +254,8 @@ export default function TechnicalIndicators() {
           </div>
 
           <div className="mt-4 pt-4 border-t border-outline-variant/30 font-label-sm text-[9px] uppercase font-mono tracking-[0.15em] text-outline space-y-3">
-            <div>SYMBOL: AAPL (SIM)</div>
-            <div>PERIOD: DAILY (40D)</div>
+            <div>SYMBOL: {stockData?.ticker ?? "—"}</div>
+            <div>PERIOD: DAILY ({data.length}D)</div>
             <div>INTERVAL: 1D</div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Sliders, Award, Percent, DollarSign } from "lucide-react";
+import { useAssetStats } from "@/lib/assetStats";
 
 interface Asset {
   name: string;
@@ -13,58 +14,38 @@ interface Asset {
 
 interface PortfolioProps {
   tickers?: string[];
+  selectedMarket: string;
 }
 
 const RISK_FREE_RATE = 4.0; // 4% risk-free rate
 
-// Helper to generate a deterministic pseudo-random number from a string
-const pseudoRandom = (seed: string) => {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = Math.imul(31, hash) + seed.charCodeAt(i) | 0;
-  }
-  return (Math.abs(hash) % 1000) / 1000;
-};
+export default function PortfolioOptimization({ tickers = [], selectedMarket }: PortfolioProps) {
+  // Inputs are estimated from the last year of real daily closes for the market's top
+  // tickers. Historical mean returns are a poor forecast of future returns, which the UI says.
+  const { stats, loading } = useAssetStats(selectedMarket, tickers);
+  const activeTickers = useMemo(() => stats?.assets.map((a) => a.ticker) ?? [], [stats]);
 
-export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) {
-  // Use top 5 tickers, fallback if none provided
-  const activeTickers = useMemo(() => {
-    const list = tickers.length > 0 ? tickers : ["AAPL", "MSFT", "NVDA", "AMZN", "META"];
-    return list.slice(0, 5);
-  }, [tickers]);
-
-  // Dynamically generate ASSETS based on activeTickers
   const ASSETS = useMemo(() => {
     const assets: Record<string, Asset> = {};
-    activeTickers.forEach(ticker => {
-      // Return between 8% and 35%
-      const expRet = 8 + pseudoRandom(ticker + "ret") * 27;
-      // Volatility between 10% and 45%
-      const vol = 10 + pseudoRandom(ticker + "vol") * 35;
-      assets[ticker] = {
-        name: ticker,
-        expectedReturn: parseFloat(expRet.toFixed(1)),
-        volatility: parseFloat(vol.toFixed(1))
+    stats?.assets.forEach((a) => {
+      assets[a.ticker] = {
+        name: a.ticker,
+        expectedReturn: parseFloat(a.annualReturn.toFixed(1)),
+        volatility: parseFloat(a.annualVol.toFixed(1)),
       };
     });
     return assets;
-  }, [activeTickers]);
+  }, [stats]);
 
-  // Dynamically generate correlation matrix
   const CORRELATIONS = useMemo(() => {
     const corrs: Record<string, number> = {};
-    for (let i = 0; i < activeTickers.length; i++) {
-      for (let j = i + 1; j < activeTickers.length; j++) {
-        const t1 = activeTickers[i];
-        const t2 = activeTickers[j];
-        // Correlation between 0.1 and 0.7
-        const corr = 0.1 + pseudoRandom(t1 + t2 + "corr") * 0.6;
-        corrs[`${t1}_${t2}`] = corr;
-        corrs[`${t2}_${t1}`] = corr;
-      }
-    }
+    stats?.assets.forEach((a, i) =>
+      stats.assets.forEach((b, j) => {
+        if (i !== j) corrs[`${a.ticker}_${b.ticker}`] = stats.correlation[i][j];
+      }),
+    );
     return corrs;
-  }, [activeTickers]);
+  }, [stats]);
 
   const [weights, setWeights] = useState<Record<string, number>>({});
 
@@ -217,6 +198,14 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
     });
   };
 
+  if (!stats) {
+    return (
+      <div className="p-6 rounded-[10px] border border-outline-variant/30 bg-surface-container/90 font-body-md text-[13px] text-on-surface-variant">
+        {loading || tickers.length === 0 ? "Loading a year of prices for the market's top tickers…" : "Not enough shared price history to estimate this portfolio."}
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -228,7 +217,7 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-5 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Expected Annual Return</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Historical Annual Return</span>
             <div className="text-2xl font-bold font-mono text-white mt-1">{currentPortfolio.returnVal}%</div>
           </div>
           <DollarSign className="w-8 h-8 text-orange-500 opacity-80" />
@@ -245,7 +234,7 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
         <div className="p-5 ventriloc-card rounded-[24px] bg-[#0a0a0a] border border-luxury-glass backdrop-blur-md flex items-center justify-between">
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Portfolio Sharpe Ratio</span>
-            <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">{currentPortfolio.sharpeVal}</div>
+            <div className={`text-2xl font-bold font-mono mt-1 ${currentPortfolio.sharpeVal >= 0 ? "text-emerald-400" : "text-[var(--loss)]"}`}>{currentPortfolio.sharpeVal}</div>
           </div>
           <Award className="w-8 h-8 text-emerald-500 opacity-80" />
         </div>
@@ -276,7 +265,7 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
                   className="w-full h-1 bg-outline-variant/30 rounded appearance-none cursor-pointer accent-secondary"
                 />
                 <div className="flex justify-between font-label-sm text-[9px] text-outline uppercase tracking-widest">
-                  <span>Ret: {ASSETS[asset].expectedReturn}%</span>
+                  <span>1Y Ret: {ASSETS[asset].expectedReturn}%</span>
                   <span>Vol: {ASSETS[asset].volatility}%</span>
                 </div>
               </div>
@@ -284,6 +273,13 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
           </div>
 
           <div className="mt-4 pt-4 border-t border-outline-variant/30 space-y-2 font-label-sm text-[10px] font-mono text-outline uppercase tracking-widest">
+            <div className="flex justify-between">
+              <span>Data window:</span>
+              <span>{stats.start} → {stats.end}</span>
+            </div>
+            <div className="flex justify-between normal-case tracking-normal">
+              <span>Past returns do not predict future returns.</span>
+            </div>
             <div className="flex justify-between">
               <span>Risk-Free Rate:</span>
               <span>4.0%</span>
@@ -300,8 +296,8 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
         {/* Efficient Frontier Scatter Plot */}
         <div className="flex-1 rounded border border-outline-variant/30 bg-[#08080a] p-stack-md flex flex-col gap-stack-sm">
           <div>
-            <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Efficient Frontier Frontier Model</h2>
-            <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">Plotting volatility against returns to discover the optimal capital allocation strategy.</p>
+            <h2 className="font-display-md text-[14px] font-bold uppercase tracking-widest text-on-surface">Efficient Frontier</h2>
+            <p className="font-label-sm text-[11px] text-outline uppercase tracking-widest mt-1">250 random weightings of these assets, using their realised 1-year returns, volatilities and correlations.</p>
           </div>
 
           <div className="w-full h-[350px]">
@@ -312,6 +308,7 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
                   dataKey="x"
                   name="Volatility"
                   unit="%"
+                  tickFormatter={(v: number) => v.toFixed(1)}
                   stroke="rgba(255,255,255,0.08)"
                   tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
                   domain={[minVol, maxVol]}
@@ -321,6 +318,7 @@ export default function PortfolioOptimization({ tickers = [] }: PortfolioProps) 
                   dataKey="y"
                   name="Return"
                   unit="%"
+                  tickFormatter={(v: number) => v.toFixed(1)}
                   stroke="rgba(255,255,255,0.08)"
                   tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
                   domain={[minRet, maxRet]}

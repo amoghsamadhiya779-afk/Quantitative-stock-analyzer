@@ -40,3 +40,29 @@ def test_report_card_endpoint(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "REPORT_CARD_PATH", str(path))
     r = client.get("/api/v1/report-card")
     assert r.status_code == 200 and r.json()["version"] == 1
+
+
+def test_commodities_endpoint(monkeypatch):
+    import numpy as np
+    import pandas as pd
+
+    import api.main as main
+
+    dates = pd.bdate_range("2025-01-01", periods=5)
+    symbols = list(main.COMMODITY_SYMBOLS.values())
+    closes = pd.DataFrame({s: np.linspace(10, 14, 5) for s in symbols}, index=dates)
+    fake = pd.concat({"Close": closes}, axis=1)  # MultiIndex columns, like yf.download
+
+    main.COMMODITIES_CACHE.clear()
+    monkeypatch.setattr(main.yf, "download", lambda *a, **k: fake)
+    r = client.get("/api/v1/commodities")
+    assert r.status_code == 200
+    gold = r.json()["commodities"]["Gold"]
+    assert gold["price"] == 14.0
+    assert round(gold["pct_change"], 2) == round((14 / 13 - 1) * 100, 2)
+    assert len(gold["closes"]) == 5
+
+    main.COMMODITIES_CACHE.clear()
+    monkeypatch.setattr(main.yf, "download", lambda *a, **k: pd.DataFrame())
+    assert client.get("/api/v1/commodities").status_code == 503
+    main.COMMODITIES_CACHE.clear()

@@ -80,6 +80,8 @@ export interface NewsItem {
   link: string;
   tag: string;
   color: string;
+  /** VADER compound sentiment of the headline, -1 to 1. */
+  score?: number;
 }
 
 export interface WatchlistItem {
@@ -152,6 +154,32 @@ export async function fetchReportCard(): Promise<ReportCard | null> {
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`API request failed (${res.status})`);
   return res.json();
+}
+
+export interface CommoditySeries {
+  symbol: string;
+  dates: string[];
+  closes: number[];
+  price: number;
+  pct_change: number;
+}
+
+let commoditiesPromise: { at: number; promise: Promise<Record<string, CommoditySeries> | null> } | null = null;
+
+/** One year of daily commodity closes, or null when the API can't reach its data source.
+ * Shared across components and cached for 15 minutes, matching the API's own cache. */
+export function fetchCommodities(): Promise<Record<string, CommoditySeries> | null> {
+  if (!commoditiesPromise || Date.now() - commoditiesPromise.at > 15 * 60_000) {
+    const promise = apiFetch("/api/v1/commodities")
+      .then((res) => res.json())
+      .then((data) => data.commodities as Record<string, CommoditySeries>)
+      .catch(() => {
+        commoditiesPromise = null; // retry on the next call instead of caching the failure
+        return null;
+      });
+    commoditiesPromise = { at: Date.now(), promise };
+  }
+  return commoditiesPromise.promise;
 }
 
 export async function fetchMarkets(): Promise<Record<string, MarketInfo>> {

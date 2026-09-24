@@ -5,7 +5,7 @@ import { Globe2, Rss, Layers, Cpu } from "lucide-react";
 import { useState, useEffect } from "react";
 import GlobeWidget, { MARKET_LOCATIONS } from "@/components/ui/GlobeWidget";
 import ExpandableNewsCards from "@/components/ui/ExpandableNewsCards";
-import { fetchNews, fetchTickers, fetchStockData, type NewsItem, type StockData } from "@/lib/api";
+import { fetchNews, fetchTickers, fetchStockData, fetchCommodities, type NewsItem, type StockData, type CommoditySeries } from "@/lib/api";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 
 interface Props {
@@ -20,6 +20,15 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
   const [marketStockData, setMarketStockData] = useState<StockData | null>(null);
   const [stockLoading, setStockLoading] = useState(false);
   const [activeTicker, setActiveTicker] = useState(selectedTicker);
+  const [commodities, setCommodities] = useState<Record<string, CommoditySeries> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchCommodities().then((d) => active && setCommodities(d));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedMarket) {
@@ -63,63 +72,41 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
 
   const activeLocation = MARKET_LOCATIONS[activeMarket] || MARKET_LOCATIONS["United States (S&P 500)"];
 
+  // Real closes for the stock and for gold, silver and WTI, each rebased to 100 on the
+  // first day shown. Commodities trade on a different calendar, so each stock trading day
+  // uses the latest commodity close on or before it.
   const generateUnifiedChartData = () => {
-    if (!marketStockData || !marketStockData.dates || marketStockData.dates.length === 0) return [];
-
+    if (!marketStockData || !marketStockData.dates || marketStockData.dates.length === 0 || !commodities) return [];
     const dates = marketStockData.dates.slice(-30);
     const closes = marketStockData.closes.slice(-30);
-    
-    const goldBase = 2345.80;
-    const silverBase = 29.50;
-    const oilBase = 78.45;
-    
-    const n = dates.length;
-    const goldWalk = new Array(n);
-    const silverWalk = new Array(n);
-    const oilWalk = new Array(n);
-    
-    goldWalk[n - 1] = goldBase;
-    silverWalk[n - 1] = silverBase;
-    oilWalk[n - 1] = oilBase;
-    
-    let seed = 42;
-    const pseudoRandom = () => {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    };
 
-    for (let i = n - 2; i >= 0; i--) {
-      const idxPctChange = closes[i + 1] && closes[i] ? (closes[i + 1] - closes[i]) / closes[i] : 0;
-      const goldChange = -idxPctChange * 0.15 + (pseudoRandom() - 0.5) * 0.004;
-      goldWalk[i] = goldWalk[i + 1] * (1 - goldChange);
-      const silverChange = goldChange * 1.1 + (pseudoRandom() - 0.5) * 0.007;
-      silverWalk[i] = silverWalk[i + 1] * (1 - silverChange);
-      const oilChange = idxPctChange * 0.4 + (pseudoRandom() - 0.5) * 0.009;
-      oilWalk[i] = oilWalk[i + 1] * (1 - oilChange);
-    }
-    
-    const chartData = [];
-    for (let i = 0; i < n; i++) {
-      const date = dates[i];
-      const indexVal = closes[i];
-      const indexNorm = (indexVal / closes[0]) * 100;
-      const goldNorm = (goldWalk[i] / goldWalk[0]) * 100;
-      const silverNorm = (silverWalk[i] / silverWalk[0]) * 100;
-      const oilNorm = (oilWalk[i] / oilWalk[0]) * 100;
-      
-      chartData.push({
-        date: date.slice(5),
-        Index: parseFloat(Number(indexNorm).toFixed(2)),
-        Gold: parseFloat(Number(goldNorm).toFixed(2)),
-        Silver: parseFloat(Number(silverNorm).toFixed(2)),
-        Oil: parseFloat(Number(oilNorm).toFixed(2)),
-        IndexRaw: parseFloat(Number(indexVal).toFixed(2)),
-        GoldRaw: parseFloat(Number(goldWalk[i]).toFixed(2)),
-        SilverRaw: parseFloat(Number(silverWalk[i]).toFixed(2)),
-        OilRaw: parseFloat(Number(oilWalk[i]).toFixed(2)),
+    const asOf = (series: CommoditySeries | undefined) => {
+      if (!series) return dates.map(() => null as number | null);
+      let j = 0;
+      let last: number | null = null;
+      return dates.map((d) => {
+        while (j < series.dates.length && series.dates[j] <= d) last = series.closes[j++];
+        return last;
       });
-    }
-    return chartData;
+    };
+    const gold = asOf(commodities["Gold"]);
+    const silver = asOf(commodities["Silver"]);
+    const oil = asOf(commodities["Crude Oil (WTI)"]);
+    const base = (xs: (number | null)[]) => xs.find((x) => x !== null) ?? null;
+    const [g0, s0, o0] = [base(gold), base(silver), base(oil)];
+    const norm = (v: number | null, v0: number | null) => (v !== null && v0 ? parseFloat(((v / v0) * 100).toFixed(2)) : null);
+
+    return dates.map((date, i) => ({
+      date: date.slice(5),
+      Index: parseFloat(((closes[i] / closes[0]) * 100).toFixed(2)),
+      Gold: norm(gold[i], g0),
+      Silver: norm(silver[i], s0),
+      Oil: norm(oil[i], o0),
+      IndexRaw: parseFloat(Number(closes[i]).toFixed(2)),
+      GoldRaw: gold[i] ?? 0,
+      SilverRaw: silver[i] ?? 0,
+      OilRaw: oil[i] ?? 0,
+    }));
   };
 
   const chartData = generateUnifiedChartData();
@@ -139,6 +126,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
   };
 
   const details = getMarketDetails();
+  const seriesName = marketStockData?.ticker ?? details.indexName;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -150,7 +138,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
           </p>
           <div className="flex items-center justify-between gap-6 my-1">
             <span className="flex items-center gap-1.5 font-bold text-[var(--accent)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" /> {details.indexName}:
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" /> {seriesName}:
             </span>
             <span className="font-bold text-[var(--foreground)]">{dataPoint.IndexRaw.toLocaleString()} {details.currency}</span>
           </div>
@@ -158,19 +146,19 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
             <span className="flex items-center gap-1.5 font-bold text-amber-400">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Gold:
             </span>
-            <span className="font-bold text-[var(--foreground)]">${dataPoint.GoldRaw.toLocaleString()}</span>
+            <span className="font-bold text-[var(--foreground)]">{dataPoint.GoldRaw ? `$${dataPoint.GoldRaw.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}</span>
           </div>
           <div className="flex items-center justify-between gap-6 my-1">
             <span className="flex items-center gap-1.5 font-bold text-slate-300">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-300" /> Silver:
             </span>
-            <span className="font-bold text-[var(--foreground)]">${dataPoint.SilverRaw.toLocaleString()}</span>
+            <span className="font-bold text-[var(--foreground)]">{dataPoint.SilverRaw ? `$${dataPoint.SilverRaw.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}</span>
           </div>
           <div className="flex items-center justify-between gap-6 my-1">
             <span className="flex items-center gap-1.5 font-bold text-sky-400">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Crude Oil:
             </span>
-            <span className="font-bold text-[var(--foreground)]">${dataPoint.OilRaw.toLocaleString()}</span>
+            <span className="font-bold text-[var(--foreground)]">{dataPoint.OilRaw ? `$${dataPoint.OilRaw.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}</span>
           </div>
           <div className="text-[9px] text-[var(--foreground)]/30 border-t border-[var(--border)] pt-1 mt-1">
             * Normalized to 100
@@ -252,28 +240,28 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
               <Layers className="text-secondary w-4 h-4" />
               <h3 className="font-label-sm text-[10px] tracking-[0.15em] text-outline uppercase font-bold">Unified Global Macro Graph</h3>
             </div>
-            <p className="font-label-sm text-[10px] text-outline font-mono">Normalized comparative performance of commodities against active index ({details.indexName})</p>
+            <p className="font-label-sm text-[10px] text-outline font-mono">{seriesName} vs gold, silver and WTI crude, daily closes rebased to 100 (last 30 trading days)</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 font-mono text-[10px]">
             <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-              <span className="text-outline">{details.tickerSymbol}:</span>
+              <span className="text-outline">{seriesName}:</span>
               <span className="font-bold text-on-surface">{marketStockData ? marketStockData.latest_close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "---"}</span>
             </div>
             <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
               <span className="text-outline">GOLD:</span>
-              <span className="font-bold text-on-surface">$2,345.80</span>
+              <span className="font-bold text-on-surface">{commodities?.["Gold"] ? `$${commodities["Gold"].price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}</span>
             </div>
             <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
               <span className="text-outline">SILVER:</span>
-              <span className="font-bold text-on-surface">$29.50</span>
+              <span className="font-bold text-on-surface">{commodities?.["Silver"] ? `$${commodities["Silver"].price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}</span>
             </div>
             <div className="px-3 py-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
               <span className="text-outline">OIL (WTI):</span>
-              <span className="font-bold text-on-surface">$78.45</span>
+              <span className="font-bold text-on-surface">{commodities?.["Crude Oil (WTI)"] ? `$${commodities["Crude Oil (WTI)"].price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}</span>
             </div>
           </div>
         </div>
@@ -290,7 +278,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
                 <XAxis dataKey="date" stroke="var(--border)" tick={{ fill: "var(--foreground)", opacity: 0.35, fontSize: 9, fontFamily: "monospace" }} axisLine={false} tickLine={false} dy={10} />
                 <YAxis domain={["auto", "auto"]} stroke="var(--border)" tickFormatter={(v) => `${v}%`} tick={{ fill: "var(--foreground)", opacity: 0.35, fontSize: 9, fontFamily: "monospace" }} axisLine={false} tickLine={false} dx={-5} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1, strokeDasharray: '4 4' }} />
-                <Line type="monotone" dataKey="Index" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name={details.indexName} isAnimationActive={true} />
+                <Line type="monotone" dataKey="Index" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name={seriesName} isAnimationActive={true} />
                 <Line type="monotone" dataKey="Gold" stroke="#EAB308" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Gold" isAnimationActive={true} />
                 <Line type="monotone" dataKey="Silver" stroke="#94A3B8" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Silver" isAnimationActive={true} />
                 <Line type="monotone" dataKey="Oil" stroke="#38BDF8" strokeWidth={1.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} name="Crude Oil" isAnimationActive={true} />
@@ -298,7 +286,7 @@ export default function NewsDrivenMarket({ selectedTicker, selectedMarket }: Pro
             </ResponsiveContainer>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-outline font-mono text-xs border border-dashed border-outline-variant/30 rounded">
-              No historical data available for comparative chart.
+              {commodities === null ? "Commodity prices are unavailable right now." : "No historical data available for comparative chart."}
             </div>
           )}
         </div>

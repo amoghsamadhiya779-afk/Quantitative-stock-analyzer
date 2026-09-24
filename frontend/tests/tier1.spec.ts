@@ -101,8 +101,8 @@ test.describe("Tier 1: Feature Coverage (30 Tests)", () => {
 
   // Feature 4: Quantitative Workflows
   test.describe("Feature 4: Quantitative Workflows", () => {
-    test("T1.F4.1: Verify Market data ingestion workflow header", async ({ page }) => {
-      const btn = page.locator("button", { hasText: /^Market data ingestion$/ });
+    test("T1.F4.1: Verify Market data workflow header", async ({ page }) => {
+      const btn = page.locator("button", { hasText: /^Market data$/ });
       await expect(btn).toBeVisible();
     });
 

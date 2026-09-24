@@ -811,11 +811,65 @@ def get_real_time_news(req: NewsRequest):
             elif compound <= -0.15: sentiment, color = "BEARISH", "#ef4444"
             else: sentiment, color = "NEUTRAL", "#3b82f6"
                 
-            processed_news.append({"title": title, "source": publisher, "link": link, "tag": f"NLP SENTIMENT: {sentiment}", "color": color})
+            processed_news.append({"title": title, "source": publisher, "link": link, "tag": f"NLP SENTIMENT: {sentiment}",
+                                   "color": color, "score": round(float(compound), 3)})
         return {"news": processed_news}
     except Exception as e: 
         logger.error(f"News fetch failed: {e}")
         return {"news": []}
+
+# Continuous front-month futures (and the dollar index) from Yahoo Finance.
+COMMODITY_SYMBOLS = {
+    "Gold": "GC=F",
+    "Silver": "SI=F",
+    "Crude Oil (WTI)": "CL=F",
+    "Brent": "BZ=F",
+    "Natural Gas": "NG=F",
+    "US Dollar Index": "DX-Y.NYB",
+}
+COMMODITIES_CACHE = TTLCache(maxsize=1, ttl=900)
+_commodities_lock = threading.Lock()
+
+
+def _fetch_commodity_history(period="1y"):
+    raw = yf.download(list(COMMODITY_SYMBOLS.values()), period=period, auto_adjust=True,
+                      progress=False, group_by="column")
+    closes = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]]
+    out = {}
+    for name, symbol in COMMODITY_SYMBOLS.items():
+        if symbol not in closes.columns:
+            continue
+        series = closes[symbol].dropna()
+        if len(series) < 2:
+            continue
+        out[name] = {
+            "symbol": symbol,
+            "dates": series.index.strftime("%Y-%m-%d").tolist(),
+            "closes": [round(float(v), 4) for v in series.values],
+            "price": float(series.iloc[-1]),
+            "pct_change": float((series.iloc[-1] / series.iloc[-2] - 1) * 100),
+        }
+    return out
+
+
+@app.get("/api/v1/commodities")
+def get_commodities():
+    """One year of daily closes for major commodities, cached for 15 minutes."""
+    with _commodities_lock:
+        cached = COMMODITIES_CACHE.get("all")
+        if cached is not None:
+            return cached
+        try:
+            data = _fetch_commodity_history()
+        except Exception as e:
+            logger.error(f"Commodity fetch failed: {e}")
+            data = {}
+        if not data:
+            raise HTTPException(status_code=503, detail="Commodity prices are unavailable right now.")
+        result = {"source": "Yahoo Finance", "commodities": data}
+        COMMODITIES_CACHE["all"] = result
+        return result
+
 
 REPORT_CARD_PATH = os.path.join(PROJECT_ROOT, "reports", "report_card.json")
 

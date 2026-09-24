@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { Activity } from "lucide-react";
 
-import MarketDataIngestion from "@/components/workflows/MarketDataIngestion";
+import PriceOverview from "@/components/workflows/PriceOverview";
 import TechnicalIndicators from "@/components/workflows/TechnicalIndicators";
 import MLPrediction from "@/components/workflows/MLPrediction";
 import PortfolioOptimization from "@/components/workflows/PortfolioOptimization";
@@ -60,9 +60,9 @@ const pages = [
 ];
 
 const ALGO_MAP: Record<string, string> = {
-  "Quantum CNN-Attention Engine (Max Yield)": "CNN_BiLSTM_Attention",
-  "Temporal Transformer Model (Robust)": "TimeSeriesTransformer",
-  "Advanced BiLSTM Layer (Balanced)": "AdvancedBiLSTM"
+  "CNN-BiLSTM-Attention": "CNN_BiLSTM_Attention",
+  "Transformer": "TimeSeriesTransformer",
+  "BiLSTM": "AdvancedBiLSTM"
 };
 
 const algos = Object.keys(ALGO_MAP);
@@ -109,12 +109,10 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
 };
 
-import { useAllPrices } from "@/lib/priceStore";
+import { useMarketQuotes } from "@/lib/priceStore";
 
 export default function TerminalPage() {
   const [activePage, setActivePage] = useState("overview");
-  const allPrices = useAllPrices();
-  const tickerKeys = Object.keys(allPrices);
 
   // Backend-driven state
   const [markets, setMarkets] = useState<Record<string, MarketInfo>>({});
@@ -129,6 +127,8 @@ export default function TerminalPage() {
   const [loading, setLoading] = useState(true);
   const [apiLatencyMs, setApiLatencyMs] = useState<number | null>(null);
   const [logoError, setLogoError] = useState(false);
+  const quotes = useMarketQuotes(selectedMarket);
+  const quoteTickers = Object.keys(quotes);
 
   // API Loaders
   useEffect(() => {
@@ -214,12 +214,12 @@ export default function TerminalPage() {
   const market = markets[selectedMarket];
   const currency = market?.currency || "USD";
   const region = market?.region || "Global";
-  const globalPrice = allPrices[selectedTicker];
-  const pctChange = globalPrice ? globalPrice.pct_change : (stockData && typeof stockData.pct_change === "number" && !isNaN(stockData.pct_change)) ? stockData.pct_change : 0;
-  const latestClose = globalPrice ? globalPrice.price : (stockData && typeof stockData.latest_close === "number" && !isNaN(stockData.latest_close)) ? stockData.latest_close : 0;
+  const pctChange = (stockData && typeof stockData.pct_change === "number" && !isNaN(stockData.pct_change)) ? stockData.pct_change : 0;
+  const latestClose = (stockData && typeof stockData.latest_close === "number" && !isNaN(stockData.latest_close)) ? stockData.latest_close : 0;
   const volatility = (stockData && typeof stockData.volatility === "number" && !isNaN(stockData.volatility)) ? stockData.volatility : 0;
   const vwap = (stockData && typeof stockData.vwap === "number" && !isNaN(stockData.vwap)) ? stockData.vwap : 0;
-  const imbalance = stockData ? Math.min(85, Math.max(30, 50 + (pctChange * 10))) : 50;
+  const rsi = (stockData && typeof stockData.rsi === "number" && !isNaN(stockData.rsi)) ? stockData.rsi : null;
+  const trend = stockData && stockData.ma_20 && stockData.ma_50 ? (stockData.ma_20 > stockData.ma_50 ? "Uptrend" : "Downtrend") : null;
 
   return (
     <div className="flex h-screen w-full overflow-hidden font-body-md text-on-background bg-background">
@@ -262,8 +262,8 @@ export default function TerminalPage() {
           <div className="flex w-max animate-marquee marquee-track">
             {[0, 1].map((copy) => (
               <div key={copy} className="flex gap-gutter px-gutter font-label-sm text-[11px] font-mono tracking-widest text-outline uppercase">
-                {tickerKeys.map((ticker, i) => {
-                  const item = allPrices[ticker];
+                {quoteTickers.map((ticker, i) => {
+                  const item = quotes[ticker];
                   return (
                     <motion.span
                       key={`${copy}-${ticker}`}
@@ -302,14 +302,13 @@ export default function TerminalPage() {
             </div>
           )}
 
-          <div className="font-label-sm text-label-sm text-outline uppercase tracking-widest mt-stack-md mb-stack-xs">Global Liquidity Nodes</div>
+          <div className="font-label-sm text-label-sm text-outline uppercase tracking-widest mt-stack-md mb-stack-xs">Commodities · daily close</div>
           <CommoditiesBar />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-stack-sm relative z-40 bg-surface-container border border-outline-variant/30 rounded p-stack-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-stack-sm relative z-40 bg-surface-container border border-outline-variant/30 rounded p-stack-md">
             <CustomSelect label="Global Node" value={selectedMarket} options={marketNames} onChange={(v) => setSelectedMarket(v)} />
             <CustomSelect label="Target Asset" value={selectedTicker} options={tickers} onChange={(v) => setSelectedTicker(v)} />
-            <CustomSelect label="AI Architecture" value={selectedAlgo} options={algos} onChange={(v) => setSelectedAlgo(v)} />
-            <CustomSelect label="Execution Routing" value="Dark Pool Aggregator" options={["Dark Pool Aggregator", "Smart Order Router", "TWAP Engine"]} onChange={() => {}} />
+            <CustomSelect label="Model" value={selectedAlgo} options={algos} onChange={(v) => setSelectedAlgo(v)} />
             <div className="p-stack-sm rounded border border-outline-variant/30 bg-[#08080a] flex flex-col justify-center">
               <div className="flex items-center gap-unit mb-1">
                 <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400" : "bg-secondary"} live-indicator`} />
@@ -331,17 +330,17 @@ export default function TerminalPage() {
               </div>
             </div>
             <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-stack-sm w-full">
-              <StatBlock label="Valuation" value={stockData ? latestClose.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"} sub={currency} delta={stockData ? `${pctChange >= 0 ? "+" : ""}${Number(pctChange).toFixed(2)}%` : undefined} deltaColor={stockData && pctChange >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"} />
-              <StatBlock label="Volatility" value={stockData ? `${Number(volatility).toFixed(1)}%` : "—"} sub={stockData ? `Beta: ${Number(vwap !== 0 ? volatility / 15 : 0).toFixed(2)}` : ""} />
+              <StatBlock label="Last close" value={stockData ? latestClose.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"} sub={currency} delta={stockData ? `${pctChange >= 0 ? "+" : ""}${Number(pctChange).toFixed(2)}%` : undefined} deltaColor={stockData && pctChange >= 0 ? "text-[var(--profit)]" : "text-[var(--loss)]"} />
+              <StatBlock label="Volatility" value={stockData ? `${Number(volatility).toFixed(1)}%` : "—"} sub={stockData ? "20d, annualised" : ""} />
               <StatBlock label="VWAP (20d)" value={stockData ? vwap.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"} sub={stockData ? `Dev: ${Number(vwap !== 0 ? ((latestClose / vwap) - 1) * 100 : 0).toFixed(2)}%` : ""} />
               <div className="p-stack-sm bg-[#08080a] border border-outline-variant/30 rounded flex flex-col justify-center">
-                <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline mb-2">Imbalance</span>
+                <span className="font-label-sm text-[10px] uppercase tracking-widest text-outline mb-2">RSI (14)</span>
                 <div className="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden mb-1 relative">
-                  <div className={`h-full rounded-full transition-all duration-700 ${imbalance > 50 ? "bg-[var(--profit)]" : "bg-[var(--loss)]"}`} style={{ width: `${imbalance}%` }} />
+                  <div className="h-full rounded-full bg-on-surface-variant transition-all duration-700" style={{ width: `${rsi ?? 0}%` }} />
                 </div>
                 <div className="flex justify-between font-label-sm text-[10px] font-mono text-outline">
-                  <span>BID {Math.round(imbalance)}%</span>
-                  <span>ASK {Math.round(100 - imbalance)}%</span>
+                  <span>{rsi === null ? "—" : rsi.toFixed(1)}{rsi !== null && (rsi >= 70 ? " · overbought" : rsi <= 30 ? " · oversold" : "")}</span>
+                  <span>{trend ?? ""}</span>
                 </div>
               </div>
             </div>
@@ -356,10 +355,10 @@ export default function TerminalPage() {
               transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
               className="transform-gpu flex flex-col gap-[20px]"
             >
-              {activePage === "overview" && <MarketDataIngestion />}
-              {activePage === "technical" && <TechnicalIndicators />}
+              {activePage === "overview" && <PriceOverview stockData={stockData} currency={currency} />}
+              {activePage === "technical" && <TechnicalIndicators stockData={stockData} />}
               {activePage === "ml-prediction" && <MLPrediction stockData={stockData} prediction={prediction} />}
-              {activePage === "portfolio" && <PortfolioOptimization tickers={tickers} />}
+              {activePage === "portfolio" && <PortfolioOptimization tickers={tickers} selectedMarket={selectedMarket} />}
               {activePage === "risk" && <RiskAnalytics tickers={tickers} selectedMarket={selectedMarket} />}
               {activePage === "backtesting" && <Backtesting selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
               {activePage === "report-card" && <ReportCard selectedMarket={selectedMarket} />}

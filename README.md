@@ -11,7 +11,7 @@ pinned: false
 
 Quantum Yield is a containerized, full-stack Machine Learning Operations (MLOps) platform designed for algorithmic capital allocation. It features a decoupled microservices architecture, linking a deep learning inference engine with a low-latency, immersive Next.js 14 user interface.
 
-The platform demonstrates robust quantitative system design, utilizing a self-hydrating data pipeline, synthetic data circuit breakers, and WebGL-based visualization interfaces.
+The platform demonstrates quantitative system design with a self-hydrating data pipeline, out-of-sample model evaluation, and WebGL-based visualization interfaces. Every price and statistic in the terminal is computed from real market data; when a source is unavailable the UI says so instead of filling the gap.
 
 ---
 
@@ -27,7 +27,7 @@ To mitigate issues with rate-limited data providers or offline states, the backe
 1. **Local Relational Layer**: Queries local SQLite databases for indexed market history.
 2. **Local Static Layer**: Cascades to compressed CSV datasets if the database is unpopulated.
 3. **Cloud Hydration Layer**: Queries Yahoo Finance APIs to fetch live delta updates.
-4. **Synthetic Circuit Breakers**: Generates mathematically consistent synthetic price series using geometric Brownian motion paths to ensure the system remains operational under network isolation.
+4. **Honest failure**: if no source has data for a ticker, the API returns an error and the UI shows an unavailable state rather than synthetic prices.
 
 ### 3. Machine Learning Subsystem
 * **Neural Network Topology**: Bidirectional Long Short-Term Memory (BiLSTM) network.
