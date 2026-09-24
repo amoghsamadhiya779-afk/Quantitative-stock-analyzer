@@ -94,6 +94,66 @@ export interface CorrelationMatrix {
   matrix: number[][];
 }
 
+export interface ReportCardModel {
+  directional_accuracy: number | null;
+  directional_bars: number;
+  directional_p_value: number | null;
+  oos_r2_vs_random_walk: number | null;
+  dm_stat_vs_random_walk: number | null;
+  dm_p_value_vs_random_walk: number | null;
+  sharpe: number | null;
+  sharpe_ci_95: [number | null, number | null];
+  total_return: number | null;
+  max_drawdown: number | null;
+  exposure: number | null;
+  psr: number | null;
+  dsr: number | null;
+  forecast_skill: boolean;
+  strategy_edge: boolean;
+}
+
+export interface ReportCardMarket {
+  index_key: string;
+  ticker: string;
+  source: string;
+  start: string;
+  end: string;
+  n_test_bars: number;
+  n_trials: number;
+  models: Record<string, ReportCardModel>;
+  buy_and_hold: {
+    sharpe: number | null;
+    sharpe_ci_95: [number | null, number | null];
+    total_return: number | null;
+    max_drawdown: number | null;
+  };
+}
+
+export interface ReportCardSummary {
+  markets: number;
+  markets_with_forecast_skill: number;
+  markets_with_strategy_edge: number;
+  markets_beating_buy_and_hold: number;
+  median_sharpe: number | null;
+  median_directional_accuracy: number | null;
+}
+
+export interface ReportCard {
+  version: number;
+  generated_at: string;
+  config: { n_folds: number; epochs: number; seq_length: number; deadband: number; cost_bps: number; models: string[] };
+  markets: Record<string, ReportCardMarket>;
+  summary: Record<string, ReportCardSummary>;
+}
+
+/** Resolves to null when the report has not been generated yet (API returns 404). */
+export async function fetchReportCard(): Promise<ReportCard | null> {
+  const res = await fetch(`${API_URL}/api/v1/report-card`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API request failed (${res.status})`);
+  return res.json();
+}
+
 export async function fetchMarkets(): Promise<Record<string, MarketInfo>> {
   const res = await apiFetch("/api/v1/markets");
   const data = await res.json();

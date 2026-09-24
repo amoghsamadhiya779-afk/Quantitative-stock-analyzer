@@ -12,6 +12,7 @@ import MLPrediction from "@/components/workflows/MLPrediction";
 import PortfolioOptimization from "@/components/workflows/PortfolioOptimization";
 import RiskAnalytics from "@/components/workflows/RiskAnalytics";
 import Backtesting from "@/components/workflows/Backtesting";
+import ReportCard from "@/components/workflows/ReportCard";
 
 // Pulls in three.js/@react-three/fiber/drei (globe) - only load it when a news/macro
 // tab is actually opened instead of bundling it into every terminal page load.
@@ -51,6 +52,7 @@ const pages = [
   "portfolio",
   "risk",
   "backtesting",
+  "report-card",
   "news-macro",
   "macro-globe",
   "live-news",
@@ -360,6 +362,7 @@ export default function TerminalPage() {
               {activePage === "portfolio" && <PortfolioOptimization tickers={tickers} />}
               {activePage === "risk" && <RiskAnalytics tickers={tickers} selectedMarket={selectedMarket} />}
               {activePage === "backtesting" && <Backtesting selectedMarket={selectedMarket} selectedTicker={selectedTicker} selectedAlgo={selectedAlgo} />}
+              {activePage === "report-card" && <ReportCard selectedMarket={selectedMarket} />}
               {(activePage === "news-macro" || activePage === "macro-globe" || activePage === "live-news" || activePage === "sentiment") && (
                 <NewsDrivenMarket selectedTicker={selectedTicker} selectedMarket={selectedMarket} />
               )}

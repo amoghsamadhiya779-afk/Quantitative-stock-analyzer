@@ -7,6 +7,7 @@ import {
   PieChart, 
   ShieldAlert, 
   History, 
+  ClipboardCheck,
   Globe, 
   ChevronRight,
   Newspaper,
@@ -28,6 +29,7 @@ const navItems = [
   { id: 'portfolio', label: 'Portfolio Optimization', icon: PieChart },
   { id: 'risk', label: 'Risk Analytics', icon: ShieldAlert },
   { id: 'backtesting', label: 'Backtesting', icon: History },
+  { id: 'report-card', label: 'Model Report Card', icon: ClipboardCheck },
   { 
     id: 'news-macro', 
     label: 'News-Driven Macro', 
